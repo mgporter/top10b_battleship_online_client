@@ -1,0 +1,39 @@
+aside#stats {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+  padding: 12px 24px 12px 24px;
+  background-color: rgba(255, 255, 255, 0.224);
+  border-radius: 24px;
+  min-width: fit-content;
+  width: 60%;
+}
+
+#stats button {
+  border-radius: 16px;
+  background-color: rgb(233, 233, 233);
+  color: black;
+  padding: 6px 16px;
+  border: 1px solid black;
+  transition: 300ms;
+}
+
+#stats button:hover {
+  background-color: rgb(37, 37, 37);
+  color: white;
+}
+
+#gamespeed-container {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 300px);
+  font-size: 1.2rem;
+}
+
+#gamespeed-container datalist {
+  display: flex;
+  justify-content: space-between;
+  width: min(100%, 300px);
+  font-size: 1rem;
+}

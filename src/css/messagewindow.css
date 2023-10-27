@@ -1,0 +1,17 @@
+.message-window {
+  align-self: center;
+  width: 400px;
+  height: 500px;
+  box-sizing: border-box;
+  background-color: #00000066;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  overflow-y: auto;
+  gap:6px;
+}
+
+.message-window p {
+  line-height: 1.2rem;
+}

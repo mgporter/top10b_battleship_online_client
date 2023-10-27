@@ -1,0 +1,91 @@
+main {
+  /* background-color: gray; */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  perspective: 800px;
+  perspective-origin: center center;
+  transform-style: preserve-3d;
+  transform-origin: center;
+  position: relative;
+  z-index: 10;
+  bottom: 20px;
+  transition: none;
+  pointer-events: none;
+}
+
+#playerboard {
+  /* using top, left, right, bottom position will squash this element */
+  display: grid;
+  position: absolute;
+  background-color: rgba(0, 0, 255, var(--playerboard-opacity));
+  background-image: url('./images/topographybg.png'),
+    radial-gradient(
+      circle,
+      rgba(0, 78, 255, var(--playerboard-opacity)) 0%,
+      rgba(0, 6, 120, var(--playerboard-opacity)) 26%,
+      rgba(14, 31, 255, 0.4) 59%
+    );
+  background-repeat: no-repeat;
+  background-size: 100% 100%, auto;
+  /* height: 96%; */
+  width: 800px;
+  aspect-ratio: 1;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(10, 1fr);
+  transform: rotateX(55deg);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 2px solid rgb(0, 150, 53);
+  z-index: 5;
+  transition: none;
+  pointer-events: all;
+}
+
+.cell {
+  border: 1px solid rgba(102, 130, 255, var(--playerboard-opacity));
+}
+
+:not(.disable-hover, .hit, .miss) > .cell {
+  cursor: pointer;
+}
+
+:not(.disable-hover, .hit, .miss) > .cell:hover {
+  background-color: rgba(122, 122, 122, var(--playerboard-opacity));
+}
+
+.canplace {
+  background-color: rgba(97, 216, 255, var(--playerboard-opacity));
+}
+
+.cannotplace {
+  background-color: rgba(255, 0, 0, var(--playerboard-opacity));
+}
+
+.cell.hit {
+  background-color: rgba(255, 0, 0, var(--playerboard-opacity));
+}
+
+.cell.miss {
+  background-color: rgba(122, 122, 122, var(--playerboard-opacity));
+}
+
+.disable-hover {
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Player Canvas */
+
+#playercanvas {
+  position: absolute;
+  /* top: 0px;
+  left: -50px;
+  right: 50px;
+  bottom: 0px; */
+  /* transform: rotateX(55deg); */
+  /* border: 2px solid red; */
+  pointer-events: none;
+  z-index: 100;
+}

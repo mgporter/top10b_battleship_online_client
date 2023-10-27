@@ -1,0 +1,11 @@
+.message-box {
+  color: white;
+  text-align: center;
+  transition: opacity calc(200ms * var(--game-speed));
+  opacity: 0.01;
+  position: relative;
+}
+
+.message-box span.ship {
+  color: rgb(255, 118, 118);
+}

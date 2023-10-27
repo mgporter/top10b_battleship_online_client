@@ -1,0 +1,160 @@
+aside#health-container {
+  background-color: rgba(255, 255, 255, 0.224);
+  border-radius: 24px;
+}
+
+aside#health {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  gap: 8px;
+  min-height: calc(100% - 24px);
+  /* position: relative; */
+}
+
+/* Target the heading of the panel */
+aside#health > :first-child {
+  text-align: center;
+  font-size: 2rem;
+}
+
+/* Target the add ship description */
+aside#health > :nth-child(2) {
+  text-align: center;
+  font-size: 1.2rem;
+  line-height: 1.4rem;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande',
+    'Lucida Sans', Arial, sans-serif;
+}
+
+#addShipSelection {
+  display: flex;
+  flex-direction: column;
+  margin-top: 12px;
+  gap: 12px;
+}
+
+#addShipSelection > label {
+  cursor: pointer;
+  position: relative;
+  min-height: 6vh;
+  display: flex;
+  align-items: center;
+}
+
+#addShipSelection input[type='radio'] {
+  appearance: none;
+  width: 0;
+  height: 0;
+  border: 0;
+  margin: 0;
+}
+
+#addShipSelection > label *:not(input) {
+  pointer-events: none;
+}
+
+#addShipSelection img {
+  transition: 100ms;
+}
+
+#addShipSelection > label:hover img {
+  filter: invert(70%);
+}
+
+#addShipSelection input[type='radio']:checked + img {
+  filter: invert(100%);
+}
+
+#addShipSelection label.ship-placed > img {
+  filter: invert(70%);
+}
+
+#addShipSelection div.ship-placed {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 30px;
+  color: rgb(19, 199, 19);
+  font-size: 3rem;
+  font-weight: bold;
+}
+
+.start-game-button {
+  margin-top: 5vh;
+  height: 48px;
+  border-radius: 16px;
+  text-align: center;
+  background-color: black;
+  color: white;
+  font-size: 1.6rem;
+  letter-spacing: 1px;
+  font-weight: bold;
+  border: none;
+  transition: background-color 500ms;
+  animation: 1.3s linear 0s infinite alternate-reverse both running
+    start-button-flash;
+  cursor: pointer;
+}
+
+.start-game-button:hover {
+  background-color: rgb(241, 0, 0);
+  animation: none;
+}
+
+@keyframes start-button-flash {
+  0% {
+    background-color: black;
+  }
+  100% {
+    background-color: rgb(173, 0, 0);
+  }
+}
+
+/* Ship Health Panel */
+
+#health-box-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+#health .ship-health-container {
+  display: grid;
+  width: 100%;
+  height: 7vh;
+  background-color: rgb(226, 226, 226);
+  position: relative;
+  overflow: hidden;
+}
+
+#health .health-box {
+  border: 1px solid rgb(20, 152, 18);
+  background-color: rgb(208, 228, 208);
+}
+
+#health .ship-health-container img {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  bottom: 6px;
+  left: 6px;
+  z-index: 50;
+}
+
+@media screen and (max-height: 450px) {
+  #health .ship-health-container {
+    height: 4vh;
+  }
+
+  #health .ship-health-container img {
+    top: 0px;
+  }
+}
+
+#health .health-box.hit {
+  border: 1px solid rgb(152, 18, 18);
+  background-color: rgb(229, 141, 141);
+}

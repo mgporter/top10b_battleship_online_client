@@ -1,0 +1,39 @@
+header#player {
+    font-size: 2.4rem;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    position: relative;
+    z-index: 1000;
+}
+  
+header#opponent {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 100;
+}
+
+header#opponent > :first-child {
+    align-self: flex-end;
+    font-size: 1rem;
+    color: rgb(112, 112, 112);
+    font-weight: normal;
+    opacity: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+
+header#opponent #opponent-board-heading {
+    /* This is the header that reads "opponent status" */
+    transition: 500ms;
+    color: rgb(255, 133, 133);
+    font-size: 2.4rem;
+    font-weight: bold;
+    text-align: center;
+    opacity: 0;
+  }

@@ -1,0 +1,62 @@
+:root {
+  font-size: 14px;
+  /* --app-font: Calibri, 'Gill Sans', 'Gill Sans MT', 'Trebuchet MS', sans-serif; */
+  --app-font: 'Oswald', sans-serif;
+  --playerboard-opacity: 0.5;
+  --game-speed: 1;
+}
+
+#root {
+  min-width: 100vw;
+  min-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+  
+body {
+  font-family: var(--app-font);
+  background-color: black;
+  background-image: url('../images/crosshairs2.svg'),
+    url('../images/battleship_background3.jpg');
+  background-repeat: no-repeat, no-repeat;
+  background-size: 50%, 70%;
+  background-position: 60% -20%, 70% -80%;
+  background-blend-mode: normal;
+  width: 100vw;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+  
+button, .button {
+  cursor: pointer;
+}
+
+.backdrop.open {
+  display: flex;
+}
+
+#model-load-progress-bar {
+  width: 200%;
+  position: relative;
+  left: -50%;
+  height: 20px;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.329);
+  z-index: 500;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}

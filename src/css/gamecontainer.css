@@ -1,0 +1,54 @@
+div#game-container {
+  width: 98%;
+  height: 96%;
+  display: grid;
+  gap: 24px;
+  grid-template-areas:
+    'ah ah hp hp hp hp hp hp ho ho ho ho'
+    'ah ah mn mn mn mn mn mn se se se se'
+    'ah ah mn mn mn mn mn mn se se se se'
+    'ah ah mn mn mn mn mn mn se se se se'
+    'ah ah mn mn mn mn mn mn se se se se'
+    'ah ah mn mn mn mn mn mn se se se se'
+    'ah ah mn mn mn mn mn mn as as as as'
+    'ah ah mn mn mn mn mn mn as as as as';
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  /* grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr; */
+  grid-template-rows: repeat(8, minmax(0, 1fr));
+  position: relative;
+  z-index: 10;
+}
+
+header#player {
+  grid-area: hp;
+  height: 0;
+  min-height: 100%;
+  width: 0;
+  min-width: 100%;
+}
+
+header#opponent {
+  grid-area: ho;
+  height: 0;
+  min-height: 100%;
+  width: 0;
+  min-width: 100%;
+}
+
+aside#health-container {
+  grid-area: ah;
+}
+
+main {
+  grid-area: mn;
+}
+
+section {
+  grid-area: se;
+}
+
+aside#stats-container {
+  grid-area: as;
+  display: flex;
+  justify-content: flex-end;
+}

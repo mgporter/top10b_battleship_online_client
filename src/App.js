@@ -1,25 +1,48 @@
-import logo from './logo.svg';
-import './App.css';
+// import logo from './logo.svg';
+import './css/basestyle.css';
+import './css/app.css';
+import { useState } from 'react';
+import RoomSelectionContainer from './components/roomselection/RoomSelectionContainer';
+// import WebSocketConnection from "./websocketconnection";
+import { ApplicationState } from './enums';
+import { SocketProvider } from './SocketProvider';
+import { PlayerProvider } from './PlayerProvider';
+
+// Connect to the server via websockets
+// const websocketconnection = WebSocketConnection();
+// websocketconnection.connect();
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+
+  const [appState, setAppState] = useState(ApplicationState.ROOM_SELECTION);
+
+  // document.addEventListener("wsConnected", () => {
+  //   setWsState(WebSocketState.CONNECTED);
+  // });
+
+  // document.addEventListener("wsDisconnected", () => {
+  //   setWsState(WebSocketState.DISCONNECTED);
+  // });
+
+
+
+  if (appState === ApplicationState.ROOM_SELECTION) {
+    return (
+      <SocketProvider>
+        <PlayerProvider>
+          <RoomSelectionContainer />
+        </PlayerProvider>
+      </SocketProvider>
+    );
+  } else if (appState === ApplicationState.SHIP_PLACEMENT) {
+    return (
+      <div id="game-container">
+        <p>Ship placement state</p>
+      </div>
+    );
+  }
+
+
 }
 
 export default App;

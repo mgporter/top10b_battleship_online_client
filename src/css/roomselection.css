@@ -1,0 +1,96 @@
+#lobby-container {
+  display: flex;
+  justify-content: center;
+  min-width: 100vw;
+  /* min-height: 100vh; */
+  gap: 36px;
+}
+
+#room-selection-container {
+  border: 1px solid gray;
+  border-radius: 24px;
+  box-sizing: border-box;
+  background-color: #000000aa;
+  padding: 24px;
+  width: clamp(350px, 50%, 800px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap:16px;
+}
+
+#room-selection-name-box {
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+  align-self: center;
+  font-size: 1.2rem;
+}
+
+#room-selection-name-box textarea {
+  appearance: none;
+  overflow: hidden;
+  resize:none;
+  height: 2rem;
+  margin-top: 4px;
+  padding: 8px 12px 14px;
+  width: 18rem;
+  font-size: 2rem;
+  background-color: transparent;
+  color: white;
+  font-family: 'Calibri', 'Trebuchet MS', sans-serif;
+  text-align: center;
+  text-decoration: underline solid gray 3px;
+  text-underline-offset: 0.5rem;
+  border: 2px solid transparent;
+  border-radius: 16px;
+}
+
+#room-selection-name-box textarea:focus-visible {
+  outline: none;
+}
+
+#room-selection-name-box textarea:hover {
+  border: 2px solid gray;
+}
+
+#room-selection-container hr {
+  width: 100%;
+}
+
+#room-selection-container button {
+  padding: 4px 12px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-top:24px;
+}
+
+#join-game-box {
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  width: 100%;
+  height: min(400px, 60vh);
+  display:flex;
+  flex-direction: column;
+  font-size: 18px;
+}
+
+#join-game-box li {
+  display: flex;
+  padding: 16px;
+  cursor: pointer;
+}
+
+#join-game-box li:hover {
+  background-color: #ffffff66;
+}
+
+#join-game-box p {
+  min-width: 140px;
+  pointer-events: none;
+}
+
+#join-game-box p:first-child {
+  min-width: 40px;
+}

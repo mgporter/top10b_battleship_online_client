@@ -1,0 +1,58 @@
+.slide-in {
+  animation: 800ms cubic-bezier(0.12, 1.07, 1, 1) 0s 1 normal forwards running
+    slide-in-from-right;
+}
+
+.fade-in {
+  animation: 400ms linear 0s 1 normal forwards running fade-in;
+}
+
+.fade-out {
+  animation: 400ms linear 0s 1 normal forwards running fade-out;
+}
+
+.boardflash {
+  animation: 1.6s linear 0s infinite alternate both running boardflash;
+}
+
+.boardping > div {
+  animation: calc(800ms * var(--game-speed)) ease-out 0s 1 normal forwards
+    running boardping;
+}
+
+@keyframes slide-in-from-right {
+  100% {
+    left: 0;
+  }
+}
+
+@keyframes fade-in {
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes boardflash {
+  0% {
+    box-shadow: 0 0 6px 6px transparent;
+  }
+  100% {
+    /* box-shadow: 0 0 6px 6px #00e4ffde; */
+    box-shadow: 0 0 6px 6px #d0faffde;
+  }
+}
+
+@keyframes boardping {
+  0% {
+    transform: scale(2);
+  }
+  100% {
+    transform: scale(0);
+  }
+}
