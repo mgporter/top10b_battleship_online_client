@@ -56,7 +56,21 @@ button, .button {
   inset: 0;
   background-color: rgba(0, 0, 0, 0.329);
   z-index: 500;
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.button-row {
+  display:flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.emphasis-text {
+  font-weight: bold;
+}
+
+.yellow {
+  color: yellow;
 }

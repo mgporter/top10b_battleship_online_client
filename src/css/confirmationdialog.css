@@ -1,0 +1,24 @@
+.confirmation-dialog {
+  background-color: rgb(59, 57, 53);
+  border: 1px solid red;
+  border-radius: 24px;
+  padding: 52px 78px;
+  display:flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap:24px;
+}
+
+.join-game-dialog {
+  width: 600px;
+  line-height: 2.4rem;
+  font-style: italic;
+}
+
+.confirmation-dialog button {
+  font-size: 20px;
+  padding: 6px 24px;
+  border-radius: 12px;
+}

@@ -1,48 +1,34 @@
-// import logo from './logo.svg';
 import './css/basestyle.css';
 import './css/app.css';
 import { useState } from 'react';
 import RoomSelectionContainer from './components/roomselection/RoomSelectionContainer';
-// import WebSocketConnection from "./websocketconnection";
+import GameContainer from './components/GameContainer';
 import { ApplicationState } from './enums';
 import { SocketProvider } from './SocketProvider';
 import { PlayerProvider } from './PlayerProvider';
 
-// Connect to the server via websockets
-// const websocketconnection = WebSocketConnection();
-// websocketconnection.connect();
 
-function App() {
+export default function App() {
 
   const [appState, setAppState] = useState(ApplicationState.ROOM_SELECTION);
-
-  // document.addEventListener("wsConnected", () => {
-  //   setWsState(WebSocketState.CONNECTED);
-  // });
-
-  // document.addEventListener("wsDisconnected", () => {
-  //   setWsState(WebSocketState.DISCONNECTED);
-  // });
-
-
 
   if (appState === ApplicationState.ROOM_SELECTION) {
     return (
       <SocketProvider>
         <PlayerProvider>
-          <RoomSelectionContainer />
+          <RoomSelectionContainer appState={appState} setAppState={setAppState} />
         </PlayerProvider>
       </SocketProvider>
     );
-  } else if (appState === ApplicationState.SHIP_PLACEMENT) {
+  } else {
     return (
-      <div id="game-container">
-        <p>Ship placement state</p>
-      </div>
+      <SocketProvider>
+        <PlayerProvider>
+          <GameContainer appState={appState} setAppState={setAppState} />
+        </PlayerProvider>
+      </SocketProvider>
     );
   }
 
 
 }
-
-export default App;

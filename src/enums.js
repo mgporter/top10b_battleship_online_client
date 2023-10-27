@@ -5,11 +5,6 @@ export const ApplicationState = {
   GAME_END: "GAME_END"
 }
 
-// export const WebSocketState = {
-//   CONNECTED: "CONNECTED",
-//   DISCONNECTED: "DISCONNECTED"
-// }
-
 export const connectionStatus = {
   UNINSTANTIATED: -1,
   CONNECTING: 0,
@@ -24,4 +19,11 @@ export const MessageTypes = {
   EXITEDLOBBY: "EXITEDLOBBY",
   EXITEDGAME: "EXITEDGAME",
   CREATEDGAME: "CREATEDGAME"
+}
+
+export const LobbyColors = {
+  playerJoin: "green",
+  playerLeave: "red",
+  emphasis: "yellow",
+  standard: "white",
 }
