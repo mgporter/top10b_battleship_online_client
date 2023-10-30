@@ -10,16 +10,17 @@ export const wsStatusContext = createContext(null);
 export function SocketProvider({children}) {
 
   const [status, setStatus] = useState(connectionStatus.UNINSTANTIATED);
-
+  // console.log("SOCKET PROVIDER is being called")
   stompClient.connect({}, onConnected, onError);
 
   function onConnected() {
-    console.log("Websockets connected (from socketprovider)");
+    // console.log("Websockets connected (from socketprovider)");
     setStatus(connectionStatus.OPEN);
   }
 
   function onError() {
     console.log("Websockets error occurred")
+    setStatus(connectionStatus.ERROR);
   }
 
   return (

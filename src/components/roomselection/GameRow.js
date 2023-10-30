@@ -1,7 +1,6 @@
 function GameRow({roomNumber, playerList, row, onClick}) {
 
   const playerString = playerList.reduce((s, player, i) => {
-    console.log(player.name)
     if (i != 0) return s + ", " + player.name
     else return s + player.name;
   }, "");

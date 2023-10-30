@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import '../../css/roomselection.css'
 import GameRow from "./GameRow";
-import MessageWindow from "../../MessageWindow";
+import MessageWindow from "../MessageWindow";
 import { ApplicationState, connectionStatus, LobbyColors, MessageTypes } from '../../enums';
 import { PlayerIdContext, PlayerNameContext, SetPlayerNameContext } from "../../PlayerProvider";
 import { SocketContext, wsStatusContext } from "../../SocketProvider";
@@ -9,7 +9,7 @@ import { parseLobbyMessage, getGameRoomList, postGameRoom } from "./fetchdata";
 import JoinGameDialog from "./JoinGameDialog";
 
 
-export default function RoomSelectionContainer({appState, setAppState}) {
+export default function RoomSelectionContainer({appState, setAppState, setRoomNum}) {
 
   // set useStates
   const [gameRooms, setGameRooms] = useState([]);
@@ -18,6 +18,7 @@ export default function RoomSelectionContainer({appState, setAppState}) {
     color: LobbyColors.emphasis,
   }]);
   const [showJoinGameDialog, setShowJoinGameDialog] = useState({show: false});
+  const [errorFetchingGamerooms, setErrorFetchingGamerooms] = useState(false);
 
   // load contexts
   const playerName = useContext(PlayerNameContext);
@@ -28,27 +29,30 @@ export default function RoomSelectionContainer({appState, setAppState}) {
 
   // Do this on mount
   useEffect(() => {
-    updateGameRooms();
+
+    /* Need to add abort signal in cleanup function */
+
+    getGameRoomList().then((data) => {
+      // If the HttpStatus code is 400 or greater, then we had a server error, and should not set the data
+      if (data && data.length >= 2 && data[1] >= 400) setErrorFetchingGamerooms(true);
+      else if (data) setGameRooms(data);
+    })
   }, []);  
 
   useEffect(() => {
-    let subscriptionObj = null;
-    if (wsStatus === connectionStatus.OPEN) {
-      console.log("subscribing to /lobby and sending join message")
-      subscriptionObj = socket.subscribe("/lobby", onMessageReceived);
-      socket.send("/app/joinLobby", {}, JSON.stringify({sender: {id: playerId, name: playerName}, messageType: MessageTypes.JOINLOBBY}));
-    }
-    return (subscriptionObj) => {
-      if (subscriptionObj) {
-        socket.unsubscribe(subscriptionObj.id);
-      }
+    if (wsStatus !== connectionStatus.OPEN) return
+    console.log("subscribing to /lobby and sending join message")
+    const subscription = socket.subscribe("/lobby", onMessageReceived);
+    socket.send("/app/joinLobby", {}, JSON.stringify({sender: {id: playerId, name: playerName}, messageType: MessageTypes.JOINLOBBY}));
+    
+    return () => {
+      if (subscription) subscription.unsubscribe();
     }
   }, [wsStatus]);
 
 
   function onMessageReceived(payload) {
     const message = JSON.parse(payload.body);
-    console.log("onMessageReceived called")
 
     if (message.messageType === MessageTypes.CREATEDGAME) {
       const newGame = {
@@ -73,14 +77,33 @@ export default function RoomSelectionContainer({appState, setAppState}) {
       setGameRooms((prev) => prev.map(updateGameRoomsOnJoin));
     }
 
+    if (message.messageType === MessageTypes.EXITEDGAME) {
+      const roomNumber = message.game.roomNumber;
+
+      const updateGameRoomsOnExit = (room) => {
+        if (room.roomNumber === roomNumber) {
+          const num = room.roomNumber;
+          const list = room.playerList.filter(player => player.id != message.sender.id);
+          return {roomNumber: num, playerList: list};
+        } else {
+          return room;
+        } 
+      };
+      setGameRooms((prev) => prev.map(updateGameRoomsOnExit));
+    }
+
+    if (message.messageType === MessageTypes.GAMEREMOVED) {
+      const roomNumber = message.game.roomNumber;
+
+      const updateGameRoomsOnRemove = (room) => {
+          return room.roomNumber != roomNumber
+        } 
+
+      setGameRooms((prev) => prev.filter(updateGameRoomsOnRemove));
+    };
+
     const lobbyMessage = parseLobbyMessage(message, playerId, playerName);
     setMessages((prev) => prev.concat([lobbyMessage]));
-  }
-
-  function updateGameRooms() {
-    getGameRoomList().then((data) => {
-      setGameRooms(data);
-    })
   }
 
   function createGameHandler() {
@@ -88,7 +111,15 @@ export default function RoomSelectionContainer({appState, setAppState}) {
       playerName: playerName,
       id: playerId,
     }
-    postGameRoom(player);
+
+    // Tell the server about our game and add it to the database
+    postGameRoom(player).then((data) => {
+      // Join the game after the server creates it
+      joinGame(data.roomNumber);
+    }).catch((e) => {
+      console.log(e);
+    });
+
   }
 
   function updateNameOnServer() {
@@ -102,21 +133,29 @@ export default function RoomSelectionContainer({appState, setAppState}) {
       show: true,
       room: gameNumber,
       players: players,
+      connecting: false,
     });
   }
 
   function joinGame(room) {
-    setShowJoinGameDialog({show: false});
+    // setShowJoinGameDialog({
+    //   show: true,
+    //   room: room,
+    //   connecting: true,
+    // });
+
+    // Send message to the lobby
     socket.send("/app/joinGame", {}, JSON.stringify({
       sender: {id: playerId, name: playerName}, 
       messageType: MessageTypes.JOINGAME,
       game: {roomNumber: room}}));
-    setAppState(ApplicationState.SHIP_PLACEMENT);
+    
+    // Set the room number so that GameContainer knows what room it is
+    setRoomNum(room);
+
+    // Set the application state to the next phase (which loads the GameContainer)
+    setAppState(ApplicationState.GAME_INITIALIZED);
   }
-  
-  const gameRoomList = gameRooms.map((gameroom, i) => {
-    return <GameRow onClick={() => handleGameSelection(gameroom)} key={gameroom.roomNumber} {...gameroom} row={i + 1} />
-  });
 
   return (
     <div id="lobby-container">
@@ -140,7 +179,21 @@ export default function RoomSelectionContainer({appState, setAppState}) {
         </div>
         <button onClick={createGameHandler} type="button">Create a game</button>
         <hr />
-        <ul id="join-game-box">{gameRoomList}</ul>
+        {errorFetchingGamerooms && (
+          <p style={{marginTop: "48px", fontSize: "1.6rem", alignSelf: "center"}}>Error connecting to the game server.</p>
+        )}
+        {wsStatus === connectionStatus.ERROR && (
+          <p style={{marginTop: "48px", fontSize: "1.6rem", alignSelf: "center"}}>Error connecting to Web Sockets.</p>
+        )}
+        { gameRooms.length === 0 ? (
+          <p style={{alignSelf: "center"}}>No Games to display yet. Click on the "Create Game" button to start one!</p>
+        ) : (
+          <ul id="join-game-box">
+          {gameRooms.map((gameroom, i) => (
+            <GameRow onClick={() => handleGameSelection(gameroom)} key={gameroom.roomNumber} {...gameroom} row={i + 1} />
+          ))}
+          </ul>
+        )}
       </div>
     </div>
   );

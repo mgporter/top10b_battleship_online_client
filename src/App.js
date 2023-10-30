@@ -4,31 +4,20 @@ import { useState } from 'react';
 import RoomSelectionContainer from './components/roomselection/RoomSelectionContainer';
 import GameContainer from './components/GameContainer';
 import { ApplicationState } from './enums';
-import { SocketProvider } from './SocketProvider';
-import { PlayerProvider } from './PlayerProvider';
 
 
 export default function App() {
 
   const [appState, setAppState] = useState(ApplicationState.ROOM_SELECTION);
+  const [roomNum, setRoomNum] = useState();
 
-  if (appState === ApplicationState.ROOM_SELECTION) {
-    return (
-      <SocketProvider>
-        <PlayerProvider>
-          <RoomSelectionContainer appState={appState} setAppState={setAppState} />
-        </PlayerProvider>
-      </SocketProvider>
-    );
-  } else {
-    return (
-      <SocketProvider>
-        <PlayerProvider>
-          <GameContainer appState={appState} setAppState={setAppState} />
-        </PlayerProvider>
-      </SocketProvider>
-    );
-  }
+  return (<>
 
+        {appState === ApplicationState.ROOM_SELECTION ? (
+          <RoomSelectionContainer appState={appState} setAppState={setAppState} setRoomNum={setRoomNum} />
+        ) : (
+          <GameContainer appState={appState} setAppState={setAppState} roomNum={roomNum} />
+        )}
 
+  </>)
 }

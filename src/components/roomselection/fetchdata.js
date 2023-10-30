@@ -45,6 +45,22 @@ export function parseLobbyMessage(message, playerId, playerName) {
       break;
     }
 
+    case MessageTypes.EXITEDGAME: {
+      lobbyMessage = {
+        message: `${message.sender.name} has left a game.`,
+        color: LobbyColors.playerLeave,
+      }
+      break;
+    }
+
+    case MessageTypes.GAMEREMOVED: {
+      lobbyMessage = {
+        message: `${message.sender.name} has left a game.`,
+        color: LobbyColors.playerLeave,
+      }
+      break;
+    }
+
   }
 
   return lobbyMessage;
@@ -62,6 +78,7 @@ export async function getGameRoomList() {
     dataArr = Object.values(data);
   } catch(e) {
     console.log(e);
+    console.log("We are in the getGameRoomList block")
   }
 
   return dataArr;
