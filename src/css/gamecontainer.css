@@ -3,7 +3,7 @@ div#game-container {
   height: 96%;
   display: grid;
   gap: 24px;
-  grid-template-areas:
+  /* grid-template-areas:
     'ah ah hp hp hp hp hp hp ho ho ho ho'
     'ah ah mn mn mn mn mn mn se se se se'
     'ah ah mn mn mn mn mn mn se se se se'
@@ -11,12 +11,28 @@ div#game-container {
     'ah ah mn mn mn mn mn mn se se se se'
     'ah ah mn mn mn mn mn mn se se se se'
     'ah ah mn mn mn mn mn mn as as as as'
+    'ah ah mn mn mn mn mn mn as as as as'; */
+
+  grid-template-areas:
+    'rp rp hp hp hp hp hp hp ho ho ho ho'
+    'rp rp mn mn mn mn mn mn se se se se'
+    'ah ah mn mn mn mn mn mn se se se se'
+    'ah ah mn mn mn mn mn mn se se se se'
+    'ah ah mn mn mn mn mn mn se se se se'
+    'ah ah mn mn mn mn mn mn se se se se'
+    'ah ah mn mn mn mn mn mn as as as as'
     'ah ah mn mn mn mn mn mn as as as as';
+
   grid-template-columns: repeat(12, minmax(0, 1fr));
-  /* grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr; */
   grid-template-rows: repeat(8, minmax(0, 1fr));
   position: relative;
   z-index: 10;
+}
+
+.room-panel {
+  grid-area: rp;
+  min-height: 100%;
+  min-width: 100%;
 }
 
 header#player {

@@ -2,12 +2,20 @@ import { useState, useEffect, useContext, useRef } from "react";
 import { ApplicationState, connectionStatus, LobbyColors, MessageTypes, PacketType } from '../enums';
 import { PlayerIdContext, PlayerNameContext } from "../PlayerProvider";
 import { SocketContext, wsStatusContext } from "../SocketProvider";
+import "../css/gamecontainer.css";
 import WaitingForPlayersDialog from "./shipplacement/WaitingForPlayersDialog";
 import { updatePlayerList } from "./helperfunctions.js";
+import BottomRightPanel from "./gamescreen/BottomRightPanel";
+import CreditsBlock from "./gamescreen/CreditsBlock";
+import LeftPanel from "./gamescreen/LeftPanel";
+import MainBoard from "./gamescreen/MainBoard";
+import MessageArea from "./gamescreen/MessageArea";
+import OpponentBoard from "./gamescreen/OpponentBoard";
+import RoomPanel from "./gamescreen/RoomPanel";
 
 export default function GameContainer({appState, setAppState, roomNum}) {
 
-  const [playerList, setPlayerList] = useState([]);
+  const [playerList, setPlayerList] = useState({playerOne: null, playerTwo: null, observerList: []});
 
   // load contexts
   const playerName = useContext(PlayerNameContext);
@@ -16,9 +24,6 @@ export default function GameContainer({appState, setAppState, roomNum}) {
   const wsStatus = useContext(wsStatusContext);
 
   const playersIDtoName = useRef({});
-
-  // use ID to name for message name conversion
-  // For rendered list, get name and add to useState list. First two are players 1 and 2 respectively.
 
   useEffect(() => {
 
@@ -34,34 +39,37 @@ export default function GameContainer({appState, setAppState, roomNum}) {
 
   function onMessageReceived(payload) {
     const message = JSON.parse(payload.body);
+    console.log(message);
 
     if (message.type === PacketType.GAME_START) {
       setAppState(ApplicationState.SHIP_PLACEMENT);
     }
 
-    if (message.type === PacketType.ANNOUNCE_NAME &&
-        !playersIDtoName.current.hasOwnProperty(message.id)) {
-      playersIDtoName.current = {...playersIDtoName.current, [message.id]: message.name};
-      updatePlayerList(setPlayerList, message, playerId);
+    if (message.type === PacketType.PLAYERLIST_UPDATE) {
+      updatePlayerList(setPlayerList, message, playersIDtoName, playerId);
     }
 
   }
 
   return (
     <div id="game-container">
+      <RoomPanel roomNum={roomNum} playerList={playerList} playersIDtoName={playersIDtoName} playerId={playerId} />
     {appState === ApplicationState.GAME_INITIALIZED && (
       <WaitingForPlayersDialog />
     )}
     {appState === ApplicationState.SHIP_PLACEMENT && (
-      <RoomPanel roomNum={roomNum} />
-      <MessageArea />
-      <LeftPanel />
-      <MainBoard />
-      <CreditsBlock />
-      {appState === ApplicationState.ATTACK_PHASE && (
-        <OpponentBoard />
-        <BottomRightPanel />
-      )}
+      <>
+        <MessageArea />
+        <LeftPanel />
+        <MainBoard />
+        <CreditsBlock />
+        {appState === ApplicationState.ATTACK_PHASE && (
+          <>
+            <OpponentBoard />
+            <BottomRightPanel />
+          </>
+        )}
+      </>
     )}
 
     </div>

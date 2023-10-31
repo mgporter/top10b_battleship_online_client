@@ -16,7 +16,7 @@ export const PacketType = {
   PLACED_COMPLETE: "PLACED_COMPLETE",
   GAME_INITIALIZED: "GAME_INITIALIZED",
   GAME_START: "GAME_START",
-  ANNOUNCE_NAME: "ANNOUNCE_NAME"
+  PLAYERLIST_UPDATE: "PLAYERLIST_UPDATE"
 }
 
 export const connectionStatus = {
@@ -42,4 +42,10 @@ export const LobbyColors = {
   playerLeave: "red",
   emphasis: "yellow",
   standard: "white",
+}
+
+export const PlayerType = {
+  PLAYER1: "PLAYER1",
+  PLAYER2: "PLAYER2",
+  OBSERVER: "OBSERVER"
 }

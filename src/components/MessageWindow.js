@@ -1,4 +1,4 @@
-import './css/messagewindow.css';
+import '../css/messagewindow.css';
 
 export default function MessageWindow({messages}) {
 

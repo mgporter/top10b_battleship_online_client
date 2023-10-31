@@ -39,7 +39,7 @@ export function parseLobbyMessage(message, playerId, playerName) {
 
     case MessageTypes.JOINGAME: {
       lobbyMessage = {
-        message: `${message.sender.name} has joined game ${message.game.roomNumber}.`,
+        message: `${message.sender.name} has joined game ${message.roomNumber}.`,
         color: LobbyColors.standard,
       }
       break;

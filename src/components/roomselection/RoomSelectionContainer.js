@@ -56,14 +56,14 @@ export default function RoomSelectionContainer({appState, setAppState, setRoomNu
 
     if (message.messageType === MessageTypes.CREATEDGAME) {
       const newGame = {
-        roomNumber: message.game.roomNumber,
-        playerList: message.game.playerList,
+        roomNumber: message.roomNumber,
+        playerList: []
       }
       setGameRooms((prev) => [newGame].concat(prev));
     }
     
     if (message.messageType === MessageTypes.JOINGAME) {
-      const roomNumber = message.game.roomNumber;
+      const roomNumber = message.roomNumber;
 
       const updateGameRoomsOnJoin = (room) => {
         if (room.roomNumber === roomNumber) {
@@ -78,7 +78,7 @@ export default function RoomSelectionContainer({appState, setAppState, setRoomNu
     }
 
     if (message.messageType === MessageTypes.EXITEDGAME) {
-      const roomNumber = message.game.roomNumber;
+      const roomNumber = message.roomNumber;
 
       const updateGameRoomsOnExit = (room) => {
         if (room.roomNumber === roomNumber) {
@@ -93,10 +93,10 @@ export default function RoomSelectionContainer({appState, setAppState, setRoomNu
     }
 
     if (message.messageType === MessageTypes.GAMEREMOVED) {
-      const roomNumber = message.game.roomNumber;
+      const roomNumber = message.roomNumber;
 
       const updateGameRoomsOnRemove = (room) => {
-          return room.roomNumber != roomNumber
+          return room.roomNumber != roomNumber;
         } 
 
       setGameRooms((prev) => prev.filter(updateGameRoomsOnRemove));
@@ -138,17 +138,13 @@ export default function RoomSelectionContainer({appState, setAppState, setRoomNu
   }
 
   function joinGame(room) {
-    // setShowJoinGameDialog({
-    //   show: true,
-    //   room: room,
-    //   connecting: true,
-    // });
 
-    // Send message to the lobby
+    // Send message to tell the server that the player has joined the room
     socket.send("/app/joinGame", {}, JSON.stringify({
       sender: {id: playerId, name: playerName}, 
       messageType: MessageTypes.JOINGAME,
-      game: {roomNumber: room}}));
+      roomNumber: room
+    }));
     
     // Set the room number so that GameContainer knows what room it is
     setRoomNum(room);

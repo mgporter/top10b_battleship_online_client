@@ -1,4 +1,4 @@
-import { createContext, useState } from "react";
+import { createContext, useState, useEffect } from "react";
 import { connectionStatus } from "./enums";
 
 const socket = new window.SockJS('http://localhost:8080/ws');
@@ -10,11 +10,15 @@ export const wsStatusContext = createContext(null);
 export function SocketProvider({children}) {
 
   const [status, setStatus] = useState(connectionStatus.UNINSTANTIATED);
-  // console.log("SOCKET PROVIDER is being called")
-  stompClient.connect({}, onConnected, onError);
+
+  useEffect(() => {
+    stompClient.connect({}, onConnected, onError);
+    return () => {
+      if (status == connectionStatus.OPEN) stompClient.disconnect();
+    }
+  }, [])
 
   function onConnected() {
-    // console.log("Websockets connected (from socketprovider)");
     setStatus(connectionStatus.OPEN);
   }
 
