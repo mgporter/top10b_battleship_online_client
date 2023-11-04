@@ -1,0 +1,29 @@
+.message-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.message-area .sender-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  margin-right: 24px;
+  color: rgb(200, 200, 200);
+}
+
+.message-area .sender-info img {
+  height: 40px;
+  width: 40px;
+  border-radius: 100%;
+  border: 2px solid gray;
+
+}
+
+.message-area .message-text {
+  /* flex: 1 0 auto; */
+  font-size: 2rem;
+  line-height: 2.5rem;
+}

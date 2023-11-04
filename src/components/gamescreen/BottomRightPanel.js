@@ -1,5 +1,7 @@
+import './bottomrightpanel.css';
+
 export default function BottomRightPanel() {
   return (
-    <p>BottomRightPanel</p>
+    <div className="section-block bottom-right-panel">BottomRightPanel</div>
   )
 }

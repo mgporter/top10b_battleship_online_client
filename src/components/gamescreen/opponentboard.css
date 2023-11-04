@@ -1,18 +1,23 @@
-section {
-  /* background-color: gray; */
+.opponent-board-container {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   position: relative;
   z-index: 1;
+  gap: 8px;
+  padding: 0;
 }
 
-#opponentboard {
+.opponent-board-container h2, .opponent-board-container p {
+  color: rgb(255, 133, 133);
+}
+
+.miniboard {
   display: grid;
-  position: absolute;
+  /* position: absolute; */
   background-color: rgba(0, 0, 255, 0.643);
-  background-image: url('./images/topographybg.png'),
+  background-image: url('../../images/topographybg.png'),
     radial-gradient(
       circle,
       rgba(0, 78, 255, var(--playerboard-opacity)) 0%,
@@ -31,17 +36,16 @@ section {
   box-shadow: 0 0 6px 6px transparent;
 }
 
-#opponentboard .ship-icon-container {
+.miniboard .ship-icon-container {
   position: absolute;
   z-index: 150;
-  /* border: 1px solid red; */
   box-sizing: border-box;
   pointer-events: none;
   translate: -2px -2px;
   opacity: 0;
 }
 
-#opponentboard .ship-icon {
+.miniboard .ship-icon {
   width: 100%;
   height: 100%;
 }

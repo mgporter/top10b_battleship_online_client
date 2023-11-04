@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-import '../../css/roomselection.css'
+import './roomselection.css'
 import GameRow from "./GameRow";
 import MessageWindow from "../MessageWindow";
 import { ApplicationState, connectionStatus, LobbyColors, MessageTypes } from '../../enums';
@@ -7,9 +7,10 @@ import { PlayerIdContext, PlayerNameContext, SetPlayerNameContext } from "../../
 import { SocketContext, wsStatusContext } from "../../SocketProvider";
 import { parseLobbyMessage, getGameRoomList, postGameRoom } from "./fetchdata";
 import JoinGameDialog from "./JoinGameDialog";
+import { SetAppStateContext } from "../../AppStateProvider";
 
 
-export default function RoomSelectionContainer({appState, setAppState, setRoomNum}) {
+export default function RoomSelectionContainer({setRoomNum}) {
 
   // set useStates
   const [gameRooms, setGameRooms] = useState([]);
@@ -26,6 +27,7 @@ export default function RoomSelectionContainer({appState, setAppState, setRoomNu
   const setPlayerName = useContext(SetPlayerNameContext);
   const socket = useContext(SocketContext);
   const wsStatus = useContext(wsStatusContext);
+  const setAppState = useContext(SetAppStateContext);
 
   // Do this on mount
   useEffect(() => {

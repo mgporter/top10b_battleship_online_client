@@ -1,37 +1,36 @@
-aside#health-container {
-  background-color: rgba(255, 255, 255, 0.224);
-  border-radius: 24px;
-}
+.placement-panel {
 
-aside#health {
-  display: flex;
-  flex-direction: column;
-  padding: 12px;
-  gap: 8px;
-  min-height: calc(100% - 24px);
+  /* min-height: calc(100% - 24px); */
   /* position: relative; */
 }
 
 /* Target the heading of the panel */
-aside#health > :first-child {
+.placement-panel > h3 {
   text-align: center;
-  font-size: 2rem;
+  font-size: 1.4rem;
 }
 
 /* Target the add ship description */
-aside#health > :nth-child(2) {
+.placement-panel > p {
   text-align: center;
-  font-size: 1.2rem;
-  line-height: 1.4rem;
+  letter-spacing: 0;
+  line-height: 1.2rem;
   font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande',
     'Lucida Sans', Arial, sans-serif;
+}
+
+@media screen and (max-height: 550px) {
+  .placement-panel > p {
+    font-size: 0.8rem;
+    line-height: 1rem;
+  }
 }
 
 #addShipSelection {
   display: flex;
   flex-direction: column;
-  margin-top: 12px;
-  gap: 12px;
+  margin: 12px 0 12px 0;
+  gap: 1vh;
 }
 
 #addShipSelection > label {
@@ -82,20 +81,23 @@ aside#health > :nth-child(2) {
 }
 
 .start-game-button {
-  margin-top: 5vh;
-  height: 48px;
   border-radius: 16px;
   text-align: center;
   background-color: black;
   color: white;
-  font-size: 1.6rem;
+  font-size: 1.2rem;
   letter-spacing: 1px;
+  padding: 6px 36px;
   font-weight: bold;
-  border: none;
+  border: 1px solid rgba(255, 0, 0, 0.169);
+  box-shadow: 0px 0px 7px 3px rgba(42, 1, 1, 0.558);
   transition: background-color 500ms;
-  animation: 1.3s linear 0s infinite alternate-reverse both running
-    start-button-flash;
   cursor: pointer;
+}
+
+.start-game-button.start-button-strobe {
+  animation: 1.3s linear 0s infinite alternate-reverse both running
+    start-button-strobe;
 }
 
 .start-game-button:hover {
@@ -103,58 +105,11 @@ aside#health > :nth-child(2) {
   animation: none;
 }
 
-@keyframes start-button-flash {
+@keyframes start-button-strobe {
   0% {
     background-color: black;
   }
   100% {
     background-color: rgb(173, 0, 0);
   }
-}
-
-/* Ship Health Panel */
-
-#health-box-container {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-#health .ship-health-container {
-  display: grid;
-  width: 100%;
-  height: 7vh;
-  background-color: rgb(226, 226, 226);
-  position: relative;
-  overflow: hidden;
-}
-
-#health .health-box {
-  border: 1px solid rgb(20, 152, 18);
-  background-color: rgb(208, 228, 208);
-}
-
-#health .ship-health-container img {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  bottom: 6px;
-  left: 6px;
-  z-index: 50;
-}
-
-@media screen and (max-height: 450px) {
-  #health .ship-health-container {
-    height: 4vh;
-  }
-
-  #health .ship-health-container img {
-    top: 0px;
-  }
-}
-
-#health .health-box.hit {
-  border: 1px solid rgb(152, 18, 18);
-  background-color: rgb(229, 141, 141);
 }

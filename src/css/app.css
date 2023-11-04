@@ -1,33 +1,26 @@
 :root {
-  font-size: 14px;
+  font-size: 12px;
   /* --app-font: Calibri, 'Gill Sans', 'Gill Sans MT', 'Trebuchet MS', sans-serif; */
   --app-font: 'Oswald', sans-serif;
   --playerboard-opacity: 0.5;
   --game-speed: 1;
+  --normal-font: Arial, sans-serif;
 }
 
-#root {
-  min-width: 100vw;
-  min-height: 100vh;
-  overflow-y: auto;
-  overflow-x: hidden;
-  color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-  
 body {
   font-family: var(--app-font);
+  letter-spacing: 0.3px;
   background-color: black;
   background-image: url('../images/crosshairs2.svg'),
     url('../images/battleship_background3.jpg');
   background-repeat: no-repeat, no-repeat;
   background-size: 50%, 70%;
-  background-position: 60% -20%, 70% -80%;
+  background-position: 60% top, 70% top;
+  background-attachment: fixed;
+  /* -20 and -80 */
   background-blend-mode: normal;
-  width: 100vw;
-  height: 100vh;
+  /* width: 100vw;
+  height: 100vh; */
   overflow-y: auto;
   overflow-x: hidden;
   color: white;
@@ -35,6 +28,19 @@ body {
   justify-content: center;
   align-items: center;
 }
+
+#root {
+  min-width: 100%;
+  min-height: 100%;
+  /* overflow-y: auto;
+  overflow-x: hidden;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center; */
+}
+  
+
   
 button, .button {
   cursor: pointer;

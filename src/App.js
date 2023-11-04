@@ -1,23 +1,20 @@
 import './css/basestyle.css';
 import './css/app.css';
-import { useState } from 'react';
-import RoomSelectionContainer from './components/roomselection/RoomSelectionContainer';
-import GameContainer from './components/GameContainer';
-import { ApplicationState } from './enums';
-
+import './css/animations.css'
+import { PlayerProvider } from './PlayerProvider';
+import { AppStateProvider } from './AppStateProvider';
+import { SocketProvider } from './SocketProvider';
+import SetScreen from './SetScreen';
 
 export default function App() {
 
-  const [appState, setAppState] = useState(ApplicationState.ROOM_SELECTION);
-  const [roomNum, setRoomNum] = useState();
-
-  return (<>
-
-        {appState === ApplicationState.ROOM_SELECTION ? (
-          <RoomSelectionContainer appState={appState} setAppState={setAppState} setRoomNum={setRoomNum} />
-        ) : (
-          <GameContainer appState={appState} setAppState={setAppState} roomNum={roomNum} />
-        )}
-
-  </>)
+  return (
+    <SocketProvider>
+      <AppStateProvider>
+        <PlayerProvider>
+          <SetScreen />
+        </PlayerProvider>
+      </AppStateProvider>
+    </SocketProvider>
+  )
 }

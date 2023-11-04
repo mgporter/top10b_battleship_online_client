@@ -1,0 +1,51 @@
+.fleet-health-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 12px 0;
+  width: 100%;
+}
+
+.ship-health-panel h3 {
+  color: rgb(195, 210, 234);
+}
+
+.ship-health-container {
+  display: grid;
+  width: 100%;
+  height: 7vh;
+  background-color: rgb(226, 226, 226);
+  position: relative;
+  overflow: hidden;
+}
+
+.health-box {
+  border: 1px solid rgb(20, 152, 18);
+  background-color: rgb(208, 228, 208);
+}
+
+.ship-health-container img {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  bottom: 6px;
+  left: 6px;
+  z-index: 50;
+  transform: scaleX(-1);
+  width: calc(100% - 12px);
+}
+
+@media screen and (max-height: 450px) {
+  .ship-health-container {
+    height: 4vh;
+  }
+
+  .ship-health-container img {
+    top: 0px;
+  }
+}
+
+.health-box.hit {
+  border: 1px solid rgb(152, 18, 18);
+  background-color: rgb(229, 141, 141);
+}

@@ -1,4 +1,4 @@
-import '../../css/confirmationdialog.css';
+import '../confirmationdialog.css';
 
 export default function JoinGameDialog({ connecting, room, players, setShowJoinGameDialog, joinGame}) {
 
