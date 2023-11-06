@@ -45,8 +45,12 @@ export default function RoomSelectionContainer({setRoomNum}) {
     if (wsStatus !== connectionStatus.OPEN) return
     console.log("subscribing to /lobby and sending join message")
     const subscription = socket.subscribe("/lobby", onMessageReceived);
+    // const subscription2 = socket.subscribe("/user/queue/hello", () => console.log("Private Message received!!"))
     socket.send("/app/joinLobby", {}, JSON.stringify({sender: {id: playerId, name: playerName}, messageType: MessageTypes.JOINLOBBY}));
+    // const sessionId = socket.ws._transport.url.match(/\/([\w\d]+)\/websocket$/)[1];
     
+    // console.log(socket);
+
     return () => {
       if (subscription) subscription.unsubscribe();
     }
@@ -140,13 +144,6 @@ export default function RoomSelectionContainer({setRoomNum}) {
   }
 
   function joinGame(room) {
-
-    // Send message to tell the server that the player has joined the room
-    socket.send("/app/joinGame", {}, JSON.stringify({
-      sender: {id: playerId, name: playerName}, 
-      messageType: MessageTypes.JOINGAME,
-      roomNumber: room
-    }));
     
     // Set the room number so that GameContainer knows what room it is
     setRoomNum(room);

@@ -26,9 +26,7 @@ export default function OpponentBoard({
 
   const opponentboardElement = useRef(null);
 
-  useEffect(() => {
-    if (!attackResultPlayer) return;
-
+  if (attackResultPlayer) {
     const targetCell = coordinateToDOMCell([attackResultPlayer.row, attackResultPlayer.col]);
 
     console.log(attackResultPlayer.type)
@@ -40,9 +38,7 @@ export default function OpponentBoard({
     } else if (attackResultPlayer.result === PacketType.ATTACK_SUNKSHIP) {
       targetCell.classList.add('hit');
     }
-
-  }, [attackResultPlayer])
-
+  }
 
 
   useEffect(() => {
@@ -78,8 +74,6 @@ export default function OpponentBoard({
       <div ref={opponentboardElement}
         className="miniboard disable-hover"
         onClick={handleCellClick}
-        // onMouseOver={handleCellMouseOver}
-        // onMouseLeave={disablePlacementHighlighting}
       >
         {cells}
       <div className="ping-container"><div className="ping-ring"></div></div>

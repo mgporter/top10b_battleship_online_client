@@ -92,7 +92,7 @@
   background-color: rgba(122, 122, 122, var(--playerboard-opacity));
 }
 
-.disable-hover {
+.disable-hover, .disable-hover .cell {
   cursor: default;
   pointer-events: none;
 }

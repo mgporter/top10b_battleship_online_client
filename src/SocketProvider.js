@@ -6,10 +6,14 @@ const stompClient = window.Stomp.over(socket);
 
 export const SocketContext = createContext(stompClient);
 export const wsStatusContext = createContext(null);
+export const PrivateMessageContext = createContext(null);
+export const SetPrivateMessageContext = createContext(null);  // Remove??
+
 
 export function SocketProvider({children}) {
 
   const [status, setStatus] = useState(connectionStatus.UNINSTANTIATED);
+  const [privateMessage, setPrivateMessage] = useState(null);
 
   useEffect(() => {
     stompClient.connect({}, onConnected, onError);
@@ -19,6 +23,8 @@ export function SocketProvider({children}) {
   }, [])
 
   function onConnected() {
+    stompClient.subscribe("/user/queue/message", onPrivateMessageReceived);
+    stompClient.send("/app/getCredentials", {}, "Test");
     setStatus(connectionStatus.OPEN);
   }
 
@@ -27,10 +33,19 @@ export function SocketProvider({children}) {
     setStatus(connectionStatus.ERROR);
   }
 
+  function onPrivateMessageReceived(payload) {
+    console.log("Private message: " + payload.body);
+    setPrivateMessage(JSON.parse(payload.body));
+  }
+
   return (
     <SocketContext.Provider value={stompClient}>
       <wsStatusContext.Provider value={status}>
-        {children}
+        <PrivateMessageContext.Provider value={privateMessage}>
+          <SetPrivateMessageContext.Provider value={setPrivateMessage}>
+            {children}
+          </SetPrivateMessageContext.Provider>
+        </PrivateMessageContext.Provider>
       </wsStatusContext.Provider>
     </SocketContext.Provider>
   );

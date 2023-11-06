@@ -35,7 +35,6 @@ export default function MainBoard({
 
   const [mouseOverCell, setMouseOverCell] = useState(null);
   const [directionIndex, setDirectionIndex] = useState(0);
-  const [clickedCell, setClickedCell] = useState(null);
 
   const playerboardElement = useRef(null);
   const modelRef = useRef(null);
@@ -47,24 +46,27 @@ export default function MainBoard({
   shipPlacement.setPlayerboardElement(playerboardElement);
 
   /* Add highlighting to cells whenever the user's mouse hovers over a cell */
-  useEffect(() => {
-    // if (!mouseOverCell || !shipToPlace.current) return () => {
-    //   shipPlacement.removeHighlightedCells(playerboardElement);
-    // };
-
-    if (!mouseOverCell || !shipToPlace.current) return;
-
+  if (mouseOverCell && shipToPlace.current) {
+    shipPlacement.removeHighlightedCells(placementCells.current);
     placementCells.current = shipPlacement.highlightCells(
       mouseOverCell,
       shipToPlace,
       directions[directionIndex]
     )
+  }
 
-    return () => {
-      shipPlacement.removeHighlightedCells(placementCells.current);
+  /* Color cells in when the opponent's attack results are received */
+  if (attackResultOpponent) {
+    const targetCell = coordinateToDOMCell([attackResultOpponent.row, attackResultOpponent.col]);
+
+    if (attackResultOpponent.result === PacketType.ATTACK_MISSED) {
+      targetCell.classList.add('miss');
+    } else if (attackResultOpponent.result === PacketType.ATTACK_HITSHIP) {
+      targetCell.classList.add('hit');
+    } else if (attackResultOpponent.result === PacketType.ATTACK_SUNKSHIP) {
+      targetCell.classList.add('hit');
     }
-
-  }, [mouseOverCell, directionIndex])
+  }
 
   /* Add event listeners for wheel and keydown events to change the ship's direction */
   useEffect(() => {
@@ -87,12 +89,12 @@ export default function MainBoard({
   }, [])
 
   /* Handle ship placement when a user clicks on a cell */
-  useEffect(() => {
-
+  function placeShip(clickedCell) {
     if (!placementCells.current) return;
 
-    /* For the first time a ship is placed only */
+     /* For the first time a ship is placed only */
     if (!shipToPlace.current.isPlaced()) {
+      
       setMainMessages((prev) => {
         const newMessage = {
           avatar: Avatars.PLAYERCAPTAIN,
@@ -124,26 +126,7 @@ export default function MainBoard({
 
     /* Let the 3d Canvas reposition itself after setting down a ship */
     modelRef.current.resizeCanvasToDisplaySize();
-
-  }, [clickedCell])
-
-
-  useEffect(() => {
-    if (!attackResultOpponent) return;
-
-    const targetCell = coordinateToDOMCell([attackResultOpponent.row, attackResultOpponent.col]);
-
-    if (attackResultOpponent.result === PacketType.ATTACK_MISSED) {
-      targetCell.classList.add('miss');
-    } else if (attackResultOpponent.result === PacketType.ATTACK_HITSHIP) {
-      targetCell.classList.add('hit');
-    } else if (attackResultOpponent.result === PacketType.ATTACK_SUNKSHIP) {
-      targetCell.classList.add('hit');
-    }
-
-  }, [attackResultOpponent])
-
-
+  }
 
   function disablePlacementHighlighting() {
     shipPlacement.removeHighlightedCells(null);
@@ -152,7 +135,9 @@ export default function MainBoard({
 
   function handleCellClick(e) {
     if (appState === ApplicationState.SHIP_PLACEMENT && isValidCell(e)) {
-      setClickedCell([Number(e.target.dataset.row), Number(e.target.dataset.column)]);
+      // placeShip([Number(e.target.dataset.row), Number(e.target.dataset.column)]);
+      placeShip([Number(e.target.dataset.row), Number(e.target.dataset.column)]);
+      // setClickedCell();
     }
   }
 
