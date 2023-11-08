@@ -1,6 +1,7 @@
 import './css/basestyle.css';
 import './css/app.css';
-import './css/animations.css'
+import './css/animations.css';
+import './css/ping.css';
 import { PlayerProvider } from './PlayerProvider';
 import { AppStateProvider } from './AppStateProvider';
 import { SocketProvider } from './SocketProvider';

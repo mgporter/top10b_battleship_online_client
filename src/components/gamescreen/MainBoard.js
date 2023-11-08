@@ -2,13 +2,16 @@ import './mainboard.css';
 import { useState, useRef, useEffect, useContext } from 'react';
 import { C } from '../../Constants';
 import Gameboard from '../logic/gameboard';
-import { ApplicationState, Avatars, PacketType } from '../../enums';
+import { ApplicationState, Avatars, PacketType, battleStatsActions } from '../../enums';
 import ModelContainer from "./ModelContainer";
 import { PlayerNameContext } from '../../PlayerProvider';
 import { AppStateContext } from '../../AppStateProvider';
 import ShipPlacement from '../logic/shipplacement';
+import { createBoardCells, pingBoard, addHitToHealthStatus } from './boardhelperfunctions';
 
 /* Create the board cells once on load */
+// const cells = (createBoardCells("playerboard"))();
+
 const cells = (function createPlayerboardCells() {
   const cellArr = []
   for (let i = 0; i < C.gameboardRows; i++) {
@@ -29,14 +32,17 @@ export default function MainBoard({
   mainboardHover,
   shipToPlace,
   sendPacket,
+  setPlayerShipsSunk,
   setMainMessages,
   setShipsPlaced,
-  attackResultOpponent}) {
+  attackResultOpponent,
+  dispatchBattleStats}) {
 
   const [mouseOverCell, setMouseOverCell] = useState(null);
   const [directionIndex, setDirectionIndex] = useState(0);
 
   const playerboardElement = useRef(null);
+  const pingRef = useRef(null);
   const modelRef = useRef(null);
   const placementCells = useRef(null);
 
@@ -56,30 +62,40 @@ export default function MainBoard({
   }
 
   /* Color cells in when the opponent's attack results are received */
-  if (attackResultOpponent) {
-    const targetCell = coordinateToDOMCell([attackResultOpponent.row, attackResultOpponent.col]);
+  useEffect(() => {
+    if (!attackResultOpponent) return;
+    
+    pingBoard(
+      playerboardElement,
+      pingRef,
+      attackResultOpponent.row,
+      attackResultOpponent.col,
+      attackResultOpponent.result);
 
     if (attackResultOpponent.result === PacketType.ATTACK_MISSED) {
-      targetCell.classList.add('miss');
+      dispatchBattleStats(battleStatsActions.incrementOpponentShotsFired);
     } else if (attackResultOpponent.result === PacketType.ATTACK_HITSHIP) {
-      targetCell.classList.add('hit');
+      addHitToHealthStatus(board, attackResultOpponent.row, attackResultOpponent.col);
+      dispatchBattleStats(battleStatsActions.incrementOpponentShotsHit);
     } else if (attackResultOpponent.result === PacketType.ATTACK_SUNKSHIP) {
-      targetCell.classList.add('hit');
+      addHitToHealthStatus(board, attackResultOpponent.row, attackResultOpponent.col);
+      setPlayerShipsSunk((prev) => prev + 1);
+      modelRef.current.sinkShip(attackResultOpponent.shipType);
+      dispatchBattleStats(battleStatsActions.incrementOpponentShotsHit);
     }
-  }
+    
+  }, [attackResultOpponent])
+
 
   /* Add event listeners for wheel and keydown events to change the ship's direction */
   useEffect(() => {
-
     function changeShipDirection(e) {
-      
       if (e.deltaY < 0 || e.key === "ArrowLeft" || e.key === "ArrowUp") {
         setDirectionIndex((prev) => (prev + 1) % 4)
       } else if (e.deltaY >= 0 || e.key === "ArrowRight" || e.key === "ArrowDown") {
         setDirectionIndex((prev) => (prev + 3) % 4)
       }
     }
-
     document.addEventListener('wheel', changeShipDirection);
     document.addEventListener('keydown', changeShipDirection);
     return () => {
@@ -88,9 +104,12 @@ export default function MainBoard({
     }
   }, [])
 
+
   /* Handle ship placement when a user clicks on a cell */
   function placeShip(clickedCell) {
     if (!placementCells.current) return;
+
+    shipToPlace.current.setDirection(directionIndex);
 
      /* For the first time a ship is placed only */
     if (!shipToPlace.current.isPlaced()) {
@@ -135,9 +154,7 @@ export default function MainBoard({
 
   function handleCellClick(e) {
     if (appState === ApplicationState.SHIP_PLACEMENT && isValidCell(e)) {
-      // placeShip([Number(e.target.dataset.row), Number(e.target.dataset.column)]);
       placeShip([Number(e.target.dataset.row), Number(e.target.dataset.column)]);
-      // setClickedCell();
     }
   }
 
@@ -151,13 +168,6 @@ export default function MainBoard({
     return Boolean(e.target.dataset.row);
   }
 
-  function coordinateToDOMCell(cellCoordinates) {
-    return playerboardElement.current.querySelector(`.cell[data-row="${cellCoordinates[0]}"][data-column="${cellCoordinates[1]}"]`)
-  };
-
-
-
-
 
   return (
     <>
@@ -170,7 +180,7 @@ export default function MainBoard({
             onMouseLeave={disablePlacementHighlighting}
           >
             {cells}
-          <div className="ping-container"><div className="ping-ring"></div></div>
+          <div className="ping-container" ref={pingRef}><div className="ping-ring"></div></div>
           </div>
       </main>
       <ModelContainer modelRef={modelRef} />

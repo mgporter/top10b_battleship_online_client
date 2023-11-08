@@ -446,10 +446,6 @@ export default function ModelContainer({modelRef}) {
 
   useEffect(() => {
     modelRef.current = Model();
-
-    return () => {
-      document.getElementById('playercanvas').remove();
-    }
   }, [])
 
   return;

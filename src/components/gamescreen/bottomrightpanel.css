@@ -1,14 +1,48 @@
 .bottom-right-panel {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-evenly;
-  padding: 12px 24px;
+  padding: 6px 12px;
   background-color: rgba(255, 255, 255, 0.224);
   border-radius: 24px;
-  min-width: fit-content;
-  width: 100%;
+  /* min-width: fit-content;
+  width: 100%; */
 }
+
+.bottom-right-panel .scoretext {
+  font-size: 1.4rem;
+}
+
+.bottom-right-panel .timer {
+  margin-left: 3vw;
+}
+
+.battle-stats-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  font-size: 1rem;
+  font-weight: normal;
+  /* border: 1px solid red; */
+  text-align: center;
+  row-gap: 4px;
+  /* width: 100%; */
+}
+
+.battle-stats-container .header {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+.battle-stats-container .you {
+  color: rgb(63, 225, 63); 
+}
+
+.battle-stats-container .opponent {
+  color: rgb(255, 10, 10);
+}
+
 
 .bottom-right-panel button {
   border-radius: 16px;

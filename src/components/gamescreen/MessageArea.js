@@ -2,8 +2,9 @@ import avatar1 from '../../images/avatar_1.png';
 import './messagearea.css';
 import { useEffect } from 'react';
 import { C } from '../../Constants';
+import OpenWinnerScreenComponent from './OpenWinnerScreenComponent';
 
-export default function MessageArea({mainMessages, setMainMessages}) {
+export default function MessageArea({mainMessages, setMainMessages, showEndGameButtons, winner, setShowEndGameDialog}) {
 
   useEffect(() => {
     
@@ -19,9 +20,18 @@ export default function MessageArea({mainMessages, setMainMessages}) {
 
   }, [mainMessages]);
 
-  if (mainMessages.length == 0) return <div className="section-block message-area"></div>;
-
   const nextMessage = mainMessages[0];
+  
+  console.log("show End Game Buttons? " + showEndGameButtons);
+  if (showEndGameButtons) {
+    return (
+      <div className="section-block message-area">
+        <OpenWinnerScreenComponent winner={winner} setShowEndGameDialog={setShowEndGameDialog} />
+      </div>
+    )
+  }
+
+  if (mainMessages.length == 0) return <div className="section-block message-area"></div>;
 
   // senders: your own commander (to report result of enemy attack on you), the system (player join/leave), enemy (report your result on them)
 

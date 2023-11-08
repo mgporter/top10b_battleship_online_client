@@ -5,6 +5,7 @@ export default function Ship(type) {
   let hits = 0;
   let shipId = null;
   let coordinates = [];
+  let direction = 0;
 
   function getType() {
     return type;
@@ -16,6 +17,14 @@ export default function Ship(type) {
 
   function getLength() {
     return C.ships[type].size;
+  }
+
+  function setDirection(newDirection) {
+    direction = newDirection;
+  }
+
+  function getDirection() {
+    return direction;
   }
 
   function setId(id) {
@@ -62,6 +71,8 @@ export default function Ship(type) {
     getType,
     getDisplayName,
     getLength,
+    setDirection,
+    getDirection,
     setId,
     getId,
     receiveHit,

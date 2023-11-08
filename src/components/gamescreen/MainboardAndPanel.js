@@ -28,9 +28,11 @@ const ships = (function createShips() {
 export default function MainboardAndPanel({
   setMainMessages, 
   sendPacket,
-  playerShipsSunk,
   attackResultOpponent,
-  readyToAttackOpponent
+  readyToAttackOpponent,
+  dispatchBattleStats,
+  playerShipsSunk,
+  setPlayerShipsSunk
 }) {
 
   const [shipClicked, setShipClicked] = useState(null);
@@ -38,6 +40,7 @@ export default function MainboardAndPanel({
   const [mainboardFlash, setMainboardFlash] = useState(false);
   const [mainboardHover, setMainboardHover] = useState(false);
   const [shipsPlaced, setShipsPlaced] = useState([]);
+  // const [playerShipsSunk, setPlayerShipsSunk] = useState(0);
 
   const shipToPlace = useRef(null);
   const firstPlacement = useRef(true);
@@ -60,7 +63,6 @@ export default function MainboardAndPanel({
 
 
   useEffect(() => {
-    console.log("ReadytoAttackOpponent variable changed")
     if (appState !== ApplicationState.ATTACK_PHASE) return;
     if (readyToAttackOpponent) {
       setMainboardFlash(false);
@@ -71,9 +73,10 @@ export default function MainboardAndPanel({
 
 
   useEffect(() => {
-    console.log("Appstate changed")
     if (appState === ApplicationState.ATTACK_PHASE) {
-      
+      setMainboardHover(false);
+    } else if (appState === ApplicationState.GAME_END) {
+      setMainboardFlash(false);
       setMainboardHover(false);
     }
   }, [appState])
@@ -100,9 +103,11 @@ export default function MainboardAndPanel({
           mainboardHover={mainboardHover}
           shipToPlace={shipToPlace}
           sendPacket={sendPacket}
+          setPlayerShipsSunk={setPlayerShipsSunk}
           setMainMessages={setMainMessages} 
           setShipsPlaced={setShipsPlaced}
           attackResultOpponent={attackResultOpponent}
+          dispatchBattleStats={dispatchBattleStats}
         />
     </>
   )

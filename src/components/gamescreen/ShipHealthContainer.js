@@ -10,7 +10,10 @@ export default function ShipHealthContainer({ship}) {
   })
 
   return (
-    <div className="ship-health-container" style={{width: `${length * 20}%`, gridTemplateColumns: `repeat(${length}, 1fr)`}}>
+    <div className="ship-health-container" 
+      style={{width: `${length * 20}%`, gridTemplateColumns: `repeat(${length}, 1fr)`}}
+      data-shiptype={ship.getType()}
+    >
         {healthBoxes}
       <img src={C.ships[shipType].sideimg} alt={C.ships[shipType].displayName} />
     </div>

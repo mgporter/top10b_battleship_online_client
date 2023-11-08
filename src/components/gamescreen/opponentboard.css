@@ -15,7 +15,7 @@
 
 .miniboard {
   display: grid;
-  /* position: absolute; */
+  position: relative;
   background-color: rgba(0, 0, 255, 0.643);
   background-image: url('../../images/topographybg.png'),
     radial-gradient(

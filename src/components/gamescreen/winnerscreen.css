@@ -3,7 +3,7 @@
   width: clamp(750px, 50%, 1700px);
   padding: 20px;
   border-radius: 24px;
-  background-image: url('./images/soldier-silhouette.png'),
+  background-image: url('./../../images/soldier-silhouette.png'),
     radial-gradient(circle at 80% bottom, #ffe29f 0%, #4f280c 100%);
   background-repeat: no-repeat;
   background-position: right bottom, center;
@@ -75,14 +75,61 @@
   gap: 16px;
 }
 
+#end-game-text-container .button-row {
+  margin-top: 8px;
+  font-size: 1.2rem;
+}
+
 #end-game-text-container button {
   padding: 6px 18px;
   border-radius: 12px;
   background-color: rgb(255, 238, 215);
   border: none;
   transition: 300ms;
+  font-weight: bold;
+  animation: 1.6s linear 0s infinite alternate both running return-to-lobby-strobe;
 }
 
-#end-game-text-container button:hover {
-  background-color: rgb(211, 254, 197);
+#end-game-text-container button:hover,
+.winner-screen-mini button:hover {
+  /* background-color: rgb(217, 179, 125); */
+  background-color: white;
+  box-shadow: 0 0 4px 4px #bac7eade;
+  animation: none;
+}
+
+@keyframes return-to-lobby-strobe {
+  0% {
+    box-shadow: 0 0 4px 4px transparent;
+  }
+  100% {
+    box-shadow: 0 0 4px 4px #d0faffde;
+  }
+}
+
+
+.winner-screen-mini {
+  position: absolute;
+  z-index: 500;
+  width: clamp(400px, 40%, 600px);
+  box-sizing: border-box;
+  padding: 20px 36px;
+  border-radius: 24px;
+  border: 2px solid gray;
+  background-image: radial-gradient(circle at 35% bottom, #a4663a 0%, rgb(198, 164, 110) 60%, #4f280c 100%);
+  background-repeat: no-repeat;
+  background-position: right bottom;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.winner-screen-mini button {
+  padding: 6px 18px;
+  border-radius: 12px;
+  border: 1px solid black;
+  background-color: rgb(255, 238, 215);
+  font-weight: bold;
+  transition: 300ms;
 }

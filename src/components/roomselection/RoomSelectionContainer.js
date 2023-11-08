@@ -3,14 +3,14 @@ import './roomselection.css'
 import GameRow from "./GameRow";
 import MessageWindow from "../MessageWindow";
 import { ApplicationState, connectionStatus, LobbyColors, MessageTypes } from '../../enums';
-import { PlayerIdContext, PlayerNameContext, SetPlayerNameContext } from "../../PlayerProvider";
-import { SocketContext, wsStatusContext } from "../../SocketProvider";
+import { PlayerIdContext, PlayerNameContext, SetPlayerIdContext, SetPlayerNameContext } from "../../PlayerProvider";
+import { PrivateMessageContext, SocketContext, wsStatusContext } from "../../SocketProvider";
 import { parseLobbyMessage, getGameRoomList, postGameRoom } from "./fetchdata";
 import JoinGameDialog from "./JoinGameDialog";
 import { SetAppStateContext } from "../../AppStateProvider";
 
 
-export default function RoomSelectionContainer({setRoomNum}) {
+export default function RoomSelectionContainer({roomNumberRef}) {
 
   // set useStates
   const [gameRooms, setGameRooms] = useState([]);
@@ -25,9 +25,11 @@ export default function RoomSelectionContainer({setRoomNum}) {
   const playerName = useContext(PlayerNameContext);
   const playerId = useContext(PlayerIdContext);
   const setPlayerName = useContext(SetPlayerNameContext);
+  const setPlayerId = useContext(SetPlayerIdContext);
   const socket = useContext(SocketContext);
   const wsStatus = useContext(wsStatusContext);
   const setAppState = useContext(SetAppStateContext);
+  // const privateMessage = useContext(PrivateMessageContext);
 
   // Do this on mount
   useEffect(() => {
@@ -45,7 +47,7 @@ export default function RoomSelectionContainer({setRoomNum}) {
     if (wsStatus !== connectionStatus.OPEN) return
     console.log("subscribing to /lobby and sending join message")
     const subscription = socket.subscribe("/lobby", onMessageReceived);
-    // const subscription2 = socket.subscribe("/user/queue/hello", () => console.log("Private Message received!!"))
+    const subscriptionPrivate = socket.subscribe("/user/queue/lobby", onPrivateMessageReceived)
     socket.send("/app/joinLobby", {}, JSON.stringify({sender: {id: playerId, name: playerName}, messageType: MessageTypes.JOINLOBBY}));
     // const sessionId = socket.ws._transport.url.match(/\/([\w\d]+)\/websocket$/)[1];
     
@@ -53,9 +55,40 @@ export default function RoomSelectionContainer({setRoomNum}) {
 
     return () => {
       if (subscription) subscription.unsubscribe();
+      if (subscriptionPrivate) subscriptionPrivate.unsubscribe();
     }
   }, [wsStatus]);
 
+  // useEffect(() => {
+  //   if (privateMessage[0].type === MessageTypes.ACCEPTEDJOIN) {
+  //     console.log("Join Accepted!")
+  //     // Set the application state to the next phase (which loads the GameContainer)
+  //     setAppState(ApplicationState.GAME_INITIALIZED);
+  //   } else if (privateMessage[0].type === MessageTypes.REJECTEDJOIN_ALREADY_IN_GAME) {
+  //     console.log("Rejected join - already in room")
+  //     roomNumberRef.current = null;
+  //   }
+  // }, [privateMessage])
+
+
+  function onPrivateMessageReceived(payload) {
+    const message = JSON.parse(payload.body);
+    console.log("Private Message Received:")
+    console.log(message)
+
+    if (message.messageType === MessageTypes.ACCEPTEDJOIN) {
+      console.log("Join Accepted!")
+      // Set the application state to the next phase (which loads the GameContainer)
+      setAppState(ApplicationState.GAME_INITIALIZED);
+    } else if (message.messageType === MessageTypes.REJECTEDJOIN_ALREADY_IN_GAME) {
+      console.log("Rejected join - already in room")
+      roomNumberRef.current = null;
+    } else if (message.messageType === MessageTypes.CREDENTIALS) {
+      console.log("setting credentials")
+      setPlayerId(message.id);
+      setPlayerName(message.name);
+    }
+  }
 
   function onMessageReceived(payload) {
     const message = JSON.parse(payload.body);
@@ -68,8 +101,9 @@ export default function RoomSelectionContainer({setRoomNum}) {
       setGameRooms((prev) => [newGame].concat(prev));
     }
     
-    if (message.messageType === MessageTypes.JOINGAME) {
+    else if (message.messageType === MessageTypes.JOINGAME) {
       const roomNumber = message.roomNumber;
+      console.log(message);
 
       const updateGameRoomsOnJoin = (room) => {
         if (room.roomNumber === roomNumber) {
@@ -83,7 +117,7 @@ export default function RoomSelectionContainer({setRoomNum}) {
       setGameRooms((prev) => prev.map(updateGameRoomsOnJoin));
     }
 
-    if (message.messageType === MessageTypes.EXITEDGAME) {
+    else if (message.messageType === MessageTypes.EXITEDGAME) {
       const roomNumber = message.roomNumber;
 
       const updateGameRoomsOnExit = (room) => {
@@ -98,7 +132,7 @@ export default function RoomSelectionContainer({setRoomNum}) {
       setGameRooms((prev) => prev.map(updateGameRoomsOnExit));
     }
 
-    if (message.messageType === MessageTypes.GAMEREMOVED) {
+    else if (message.messageType === MessageTypes.GAMEREMOVED) {
       const roomNumber = message.roomNumber;
 
       const updateGameRoomsOnRemove = (room) => {
@@ -145,11 +179,16 @@ export default function RoomSelectionContainer({setRoomNum}) {
 
   function joinGame(room) {
     
-    // Set the room number so that GameContainer knows what room it is
-    setRoomNum(room);
+    // Add the room number to a reference
+    roomNumberRef.current = room;
 
-    // Set the application state to the next phase (which loads the GameContainer)
-    setAppState(ApplicationState.GAME_INITIALIZED);
+    // Attempt to join the room
+    socket.send("/app/joinGame", {}, JSON.stringify({
+      sender: {id: playerId, name: playerName}, 
+      messageType: MessageTypes.JOINGAME,
+      roomNumber: room
+    }));
+
   }
 
   return (

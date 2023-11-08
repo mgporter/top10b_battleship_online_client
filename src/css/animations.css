@@ -4,7 +4,7 @@
 }
 
 .fade-in {
-  animation: 400ms linear 0s 1 normal forwards running fade-in;
+  animation: 400ms linear 400ms 1 normal forwards running fade-in;
 }
 
 .fade-out {
@@ -16,8 +16,7 @@
 }
 
 .boardping > div {
-  animation: calc(800ms * var(--game-speed)) ease-out 0s 1 normal forwards
-    running boardping;
+  animation: 400ms ease-out 0s 1 normal forwards running boardping;
 }
 
 @keyframes slide-in-from-right {
@@ -43,7 +42,6 @@
     box-shadow: 0 0 6px 6px transparent;
   }
   100% {
-    /* box-shadow: 0 0 6px 6px #00e4ffde; */
     box-shadow: 0 0 6px 6px #d0faffde;
   }
 }

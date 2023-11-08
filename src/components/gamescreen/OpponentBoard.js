@@ -1,9 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { C } from "../../Constants";
 import './opponentboard.css';
-import { PacketType } from "../../enums";
+import { PacketType, battleStatsActions } from "../../enums";
+import { createBoardCells, pingBoard, displayShipOnOpponentBoard } from "./boardhelperfunctions";
 
 /* Create the board cells once on load */
+// const cells = createBoardCells("opponentboard");
+
 const cells = (function createOpponentboardCells() {
   const cellArr = []
   for (let i = 0; i < C.gameboardRows; i++) {
@@ -14,35 +17,62 @@ const cells = (function createOpponentboardCells() {
   return cellArr;
 })();
 
-
-
 export default function OpponentBoard({
-  opponentShipsSunk, 
   readyToAttackOpponent, 
   sendPacket, 
   attackResultPlayer,
-  setReadyToAttackOpponent
+  setReadyToAttackOpponent,
+  dispatchBattleStats,
+  opponentShipsSunk,
+  setOpponentShipsSunk
 }) {
 
+  // const [opponentShipsSunk, setOpponentShipsSunk] = useState(0);
   const opponentboardElement = useRef(null);
+  const pingRef = useRef(null);
 
-  if (attackResultPlayer) {
-    const targetCell = coordinateToDOMCell([attackResultPlayer.row, attackResultPlayer.col]);
+  useEffect(() => {
+    if (!attackResultPlayer) return;
 
-    console.log(attackResultPlayer.type)
+    pingBoard(
+      opponentboardElement,
+      pingRef,
+      attackResultPlayer.row,
+      attackResultPlayer.col,
+      attackResultPlayer.result);
 
+    console.log("RESULT RECEIVED: " + attackResultPlayer.result)
+    
+    let setImagePosition;
     if (attackResultPlayer.result === PacketType.ATTACK_MISSED) {
-      targetCell.classList.add('miss');
+      dispatchBattleStats(battleStatsActions.incrementMyShotsFired);
     } else if (attackResultPlayer.result === PacketType.ATTACK_HITSHIP) {
-      targetCell.classList.add('hit');
+      dispatchBattleStats(battleStatsActions.incrementMyShotsHit);
     } else if (attackResultPlayer.result === PacketType.ATTACK_SUNKSHIP) {
-      targetCell.classList.add('hit');
+      setImagePosition = displayShipOnOpponentBoard(opponentboardElement, attackResultPlayer);
+      window.addEventListener('resize', setImagePosition);
+      setOpponentShipsSunk((prev) => prev + 1);
+      dispatchBattleStats(battleStatsActions.incrementMyShotsHit);
     }
-  }
+    
+    // dispatchBattleStats(battleStatsActions.incrementMyShotsFired);
+
+    // if (attackResultPlayer.result === PacketType.ATTACK_HITSHIP) {
+    //   dispatchBattleStats(battleStatsActions.incrementMyShotsHit);
+    // } else if (attackResultPlayer.result === PacketType.ATTACK_SUNKSHIP) {
+    //   displayShipOnOpponentBoard(opponentboardElement, attackResultPlayer);
+    //   setOpponentShipsSunk((prev) => prev + 1);
+    //   dispatchBattleStats(battleStatsActions.incrementMyShotsHit);
+    // }
+
+    return () => {
+      window.removeEventListener('resize', setImagePosition);
+    }
+
+  }, [attackResultPlayer])
 
 
   useEffect(() => {
-    console.log("readytoattackopponent changed")
     if (readyToAttackOpponent) {
       opponentboardElement.current.classList.add("boardflash");
       opponentboardElement.current.classList.remove("disable-hover");
@@ -56,16 +86,11 @@ export default function OpponentBoard({
     if (!isValidCell(e)) return;
     setReadyToAttackOpponent(false);
     sendPacket(PacketType.ATTACK, [Number(e.target.dataset.row), Number(e.target.dataset.column)]);
-    
   }
 
   function isValidCell(e) {
     return Boolean(e.target.dataset.row);
   }
-
-  function coordinateToDOMCell(cellCoordinates) {
-    return opponentboardElement.current.querySelector(`.cell[data-row="${cellCoordinates[0]}"][data-column="${cellCoordinates[1]}"]`)
-  };
 
   return (
     <div className="section-block opponent-board-container">
@@ -76,7 +101,7 @@ export default function OpponentBoard({
         onClick={handleCellClick}
       >
         {cells}
-      <div className="ping-container"><div className="ping-ring"></div></div>
+      <div className="ping-container" ref={pingRef}><div className="ping-ring"></div></div>
       </div>
     </div>
   )

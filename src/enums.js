@@ -19,7 +19,8 @@ export const PacketType = {
   GAME_START: "GAME_START",
   GAME_ATTACK_PHASE_START: "GAME_ATTACK_PHASE_START",
   PLAYERLIST_UPDATE: "PLAYERLIST_UPDATE",
-  LOAD_ALL_DATA: "LOAD_ALL_DATA"
+  LOAD_ALL_DATA: "LOAD_ALL_DATA",
+  SUNKSHIP_INFO: "SUNKSHIP_INFO"
 }
 
 export const connectionStatus = {
@@ -38,7 +39,10 @@ export const MessageTypes = {
   EXITEDLOBBY: "EXITEDLOBBY",
   EXITEDGAME: "EXITEDGAME",
   GAMEREMOVED: "GAMEREMOVED",
-  CREATEDGAME: "CREATEDGAME"
+  CREATEDGAME: "CREATEDGAME",
+  REJECTEDJOIN_ALREADY_IN_GAME: "REJECTEDJOIN_ALREADY_IN_GAME",
+  REJECTEDJOIN_NO_OBSERVERS: "REJECTEDJOIN_NO_OBSERVERS",
+  ACCEPTEDJOIN: "ACCEPTEDJOIN"
 }
 
 export const LobbyColors = {
@@ -66,4 +70,11 @@ export const Avatars = {
   PLAYERCAPTAIN: "PLAYERCAPTAIN",
   ENEMYCOMMANDER: "ENEMYCOMMANDER",
   SYSTEM: "SYSTEM"
+}
+
+export const battleStatsActions = {
+  incrementMyShotsFired: "incrementMyShotsFired",
+  incrementMyShotsHit: "incrementMyShotsHit",
+  incrementOpponentShotsFired: "incrementOpponentShotsFired",
+  incrementOpponentShotsHit: "incrementOpponentShotsHit"
 }
