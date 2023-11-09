@@ -4,7 +4,7 @@ import GameContainer from './components/GameContainer';
 import { ApplicationState, MessageTypes } from './enums';
 import { AppStateContext } from './AppStateProvider';
 import { PrivateMessageContext, SetPrivateMessageContext } from './SocketProvider';
-import { SetPlayerIdContext, SetPlayerNameContext } from './PlayerProvider';
+import { PlayerIdContext, PlayerNameContext, SetPlayerIdContext, SetPlayerNameContext } from './PlayerProvider';
 
 export default function SetScreen() {
 
@@ -13,17 +13,14 @@ export default function SetScreen() {
   
   const roomNumberRef = useRef(null);
 
-  const privateMessage = useContext(PrivateMessageContext);
-  const setPlayerId = useContext(SetPlayerIdContext);
-  const setPlayerName = useContext(SetPlayerNameContext);
+  // const playerId = useContext(PlayerIdContext);
+  // const playerName = useContext(PlayerNameContext);
 
   // useEffect(() => {
-  //   console.log(privateMessage)
-  //   if (privateMessage[0].type === MessageTypes.CREDENTIALS) {
-  //     setPlayerId(privateMessage.id);
-  //     setPlayerName(privateMessage.name);
-  //   }
-  // }, [privateMessage])
+  //   console.log("setting credentials in local storage")
+  //   localStorage.setItem("playerId", playerId);
+  //   localStorage.setItem("playerName", playerName);
+  // }, [playerId, playerName])
 
   return (<>
     {appState === ApplicationState.ROOM_SELECTION ? (

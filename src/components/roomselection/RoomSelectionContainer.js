@@ -20,6 +20,7 @@ export default function RoomSelectionContainer({roomNumberRef}) {
   }]);
   const [showJoinGameDialog, setShowJoinGameDialog] = useState({show: false});
   const [errorFetchingGamerooms, setErrorFetchingGamerooms] = useState(false);
+  // const [connectedToLobby, setConnectedToLobby] = useState(false);
 
   // load contexts
   const playerName = useContext(PlayerNameContext);
@@ -32,25 +33,25 @@ export default function RoomSelectionContainer({roomNumberRef}) {
   // const privateMessage = useContext(PrivateMessageContext);
 
   // Do this on mount
-  useEffect(() => {
+  // useEffect(() => {
 
-    /* Need to add abort signal in cleanup function */
+  //   /* Need to add abort signal in cleanup function */
 
-    getGameRoomList().then((data) => {
-      // If the HttpStatus code is 400 or greater, then we had a server error, and should not set the data
-      if (data && data.length >= 2 && data[1] >= 400) setErrorFetchingGamerooms(true);
-      else if (data) setGameRooms(data);
-    })
-  }, []);  
+  //   getGameRoomList().then((data) => {
+  //     // If the HttpStatus code is 400 or greater, then we had a server error, and should not set the data
+  //     if (data && data.length >= 2 && data[1] >= 400) setErrorFetchingGamerooms(true);
+  //     else if (data) setGameRooms(data);
+  //   })
+  // }, []);  
 
   useEffect(() => {
     if (wsStatus !== connectionStatus.OPEN) return
     console.log("subscribing to /lobby and sending join message")
     const subscription = socket.subscribe("/lobby", onMessageReceived);
     const subscriptionPrivate = socket.subscribe("/user/queue/lobby", onPrivateMessageReceived)
-    socket.send("/app/joinLobby", {}, JSON.stringify({sender: {id: playerId, name: playerName}, messageType: MessageTypes.JOINLOBBY}));
+    socket.send("/app/joinLobby", {}, 
+      JSON.stringify({sender: {id: playerId, name: playerName}, messageType: MessageTypes.JOINLOBBY}));
     // const sessionId = socket.ws._transport.url.match(/\/([\w\d]+)\/websocket$/)[1];
-    
     // console.log(socket);
 
     return () => {
@@ -59,16 +60,7 @@ export default function RoomSelectionContainer({roomNumberRef}) {
     }
   }, [wsStatus]);
 
-  // useEffect(() => {
-  //   if (privateMessage[0].type === MessageTypes.ACCEPTEDJOIN) {
-  //     console.log("Join Accepted!")
-  //     // Set the application state to the next phase (which loads the GameContainer)
-  //     setAppState(ApplicationState.GAME_INITIALIZED);
-  //   } else if (privateMessage[0].type === MessageTypes.REJECTEDJOIN_ALREADY_IN_GAME) {
-  //     console.log("Rejected join - already in room")
-  //     roomNumberRef.current = null;
-  //   }
-  // }, [privateMessage])
+
 
 
   function onPrivateMessageReceived(payload) {
@@ -76,17 +68,40 @@ export default function RoomSelectionContainer({roomNumberRef}) {
     console.log("Private Message Received:")
     console.log(message)
 
-    if (message.messageType === MessageTypes.ACCEPTEDJOIN) {
-      console.log("Join Accepted!")
-      // Set the application state to the next phase (which loads the GameContainer)
-      setAppState(ApplicationState.GAME_INITIALIZED);
-    } else if (message.messageType === MessageTypes.REJECTEDJOIN_ALREADY_IN_GAME) {
-      console.log("Rejected join - already in room")
-      roomNumberRef.current = null;
-    } else if (message.messageType === MessageTypes.CREDENTIALS) {
-      console.log("setting credentials")
-      setPlayerId(message.id);
-      setPlayerName(message.name);
+    switch(message.messageType) {
+      
+      case MessageTypes.GAMEROOMLIST: {
+        setGameRooms(message.gameRoomList);
+        break;
+      }
+
+      case MessageTypes.ACCEPTEDJOIN: {
+        console.log("Join Accepted!")
+        // Set the application state to the next phase (which loads the GameContainer)
+        setAppState(ApplicationState.GAME_INITIALIZED);
+        break;
+      }
+
+      case MessageTypes.REJECTEDJOIN_ALREADY_IN_GAME: {
+        console.log("Rejected join - already in room")
+        roomNumberRef.current = null;
+        break;
+      }
+
+      case MessageTypes.CREDENTIALS: {
+        console.log("setting credentials")
+        setPlayerId(message.id);
+  
+        if (playerName) {
+          console.log("Using previous credentials")
+          updateNameOnServer();
+          // socket.send("/app/setCredentials", {}, JSON.stringify({sender: {id: playerId, name: playerName}}));
+        } else {
+          setPlayerName(message.name);
+        }
+        break;
+      }
+
     }
   }
 
@@ -146,6 +161,20 @@ export default function RoomSelectionContainer({roomNumberRef}) {
     setMessages((prev) => prev.concat([lobbyMessage]));
   }
 
+  function validateInput(e) {
+    console.log(e)
+    if (e.key === 'enter') e.preventDefault();
+  }
+
+  function handleNameChange(e) {
+    localStorage.setItem("playerName", e.target.value);
+    setPlayerName(e.target.value);
+  }
+
+  function updateNameOnServer() {
+    socket.send("/app/changeName", {}, playerName);
+  }
+
   function createGameHandler() {
     const player = {
       playerName: playerName,
@@ -162,9 +191,7 @@ export default function RoomSelectionContainer({roomNumberRef}) {
 
   }
 
-  function updateNameOnServer() {
-    socket.send("/app/changeName", {}, playerName);
-  }
+
 
   function handleGameSelection(gameroom) {
     const gameNumber = gameroom.roomNumber;
@@ -208,7 +235,8 @@ export default function RoomSelectionContainer({roomNumberRef}) {
             placeholder="Battleship Player" 
             maxLength="24" 
             value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
+            onKeyDown={validateInput}
+            onChange={handleNameChange}
             onBlur={updateNameOnServer}></textarea>
         </div>
         <button onClick={createGameHandler} type="button">Create a game</button>

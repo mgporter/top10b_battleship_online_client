@@ -39,6 +39,7 @@ export default function GameContainer({roomNumberRef}) {
   const [winner, setWinner] = useState(null);
   const [showEndGameDialog, setShowEndGameDialog] = useState(true);
   const [gameTimeSeconds, setGameTimeSeconds] = useState(0);
+  const [connectedToRoom, setConnectedToRoom] = useState(false);
 
   const [battleStats, dispatchBattleStats] = useReducer(battleCounterReducer, {
     myShotsFired: 0, 

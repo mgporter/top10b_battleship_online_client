@@ -9,9 +9,12 @@ export const PlayerNameContext = createContext(null);
 export const SetPlayerNameContext = createContext(null);
 
 export function PlayerProvider({children}) {
-  // const [playerName, setPlayerName] = useState(`Player#${uuid.slice(0,5).toUpperCase()}`);
-  const [playerName, setPlayerName] = useState("Player");
-  const [playerId, setPlayerId] = useState(null);
+  
+  const initialName = localStorage.getItem("playerName");
+  const initialId = localStorage.getItem("playerId");
+
+  const [playerName, setPlayerName] = useState(initialName ? initialName : null);
+  const [playerId, setPlayerId] = useState(initialId ? initialId : null);
 
   return (
     <PlayerIdContext.Provider value={playerId}>

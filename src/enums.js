@@ -34,6 +34,7 @@ export const connectionStatus = {
 
 export const MessageTypes = {
   CREDENTIALS: "CREDENTIALS",
+  GAMEROOMLIST: "GAMEROOMLIST",
   JOINLOBBY: "JOINLOBBY",
   JOINGAME: "JOINGAME",
   EXITEDLOBBY: "EXITEDLOBBY",

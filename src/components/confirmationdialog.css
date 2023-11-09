@@ -2,13 +2,13 @@
   background-color: rgb(59, 57, 53);
   border: 1px solid red;
   border-radius: 24px;
-  padding: 52px 78px;
+  padding: 38px 78px;
   display:flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-evenly;
   align-items: center;
   text-align: center;
-  gap:24px;
+  gap:36px;
 }
 
 .join-game-dialog {
@@ -21,4 +21,12 @@
   font-size: 20px;
   padding: 6px 24px;
   border-radius: 12px;
+  border: none;
+  background-color: rgb(174, 174, 174);
+  transition: 200ms;
+}
+
+.confirmation-dialog button:hover {
+  background-color: rgb(232, 232, 232);
+  box-shadow: 0 0 4px 4px rgba(156, 156, 184, 0.402);
 }

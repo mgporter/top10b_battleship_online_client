@@ -1,11 +1,12 @@
 import { useContext } from "react"
-import { AppStateContext } from "../AppStateProvider"
+import { AppStateContext, SetAppStateContext } from "../AppStateProvider"
 import { ApplicationState } from "../enums";
 import { C } from "../Constants";
 
 export default function FullScreenInfoDialog({opponentShipsPlaced, notEnoughPlayers}) {
 
   const appState = useContext(AppStateContext);
+  const setAppState = useContext(SetAppStateContext);
 
   const waitingForAnotherPlayer = appState === ApplicationState.GAME_INITIALIZED;
   const waitingForPlayerToPressStart = appState === ApplicationState.SHIPS_PLACED_AND_STARTED;
@@ -32,6 +33,7 @@ export default function FullScreenInfoDialog({opponentShipsPlaced, notEnoughPlay
     <div className='backdrop'>
       <div className='confirmation-dialog join-game-dialog'>
         <h2>{message}</h2>
+        <button type="button" onClick={() => setAppState(ApplicationState.ROOM_SELECTION)}>Return to the lobby</button>
       </div>
     </div>
   )
