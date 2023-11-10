@@ -11,6 +11,7 @@ export default function FullScreenInfoDialog({opponentShipsPlaced, notEnoughPlay
   const waitingForAnotherPlayer = appState === ApplicationState.GAME_INITIALIZED;
   const waitingForPlayerToPressStart = appState === ApplicationState.SHIPS_PLACED_AND_STARTED;
 
+  if (appState === ApplicationState.GAME_END) return;
 
   let message = "";
   if (waitingForAnotherPlayer) {

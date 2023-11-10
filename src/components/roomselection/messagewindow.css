@@ -2,8 +2,8 @@
   font-family: var(--normal-font);
   letter-spacing: 0px;
   align-self: center;
-  width: 400px;
-  height: 500px;
+  width: clamp(300px, 30%, 500px);
+  height: 70vh;
   box-sizing: border-box;
   background-color: #00000066;
   padding: 24px;

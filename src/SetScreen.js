@@ -2,32 +2,84 @@ import { useContext, useEffect, useState, useRef } from 'react';
 import RoomSelectionContainer from './components/roomselection/RoomSelectionContainer';
 import GameContainer from './components/GameContainer';
 import { ApplicationState, MessageTypes } from './enums';
-import { AppStateContext } from './AppStateProvider';
-import { PrivateMessageContext, SetPrivateMessageContext } from './SocketProvider';
-import { PlayerIdContext, PlayerNameContext, SetPlayerIdContext, SetPlayerNameContext } from './PlayerProvider';
+import { AppStateContext, SetAppStateContext } from './AppStateProvider';
+import useSubscription from './useSubscription';
+import { PlayerNameContext, SetPlayerIdContext, SetPlayerNameContext } from './PlayerProvider';
+import useSocketSend from './useSocketSend';
 
 export default function SetScreen() {
 
+  const [readyToAttackOpponent, setReadyToAttackOpponent] = useState(false);
+
   const appState = useContext(AppStateContext);
-  // const [roomNum, setRoomNum] = useState();
-  
+  const setAppState = useContext(SetAppStateContext);
   const roomNumberRef = useRef(null);
+  const setPlayerId = useContext(SetPlayerIdContext);
+  const playerName = useContext(PlayerNameContext);
+  const setPlayerName = useContext(SetPlayerNameContext);
 
-  // const playerId = useContext(PlayerIdContext);
-  // const playerName = useContext(PlayerNameContext);
+  const socketSend = useSocketSend();
 
-  // useEffect(() => {
-  //   console.log("setting credentials in local storage")
-  //   localStorage.setItem("playerId", playerId);
-  //   localStorage.setItem("playerName", playerName);
-  // }, [playerId, playerName])
+  const showLobby = appState === ApplicationState.ROOM_SELECTION;
+
+  const playerSubscription = useSubscription("/user/queue/player", onMessageReceived);
+  // const publicGameSub = useSubscription(`/game/${roomNumberRef.current}`, console.log);
+
+  function onMessageReceived(payload) {
+    const message = JSON.parse(payload.body);
+    console.log(message)
+
+    switch(message.messageType) {
+
+      case MessageTypes.ACCEPTEDJOIN: {
+        setAppState(ApplicationState.GAME_INITIALIZED);
+        break;
+      }
+
+      case MessageTypes.GOFIRST: {
+        setReadyToAttackOpponent(true);
+      }
+
+      case MessageTypes.CREDENTIALS: {
+        setPlayerId(message.id);
+  
+        if (playerName) {
+          updateNameOnServer();
+        } else {
+          setPlayerName(message.name);
+        }
+        break;
+      }
+
+      case MessageTypes.REJECTEDJOIN_ALREADY_IN_GAME: {
+        roomNumberRef.current = null;
+        break;
+      }
+
+      case MessageTypes.REJECTEDJOIN_ROOM_FULL: {
+        roomNumberRef.current = null;
+        break;
+      }
+
+      case MessageTypes.REJECTEDJOIN_GAME_NOT_FOUND: {
+        roomNumberRef.current = null;
+        break;
+      }
+    }
+  }
+
+  function updateNameOnServer() {
+    socketSend.send("/app/changeName", playerName);
+  }
 
   return (<>
-    {appState === ApplicationState.ROOM_SELECTION ? (
-      <RoomSelectionContainer roomNumberRef={roomNumberRef} />
+    {showLobby ? (
+      <RoomSelectionContainer roomNumberRef={roomNumberRef} updateNameOnServer={updateNameOnServer} />
     ) : (
-      <GameContainer roomNumberRef={roomNumberRef} />
+      <GameContainer 
+        roomNumberRef={roomNumberRef}
+        readyToAttackOpponent={readyToAttackOpponent}
+        setReadyToAttackOpponent={setReadyToAttackOpponent} />
     )}
-  </>
-  )
+  </>)
 }

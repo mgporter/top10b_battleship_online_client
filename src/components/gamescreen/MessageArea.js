@@ -22,7 +22,6 @@ export default function MessageArea({mainMessages, setMainMessages, showEndGameB
 
   const nextMessage = mainMessages[0];
   
-  console.log("show End Game Buttons? " + showEndGameButtons);
   if (showEndGameButtons) {
     return (
       <div className="section-block message-area">

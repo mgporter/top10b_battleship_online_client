@@ -1,7 +1,6 @@
 import { useState, useEffect, useContext, useRef, useReducer } from "react";
-import { ApplicationState, connectionStatus, PacketType, Avatars, MessageTypes } from '../enums';
-import { PlayerIdContext, PlayerNameContext } from "../PlayerProvider";
-import { PrivateMessageContext, SocketContext, wsStatusContext } from "../SocketProvider";
+import { ApplicationState, PacketType, Avatars } from '../enums';
+import { PlayerIdContext } from "../PlayerProvider";
 import "./gamecontainer.css";
 import './gamescreen/winnerscreen.css';
 import FullScreenInfoDialog from "./FullScreenInfoDialog.js";
@@ -13,11 +12,12 @@ import OpponentBoard from "./gamescreen/OpponentBoard";
 import RoomPanel from "./gamescreen/RoomPanel";
 import MainboardAndPanel from "./gamescreen/MainboardAndPanel";
 import WinnerScreen from "./gamescreen/WinnerScreen.js";
-import OpenWinnerScreenComponent from "./gamescreen/OpenWinnerScreenComponent.js";
 import { AppStateContext, SetAppStateContext } from "../AppStateProvider";
 import { battleCounterReducer } from './gamescreen/boardhelperfunctions';
+import useSocketSend from "../useSocketSend.js";
+import useSubscription from "../useSubscription.js";
 
-export default function GameContainer({roomNumberRef}) {
+export default function GameContainer({roomNumberRef, readyToAttackOpponent, setReadyToAttackOpponent}) {
 
   const [playerList, setPlayerList] = useState({playerOne: null, playerTwo: null, observerList: []});
   const [mainMessages, setMainMessages] = useState([
@@ -33,13 +33,11 @@ export default function GameContainer({roomNumberRef}) {
   const [notEnoughPlayers, setNotEnoughPlayers] = useState(false);
   const [playerShipsSunk, setPlayerShipsSunk] = useState(0);
   const [opponentShipsSunk, setOpponentShipsSunk] = useState(0);
-  const [readyToAttackOpponent, setReadyToAttackOpponent] = useState(false);
   const [attackResultPlayer, setAttackResultPlayer] = useState(null);
   const [attackResultOpponent, setAttackResultOpponent] = useState(null);
   const [winner, setWinner] = useState(null);
   const [showEndGameDialog, setShowEndGameDialog] = useState(true);
   const [gameTimeSeconds, setGameTimeSeconds] = useState(0);
-  const [connectedToRoom, setConnectedToRoom] = useState(false);
 
   const [battleStats, dispatchBattleStats] = useReducer(battleCounterReducer, {
     myShotsFired: 0, 
@@ -48,43 +46,24 @@ export default function GameContainer({roomNumberRef}) {
     opponentShotsHit: 0});
 
   // load contexts
-  const playerName = useContext(PlayerNameContext);
   const playerId = useContext(PlayerIdContext);
-  const socket = useContext(SocketContext);
-  const wsStatus = useContext(wsStatusContext);
   const appState = useContext(AppStateContext);
   const setAppState = useContext(SetAppStateContext);
-  const privateMessage = useContext(PrivateMessageContext);
 
   const playersIDtoName = useRef({});
 
+  const socketSend = useSocketSend();
+
+  const publicGameSub = useSubscription(`/game/${roomNumberRef.current}`, onPublicMessageReceived);
+  // const privateGameSub = useSubscription("/user/queue/gameroom", onPrivateMessageReceived);
+
   useEffect(() => {
+    if (publicGameSub)
+      socketSend.send("/app/gameloaded", {roomNumber: roomNumberRef.current});
+  }, [publicGameSub])
 
-    if (wsStatus !== connectionStatus.OPEN) return
-    console.log("subscribing to /gameroom")
-    const subscription = socket.subscribe(`/game/${roomNumberRef.current}`, onMessageReceived);
-    const subscription2 = socket.subscribe("/user/queue/gameroom", onPrivateMessageReceived);
-
-    socket.send("/app/gameloaded", {}, JSON.stringify({roomNumber: roomNumberRef.current}));
-    
-    return () => {
-      if (subscription) subscription.unsubscribe();
-      if (subscription2) subscription2.unsubscribe();
-    }
-  }, [wsStatus]);
-
-
-  function onPrivateMessageReceived(payload) {
-    const message = JSON.parse(payload.body);
-    console.log("Private Message: " + payload.body);
-
-    if (message.type == PacketType.ATTACK) {
-      setReadyToAttackOpponent(true);
-    }
-  }
-
-
-  function onMessageReceived(payload) {
+  
+  function onPublicMessageReceived(payload) {
     const message = JSON.parse(payload.body);
     const fromCurrentPlayer = message.playerId === playerId;
     
@@ -113,7 +92,6 @@ export default function GameContainer({roomNumberRef}) {
       }
 
       case PacketType.PLAYERLIST_UPDATE: {
-        console.log(message);
         const atLeastTwoPlayers = updatePlayerList(setPlayerList, message, playersIDtoName, playerId);
         if (atLeastTwoPlayers) {
           setNotEnoughPlayers(false);
@@ -129,7 +107,6 @@ export default function GameContainer({roomNumberRef}) {
       }
 
       case PacketType.GAME_ATTACK_PHASE_START: {
-        console.log("RECEIVED GAME_ATTACK_PHASE_START PACKET")
         // if (playerOneId === playerId) {
         //   console.log("RECEIVED GAME_ATTACK_PHASE_START PACKET and setting readytoattackopponent to true")
         //   setReadyToAttackOpponent(true);
@@ -142,38 +119,31 @@ export default function GameContainer({roomNumberRef}) {
       case PacketType.ATTACK_ALLSUNK: {
         setWinner(message.playerId);
         setReadyToAttackOpponent(false);
-        setTimeout(() => {          // Give a slight delay in order to let the final boardping animation play
+        setTimeout(() => {        // Give a slight delay in order to let the final boardping animation play
           setAppState(ApplicationState.GAME_END);
         }, 1200)
         break;
       }
-
-
     }
-
   }
 
   function sendPacket(type, data = null) {
 
     const packet = {
-      playerId: playerId,
-      roomNumber: roomNumberRef.current,
+      // playerId: playerId,
+      // roomNumber: roomNumberRef.current,
       type: type,
     }
 
     switch(type) {
 
       case PacketType.PLACED_SHIP: {
-        // Type is PlacementPacket
-        socket.send("/app/game/placeShip", {}, JSON.stringify(packet));
+        socketSend.send("/app/game/placeShip", packet);
         break;
       }
 
       case PacketType.PLACED_COMPLETE: {
-        // Type is PlacementPacket
-        
         const packetizedShips = data.map((ship) => {
-
           const coordinates = ship.getLocation().map((coord) => {
             return {row: coord[0], col: coord[1]}
           })
@@ -187,19 +157,19 @@ export default function GameContainer({roomNumberRef}) {
         })
 
         packet["placementList"] = packetizedShips;
-        socket.send("/app/game/placementComplete", {}, JSON.stringify(packet));
+        socketSend.send("/app/game/placementComplete", packet);
         break;
       }
 
       case PacketType.ATTACK: {
         packet["row"] = data[0];
         packet["col"] = data[1];
-        socket.send("/app/game/attack", {}, JSON.stringify(packet));
+        socketSend.send("/app/game/attack", packet);
         break;
       }
 
       case PacketType.LOAD_ALL_DATA: {
-        socket.send("/app/game/loadGameData", {}, JSON.stringify(packet));
+        socketSend.send("/app/game/loadGameData", packet);
         break;
       }
       
@@ -255,6 +225,6 @@ export default function GameContainer({roomNumberRef}) {
         gameTimeSeconds={gameTimeSeconds}
         setShowEndGameDialog={setShowEndGameDialog} />}
     </div>
-  )
+  ) 
 
 }

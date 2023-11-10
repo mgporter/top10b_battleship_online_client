@@ -1,4 +1,5 @@
 import { MessageTypes, LobbyColors } from "../../enums";
+import { C } from "../../Constants";
 
 export function parseLobbyMessage(message, playerId, playerName) {
   let lobbyMessage;
@@ -89,7 +90,7 @@ export async function postGameRoom(playerObj) {
   const data = JSON.stringify(playerObj);
 
   try {
-    response = await fetch("http://localhost:8080/gamerooms", {
+    response = await fetch(C.serverPrefix + "/createGameRoom", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: data,
