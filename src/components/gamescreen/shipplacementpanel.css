@@ -1,8 +1,13 @@
 .placement-panel {
-
-  /* min-height: calc(100% - 24px); */
-  /* position: relative; */
+  transition: 1000ms cubic-bezier(0.12, 1.07, 1, 1) transform;
 }
+
+.placement-panel.preEnter,
+.placement-panel.exiting,
+.placement-panel.exited {
+  transform: translate(-140%);
+}
+
 
 /* Target the heading of the panel */
 .placement-panel > h3 {

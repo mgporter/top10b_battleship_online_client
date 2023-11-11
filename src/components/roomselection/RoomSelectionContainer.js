@@ -8,6 +8,7 @@ import { SetAppStateContext } from "../../AppStateProvider";
 import RoomSelectionWindow from "./RoomSelectionWindow";
 import useSubscription from "../../useSubscription";
 import useSocketSend from "../../useSocketSend";
+import useTransition from "react-transition-state";
 
 export default function RoomSelectionContainer({roomNumberRef, updateNameOnServer}) {
 
@@ -23,6 +24,21 @@ export default function RoomSelectionContainer({roomNumberRef, updateNameOnServe
   const socketSend = useSocketSend();
 
   const publicLobbySub = useSubscription("/lobby", onPublicMessageReceived);
+
+  const [toggleTransition, setToggleTransition] = useState(false);
+  const [{status: transitionStatus}, toggle] = useTransition({
+    timeout: 1000, 
+    initialEntered: false, 
+    preEnter: true, 
+    unmountOnExit:false});
+
+  useEffect(() => {
+    setToggleTransition(true);
+  }, []);
+
+  useEffect(() => {
+    if (toggleTransition === true) toggle(true);
+  }, [toggleTransition])
 
   useEffect(() => {
     if (publicLobbySub) socketSend.send("/app/joinLobby", playerName);
@@ -99,12 +115,13 @@ export default function RoomSelectionContainer({roomNumberRef, updateNameOnServe
 
   return (
     <div id="lobby-container">
-      <MessageWindow messages={messages} />
+      <MessageWindow messages={messages} transitionStatus={transitionStatus} />
       <RoomSelectionWindow 
         updateNameOnServer={updateNameOnServer}
         roomNumberRef={roomNumberRef}
         gameRooms={gameRooms}
         setGameRooms={setGameRooms}
+        transitionStatus={transitionStatus}
       />
     </div>
   );

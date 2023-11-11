@@ -44,7 +44,7 @@ export default function SetScreen() {
         setPlayerId(message.id);
   
         if (playerName) {
-          updateNameOnServer();
+          updateNameOnServer(playerName);
         } else {
           setPlayerName(message.name);
         }
@@ -68,8 +68,8 @@ export default function SetScreen() {
     }
   }
 
-  function updateNameOnServer() {
-    socketSend.send("/app/changeName", playerName);
+  function updateNameOnServer(name) {
+    socketSend.send("/app/changeName", name);
   }
 
   return (<>

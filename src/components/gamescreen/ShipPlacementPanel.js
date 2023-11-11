@@ -5,7 +5,12 @@ import './shipplacementpanel.css';
 import { AppStateContext, SetAppStateContext } from '../../AppStateProvider';
 import { useContext } from 'react';
 
-export default function ShipPlacementPanel({setShipClicked, leftPanelFlash, shipsPlaced, sendPacket}) {
+export default function ShipPlacementPanel({
+  setShipClicked, 
+  leftPanelFlash, 
+  shipsPlaced, 
+  sendPacket, 
+  addShipTransitionStatus}) {
 
   const appState = useContext(AppStateContext);
   const setAppState = useContext(SetAppStateContext);
@@ -39,7 +44,7 @@ export default function ShipPlacementPanel({setShipClicked, leftPanelFlash, ship
   const flash = (appState === ApplicationState.SHIP_PLACEMENT) && leftPanelFlash ? true : false;
 
   return (
-      <div className={`section-block left-panel placement-panel ${flash && "boardflash"}`}>
+      <div className={`section-block left-panel placement-panel ${flash && "boardflash"} ${addShipTransitionStatus}`}>
         <h3>Add your ships</h3>
         <p>Select a ship, then click on a cell to add it to the board. Use the mousewheel or arrowkeys to rotate.</p>
         <fieldset id="addShipSelection">

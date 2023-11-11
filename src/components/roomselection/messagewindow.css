@@ -17,3 +17,14 @@
 .message-window p {
   line-height: 1.2rem;
 }
+
+.message-window {
+  transition: 1000ms cubic-bezier(0.12, 1.07, 1, 1);
+}
+
+.message-window.preEnter,
+.message-window.exiting,
+.message-window.exited {
+  transform: translate(100px);
+  opacity: 0;
+}

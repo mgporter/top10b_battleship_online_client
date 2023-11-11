@@ -50,79 +50,123 @@ export function pingBoard(boardRef, pingRef, row, column, attackResult) {
 }
 
 
-export function displayShipOnOpponentBoard(boardRef, attackResult) {
+export function displayShipOnOpponentBoard(boardOverlayRef, attackResult) {
 
+  // Set up variables
   const shipImgUrl = C.ships[attackResult.shipType].topimg;
   const shipSize = C.ships[attackResult.shipType].size;
   const shipDirection = directions[attackResult.direction];
-  const row = attackResult.startingRow;
-  const column = attackResult.startingCol;
+  const shipDirectionOffset = C.paths[shipDirection];
+  let row = attackResult.startingRow + 1;
+  let column = attackResult.startingCol + 1;
+  const overlay = boardOverlayRef.current;
 
-  const opponentBoard = boardRef.current;
+  // Create the elements
   const imgContainer = document.createElement('div');
   imgContainer.classList.add('ship-icon-container');
-
-  function setImagePosition() {
-    const opponentBoardRect = opponentBoard.getBoundingClientRect();
-    const cell = coordinateToDOMCell([row, column], boardRef);
-    const cellRect = cell.getBoundingClientRect();
-
-    // We need to adjust the translation of the img based on its direction
-    let offsetLeft = 0;
-    let offsetTop = 0;
-    if (shipDirection === 'left') {
-      imgContainer.style.rotate = '0deg';
-    } else if (shipDirection === 'right') {
-      imgContainer.style.rotate = '180deg';
-      offsetLeft = (shipSize - 1) * cellRect.width * -1;
-    } else if (shipDirection === 'up') {
-      imgContainer.style.rotate = '90deg';
-      offsetLeft = Math.floor(shipSize / 2) * cellRect.width * -1;
-      offsetTop = Math.floor(shipSize / 2) * cellRect.height;
-      // For ships of length 2, 4, 6, etc, we have to make another adjustment
-      if (shipSize % 2 === 0) {
-        offsetLeft += cellRect.width / 2;
-        offsetTop -= cellRect.height / 2;
-      }
-    } else {
-      imgContainer.style.rotate = '-90deg';
-      offsetLeft = Math.floor(shipSize / 2) * cellRect.width * -1;
-      offsetTop = Math.floor(shipSize / 2) * cellRect.height * -1;
-      // For ships of length 2, 4, 6, etc, we have to make another adjustment
-      if (shipSize % 2 === 0) {
-        offsetLeft += cellRect.width / 2;
-        offsetTop += cellRect.height / 2;
-      }
-    }
-
-    imgContainer.style.width = `${cellRect.width * shipSize}px`;
-    imgContainer.style.height = `${cellRect.height}px`;
-    imgContainer.style.left = `${
-      cellRect.left - opponentBoardRect.left + offsetLeft
-    }px`;
-    imgContainer.style.top = `${
-      cellRect.top - opponentBoardRect.top + offsetTop
-    }px`;
-  }
-
-  setImagePosition();
 
   const shipimg = document.createElement('img');
   shipimg.classList.add('ship-icon');
   shipimg.src = shipImgUrl;
   shipimg.alt = C.ships[attackResult.shipType].displayName;
+  shipimg.style.objectFit = "contain";
   imgContainer.appendChild(shipimg);
 
-  opponentBoard.appendChild(imgContainer);
+  // Set rotation based on the ship's direction
+  if (shipDirection === 'left') {
+    shipimg.style.rotate = '0deg';
+  } else if (shipDirection === 'right') {
+    column += 1;
+    shipimg.style.rotate = '180deg';
+  } else if (shipDirection === 'up') {
+    shipimg.style.scale = shipSize;
+    shipimg.style.rotate = '90deg';
+  } else {
+    shipimg.style.scale = shipSize;
+    row += 1;
+    shipimg.style.rotate = '-90deg';
+  }
 
-  // Trigger the fade in transition
+  // Set position within the overlay's grid
+  const endingRow = row + (shipSize * shipDirectionOffset[0]);
+  const endingCol = column + (shipSize * shipDirectionOffset[1]);
+  imgContainer.style.gridRow = `${Math.min(row, endingRow)} / ${Math.max(row, endingRow)}`;
+  imgContainer.style.gridColumn = `${Math.min(column, endingCol)} / ${Math.max(column, endingCol)}`;
+
+
+  // Append the element and trigger the fade in transition
+  overlay.appendChild(imgContainer);
   imgContainer.style.animationDuration = `${1000 * C.gameSpeed}ms`;
   imgContainer.classList.add('fade-in');
 
-  // Make sure that this element resizes properly when the window is changed
 
 
-  return setImagePosition;
+  // const opponentBoard = boardRef.current;
+  // const imgContainer = document.createElement('div');
+  // imgContainer.classList.add('ship-icon-container');
+
+  // function setImagePosition() {
+  //   console.log()
+  //   const opponentBoardRect = opponentBoard.getBoundingClientRect();
+  //   const cell = coordinateToDOMCell([row, column], boardRef);
+  //   const cellRect = cell.getBoundingClientRect();
+
+  //   // We need to adjust the translation of the img based on its direction
+  //   let offsetLeft = 0;
+  //   let offsetTop = 0;
+  //   if (shipDirection === 'left') {
+  //     imgContainer.style.rotate = '0deg';
+  //   } else if (shipDirection === 'right') {
+  //     imgContainer.style.rotate = '180deg';
+  //     offsetLeft = (shipSize - 1) * cellRect.width * -1;
+  //   } else if (shipDirection === 'up') {
+  //     imgContainer.style.rotate = '90deg';
+  //     offsetLeft = Math.floor(shipSize / 2) * cellRect.width * -1;
+  //     offsetTop = Math.floor(shipSize / 2) * cellRect.height;
+  //     // For ships of length 2, 4, 6, etc, we have to make another adjustment
+  //     if (shipSize % 2 === 0) {
+  //       offsetLeft += cellRect.width / 2;
+  //       offsetTop -= cellRect.height / 2;
+  //     }
+  //   } else {
+  //     imgContainer.style.rotate = '-90deg';
+  //     offsetLeft = Math.floor(shipSize / 2) * cellRect.width * -1;
+  //     offsetTop = Math.floor(shipSize / 2) * cellRect.height * -1;
+  //     // For ships of length 2, 4, 6, etc, we have to make another adjustment
+  //     if (shipSize % 2 === 0) {
+  //       offsetLeft += cellRect.width / 2;
+  //       offsetTop += cellRect.height / 2;
+  //     }
+  //   }
+
+  //   imgContainer.style.width = `${cellRect.width * shipSize}px`;
+  //   imgContainer.style.height = `${cellRect.height}px`;
+  //   imgContainer.style.left = `${
+  //     cellRect.left - opponentBoardRect.left + offsetLeft
+  //   }px`;
+  //   imgContainer.style.top = `${
+  //     cellRect.top - opponentBoardRect.top + offsetTop
+  //   }px`;
+  // }
+
+  // setImagePosition();
+
+  // const shipimg = document.createElement('img');
+  // shipimg.classList.add('ship-icon');
+  // shipimg.src = shipImgUrl;
+  // shipimg.alt = C.ships[attackResult.shipType].displayName;
+  // imgContainer.appendChild(shipimg);
+
+  // opponentBoard.appendChild(imgContainer);
+
+  // // Trigger the fade in transition
+  // imgContainer.style.animationDuration = `${1000 * C.gameSpeed}ms`;
+  // imgContainer.classList.add('fade-in');
+
+  // // Make sure that this element resizes properly when the window is changed
+
+
+  return;
 }
 
 

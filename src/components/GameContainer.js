@@ -13,9 +13,10 @@ import RoomPanel from "./gamescreen/RoomPanel";
 import MainboardAndPanel from "./gamescreen/MainboardAndPanel";
 import WinnerScreen from "./gamescreen/WinnerScreen.js";
 import { AppStateContext, SetAppStateContext } from "../AppStateProvider";
-import { battleCounterReducer } from './gamescreen/boardhelperfunctions';
+import { battleCounterReducer } from './logic/boardhelperfunctions';
 import useSocketSend from "../useSocketSend.js";
 import useSubscription from "../useSubscription.js";
+import useTransition from "react-transition-state";
 
 export default function GameContainer({roomNumberRef, readyToAttackOpponent, setReadyToAttackOpponent}) {
 
@@ -55,11 +56,36 @@ export default function GameContainer({roomNumberRef, readyToAttackOpponent, set
   const socketSend = useSocketSend();
 
   const publicGameSub = useSubscription(`/game/${roomNumberRef.current}`, onPublicMessageReceived);
-  // const privateGameSub = useSubscription("/user/queue/gameroom", onPrivateMessageReceived);
+
+  // const [addShipTransitionActive, setAddShipTransitionActive] = useState(false);
+  // const [RightSideMenusTransitionActive, setRightSideMenusTransitionActive] = useState(false);
+
+  const [{status: addShipTransitionStatus}, addShipTransitionToggle] = useTransition({
+    timeout: 800, 
+    initialEntered: false, 
+    preEnter: true, 
+    unmountOnExit:true});
+
+  const [{status: rightSideMenusTransitionStatus}, rightSideMenusTransitionToggle] = useTransition({
+    timeout: 800, 
+    initialEntered: false, 
+    preEnter: true, 
+    unmountOnExit:true});
+
+  // useEffect(() => {
+  //   if (appState === ApplicationState.SHIP_PLACEMENT) {
+  //     setAddShipTransitionActive(true);
+  //   }
+  // }, [appState, addShipPanelMounted]);
+
+  // useEffect(() => {
+  //   if (addShipTransitionActive === true) addShipTransitionToggle(true);
+  // }, [addShipTransitionActive])
+
+
 
   useEffect(() => {
-    if (publicGameSub)
-      socketSend.send("/app/gameloaded", {roomNumber: roomNumberRef.current});
+    if (publicGameSub) socketSend.send("/app/gameloaded", {roomNumber: roomNumberRef.current});
   }, [publicGameSub])
 
   
@@ -88,6 +114,7 @@ export default function GameContainer({roomNumberRef, readyToAttackOpponent, set
 
       case PacketType.GAME_START: {
         setAppState(ApplicationState.SHIP_PLACEMENT);
+        addShipTransitionToggle(true);
         break;
       }
 
@@ -112,6 +139,7 @@ export default function GameContainer({roomNumberRef, readyToAttackOpponent, set
         //   setReadyToAttackOpponent(true);
         // }
         setAppState(ApplicationState.ATTACK_PHASE);
+        rightSideMenusTransitionToggle(true);
         setShowOpponentPanels(true);
         break;
       }
@@ -197,6 +225,7 @@ export default function GameContainer({roomNumberRef, readyToAttackOpponent, set
           readyToAttackOpponent={readyToAttackOpponent}
           playerShipsSunk={playerShipsSunk}
           setPlayerShipsSunk={setPlayerShipsSunk}
+          addShipTransitionStatus={addShipTransitionStatus}
         />
         <CreditsBlock />
         {showOpponentPanels && (
@@ -209,11 +238,13 @@ export default function GameContainer({roomNumberRef, readyToAttackOpponent, set
               attackResultPlayer={attackResultPlayer}
               opponentShipsSunk={opponentShipsSunk}
               setOpponentShipsSunk={setOpponentShipsSunk}
+              rightSideMenusTransitionStatus={rightSideMenusTransitionStatus}
             />
             <BottomRightPanel 
               battleStats={battleStats} 
               setGameTimeSeconds={setGameTimeSeconds}
-              gameTimeSeconds={gameTimeSeconds} />
+              gameTimeSeconds={gameTimeSeconds}
+              rightSideMenusTransitionStatus={rightSideMenusTransitionStatus} />
           </>
         )}
       </>

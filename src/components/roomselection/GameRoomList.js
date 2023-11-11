@@ -22,7 +22,7 @@ export default function GameRoomList({joinGame, gameRooms, setGameRooms}) {
       show: true,
       room: gameNumber,
       players: players,
-      connecting: false,
+      full: gameroom.playerList.length >= 2,
     });
   }
 

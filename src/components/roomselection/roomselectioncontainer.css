@@ -26,6 +26,19 @@
   /* max-height: 100%; */
 }
 
+#room-selection-container {
+  transition: 1000ms cubic-bezier(0.12, 1.07, 1, 1) transform;
+}
+
+#room-selection-container.preEnter,
+#room-selection-container.exiting,
+#room-selection-container.exited {
+  transform: translate(-100px);
+  opacity: 0;
+}
+
+
+
 #room-selection-container > * {
   flex: 0 1 auto;
 }
@@ -38,9 +51,8 @@
   gap: 12px;
 }
 
-#room-selection-name-box textarea {
+#room-selection-name-box input {
   appearance: none;
-  overflow: hidden;
   resize:none;
   height: 3.4rem;
   margin-top: 4px;
@@ -52,24 +64,43 @@
   color: white;
   font-family: 'Calibri', 'Trebuchet MS', sans-serif;
   text-decoration: underline solid gray 3px;
-  text-underline-offset: 0.5rem;
+  text-underline-offset: 0.3rem;
   border: 2px solid transparent;
   border-radius: 16px;
+  transition: border 200ms;
 }
 
-#room-selection-name-box textarea:focus-visible {
+#room-selection-name-box input:focus-visible {
   outline: none;
+  background-color: rgba(240, 248, 255, 0.17);
 }
 
-#room-selection-name-box textarea:hover {
+#room-selection-name-box input:hover {
   border: 2px solid gray;
+}
+
+#room-selection-name-box input:invalid {
+  background-color: rgba(165, 0, 0, 0.799);
+}
+
+#room-selection-name-box fieldset {
+  position:relative;
+}
+
+#room-selection-name-box fieldset:invalid::before {
+  content: "*Name field can only use numbers, letters, and underscores, and cannot be empty";
+  color: rgb(218, 0, 0);
+  font-size: 1.2rem;
+  position: absolute;
+  top: 4rem;
+  font-family: 'Calibri', 'Trebuchet MS', sans-serif;
 }
 
 #room-selection-container hr {
   width: 100%;
 }
 
-#room-selection-container button {
+.create-game-button {
   padding: 4px 12px;
   font-size: 1.2rem;
   font-weight: bold;
@@ -81,8 +112,6 @@
   overflow-x: hidden;
   overflow-y: auto;
   width: 100%;
-  /* max-height: 300px; */
-  /* height: min(400px, 60vh); */
   display:flex;
   flex-direction: column;
   height: 100px;
@@ -90,21 +119,32 @@
   font-size: 18px;
 }
 
-#join-game-box li {
+.join-game-game-row {
   display: flex;
-  padding: 8px 16px;
+  align-items: center;
+  min-height: 3.2rem;
+  padding: 0 16px;
   cursor: pointer;
 }
 
-#join-game-box li:hover {
+.join-game-game-row:hover {
   background-color: #ffffff66;
 }
 
-#join-game-box p {
-  min-width: 140px;
-  pointer-events: none;
+/* The row number */
+.join-game-game-row p:first-child {
+  min-width: 40px;
 }
 
-#join-game-box p:first-child {
-  min-width: 40px;
+/* All other columns */
+.join-game-game-row p {
+  min-width: 140px;
+  pointer-events: none;
+  line-height: 1.8rem;
+}
+
+.game-in-progress-img {
+  height: 2.4rem;
+  filter: invert(1);
+  margin: 0 12px 0 -4px;
 }

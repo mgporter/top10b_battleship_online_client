@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { C } from "../../Constants";
 import './opponentboard.css';
 import { PacketType, battleStatsActions } from "../../enums";
-import { createBoardCells, pingBoard, displayShipOnOpponentBoard } from "./boardhelperfunctions";
+import { createBoardCells, pingBoard, displayShipOnOpponentBoard } from "../logic/boardhelperfunctions";
 
 /* Create the board cells once on load */
 // const cells = createBoardCells("opponentboard");
@@ -24,18 +24,20 @@ export default function OpponentBoard({
   setReadyToAttackOpponent,
   dispatchBattleStats,
   opponentShipsSunk,
-  setOpponentShipsSunk
+  setOpponentShipsSunk,
+  rightSideMenusTransitionStatus
 }) {
 
   // const [opponentShipsSunk, setOpponentShipsSunk] = useState(0);
-  const opponentboardElement = useRef(null);
+  const opponentboardRef = useRef(null);
+  const boardOverlayRef = useRef(null);
   const pingRef = useRef(null);
 
   useEffect(() => {
     if (!attackResultPlayer) return;
 
     pingBoard(
-      opponentboardElement,
+      opponentboardRef,
       pingRef,
       attackResultPlayer.row,
       attackResultPlayer.col,
@@ -45,40 +47,38 @@ export default function OpponentBoard({
     
     let setImagePosition;
     if (attackResultPlayer.result === PacketType.ATTACK_MISSED) {
+
       dispatchBattleStats(battleStatsActions.incrementMyShotsFired);
+
     } else if (attackResultPlayer.result === PacketType.ATTACK_HITSHIP) {
+
       dispatchBattleStats(battleStatsActions.incrementMyShotsHit);
+
     } else if (attackResultPlayer.result === PacketType.ATTACK_SUNKSHIP) {
-      setImagePosition = displayShipOnOpponentBoard(opponentboardElement, attackResultPlayer);
-      window.addEventListener('resize', setImagePosition);
+
+      displayShipOnOpponentBoard(boardOverlayRef, attackResultPlayer);
+      // window.addEventListener('resize', setImagePosition);
       setOpponentShipsSunk((prev) => prev + 1);
       dispatchBattleStats(battleStatsActions.incrementMyShotsHit);
-    }
-    
-    // dispatchBattleStats(battleStatsActions.incrementMyShotsFired);
 
-    // if (attackResultPlayer.result === PacketType.ATTACK_HITSHIP) {
-    //   dispatchBattleStats(battleStatsActions.incrementMyShotsHit);
-    // } else if (attackResultPlayer.result === PacketType.ATTACK_SUNKSHIP) {
-    //   displayShipOnOpponentBoard(opponentboardElement, attackResultPlayer);
-    //   setOpponentShipsSunk((prev) => prev + 1);
-    //   dispatchBattleStats(battleStatsActions.incrementMyShotsHit);
+    }
+
+    return;
+
+    // return () => {
+    //   window.removeEventListener('resize', setImagePosition);
     // }
-
-    return () => {
-      window.removeEventListener('resize', setImagePosition);
-    }
 
   }, [attackResultPlayer])
 
 
   useEffect(() => {
     if (readyToAttackOpponent) {
-      opponentboardElement.current.classList.add("boardflash");
-      opponentboardElement.current.classList.remove("disable-hover");
+      opponentboardRef.current.classList.add("boardflash");
+      opponentboardRef.current.classList.remove("disable-hover");
     } else {
-      opponentboardElement.current.classList.remove("boardflash");
-      opponentboardElement.current.classList.add("disable-hover");
+      opponentboardRef.current.classList.remove("boardflash");
+      opponentboardRef.current.classList.add("disable-hover");
     }
   }, [readyToAttackOpponent])
 
@@ -93,14 +93,15 @@ export default function OpponentBoard({
   }
 
   return (
-    <div className="section-block opponent-board-container">
+    <div className={`section-block opponent-board-container ${rightSideMenusTransitionStatus}`}>
       <h2>Opponent:</h2>
       <p>Currently {opponentShipsSunk} of {C.totalShips} ships sunk</p>
-      <div ref={opponentboardElement}
+      <div ref={opponentboardRef}
         className="miniboard disable-hover"
         onClick={handleCellClick}
       >
         {cells}
+      <div className="miniboard-overlay" ref={boardOverlayRef}></div>
       <div className="ping-container" ref={pingRef}><div className="ping-ring"></div></div>
       </div>
     </div>

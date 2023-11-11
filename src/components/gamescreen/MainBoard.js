@@ -7,7 +7,7 @@ import ModelContainer from "./ModelContainer";
 import { PlayerNameContext } from '../../PlayerProvider';
 import { AppStateContext } from '../../AppStateProvider';
 import ShipPlacement from '../logic/shipplacement';
-import { createBoardCells, pingBoard, addHitToHealthStatus } from './boardhelperfunctions';
+import { createBoardCells, pingBoard, addHitToHealthStatus } from '../logic/boardhelperfunctions';
 
 /* Create the board cells once on load */
 // const cells = (createBoardCells("playerboard"))();
@@ -23,8 +23,10 @@ const cells = (function createPlayerboardCells() {
 })();
 
 
-const board = new Gameboard();
-const shipPlacement = ShipPlacement(board);
+// const board = new Gameboard();
+// const shipPlacement = ShipPlacement(board);
+let board;
+let shipPlacement;
 const directions = Object.keys(C.paths);
 
 export default function MainBoard({
@@ -49,7 +51,7 @@ export default function MainBoard({
   const playerName = useContext(PlayerNameContext);
   const appState = useContext(AppStateContext);
 
-  shipPlacement.setPlayerboardElement(playerboardElement);
+  // shipPlacement.setPlayerboardElement(playerboardElement);
 
   /* Add highlighting to cells whenever the user's mouse hovers over a cell */
   if (mouseOverCell && shipToPlace.current) {
@@ -60,6 +62,12 @@ export default function MainBoard({
       directions[directionIndex]
     )
   }
+
+  useEffect(() => {
+    board = new Gameboard();
+    shipPlacement = ShipPlacement(board);
+    shipPlacement.setPlayerboardElement(playerboardElement);
+  }, []);
 
   /* Color cells in when the opponent's attack results are received */
   useEffect(() => {

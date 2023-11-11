@@ -3,7 +3,11 @@ import { AppStateContext } from '../../AppStateProvider';
 import { ApplicationState } from '../../enums';
 import './bottomrightpanel.css';
 
-export default function BottomRightPanel({battleStats, gameTimeSeconds, setGameTimeSeconds}) {
+export default function BottomRightPanel({
+  battleStats, 
+  gameTimeSeconds, 
+  setGameTimeSeconds,
+  rightSideMenusTransitionStatus}) {
 
   const appState = useContext(AppStateContext);
 
@@ -29,7 +33,7 @@ export default function BottomRightPanel({battleStats, gameTimeSeconds, setGameT
   const opponentHitRate = battleStats.opponentShotsFired === 0 ? 0 : battleStats.opponentShotsHit / battleStats.opponentShotsFired;
 
   return (
-    <div className="section-block bottom-right-panel">
+    <div className={`section-block bottom-right-panel ${rightSideMenusTransitionStatus}`}>
       <div className='scoretext'>Score: <span className='scorenumber'>1234</span><span className='timer'>{gameMinutes}:{String(gameSeconds).padStart(2, "0")}</span></div>
       <div className='battle-stats-container'>
         <p className='header you'>You</p>

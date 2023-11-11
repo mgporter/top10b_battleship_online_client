@@ -8,22 +8,8 @@ import Ship from "../logic/ship";
 import { C } from "../../Constants";
 import { AppStateContext } from "../../AppStateProvider";
 
-const ships = (function createShips() {
 
-  /* Create an array of ships and give each ship a unique ID */
-
-  const ships = [];
-  let shipId = 0;
-  for (let shipType in ShipType) {
-    for (let i = 0; i < C.ships[shipType].numberAllowed; i++) {
-      const ship = Ship(shipType);
-      ship.setId(++shipId);
-      ships.push(ship);
-    }
-  }
-
-  return ships;
-})();
+let ships;
 
 export default function MainboardAndPanel({
   setMainMessages, 
@@ -32,7 +18,8 @@ export default function MainboardAndPanel({
   readyToAttackOpponent,
   dispatchBattleStats,
   playerShipsSunk,
-  setPlayerShipsSunk
+  setPlayerShipsSunk,
+  addShipTransitionStatus
 }) {
 
   const [shipClicked, setShipClicked] = useState(null);
@@ -46,6 +33,21 @@ export default function MainboardAndPanel({
   const firstPlacement = useRef(true);
 
   const appState = useContext(AppStateContext);
+
+  useEffect(() => {
+
+    ships = [];
+
+    let shipId = 0;
+    for (let shipType in ShipType) {
+      for (let i = 0; i < C.ships[shipType].numberAllowed; i++) {
+        const ship = Ship(shipType);
+        ship.setId(++shipId);
+        ships.push(ship);
+      }
+    }
+
+  }, [])
 
   useEffect(() => {
     if (!shipClicked) return;
@@ -93,7 +95,8 @@ export default function MainboardAndPanel({
           setShipClicked={setShipClicked} 
           leftPanelFlash={leftPanelFlash}
           sendPacket={sendPacket}
-          shipsPlaced={shipsPlaced} />}
+          shipsPlaced={shipsPlaced}
+          addShipTransitionStatus={addShipTransitionStatus} />}
         {showShipHealthPanel && <ShipHealthPanel 
           shipsPlaced={shipsPlaced}
           playerShipsSunk={playerShipsSunk}

@@ -6,7 +6,13 @@ import NameInput from "./NameInput";
 import GameRoomList from "./GameRoomList";
 import useSocketSend from "../../useSocketSend";
 
-export default function RoomSelectionWindow({updateNameOnServer, roomNumberRef, gameRooms, setGameRooms}) {
+export default function RoomSelectionWindow({
+  updateNameOnServer, 
+  roomNumberRef, 
+  gameRooms, 
+  setGameRooms,
+  transitionStatus
+}) {
 
   const playerName = useContext(PlayerNameContext);
   const playerId = useContext(PlayerIdContext);
@@ -39,10 +45,10 @@ export default function RoomSelectionWindow({updateNameOnServer, roomNumberRef, 
 
 
   return (
-    <div id="room-selection-container">
+    <div id="room-selection-container" className={`${transitionStatus}`}>
       <h2>Create or join a game</h2>
       <NameInput updateNameOnServer={updateNameOnServer} />
-      <button onClick={createGameHandler} type="button">Create a game</button>
+      <button className="create-game-button button" onClick={createGameHandler} type="button">Create a game</button>
       <hr />
       <GameRoomList 
         joinGame={joinGame}

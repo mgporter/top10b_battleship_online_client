@@ -7,9 +7,6 @@ export default function RoomPanel({roomNum, playerList, playersIDtoName, playerI
   const observers = playerList.observerList;
   const idToName = playersIDtoName.current;
 
-  console.log(playerList.playerOne)
-  console.log(playerId)
-
   return (
     <div className="section-block room-panel">
       <h1 className="game-title">BATTLESHIP!</h1>

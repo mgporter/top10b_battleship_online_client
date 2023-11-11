@@ -6,9 +6,19 @@
   padding: 6px 12px;
   background-color: rgba(255, 255, 255, 0.224);
   border-radius: 24px;
-  /* min-width: fit-content;
-  width: 100%; */
 }
+
+.bottom-right-panel {
+  transition: 1000ms cubic-bezier(0.12, 1.07, 1, 1) 300ms transform;
+}
+
+.bottom-right-panel.preEnter,
+.bottom-right-panel.exiting,
+.bottom-right-panel.exited {
+  transform: translate(160%);
+}
+
+
 
 .bottom-right-panel .scoretext {
   font-size: 1.4rem;
@@ -24,10 +34,20 @@
   grid-template-rows: repeat(4, 1fr);
   font-size: 1rem;
   font-weight: normal;
-  /* border: 1px solid red; */
   text-align: center;
   row-gap: 4px;
-  /* width: 100%; */
+}
+
+@media screen and (min-width: 1400px) {
+  .bottom-right-panel .scoretext,
+  .bottom-right-panel .timer {
+    font-size: 2rem;
+  }
+
+  .battle-stats-container {
+    font-size: 1.4rem;
+    row-gap: 1.8vh;
+  }
 }
 
 .battle-stats-container .header {
