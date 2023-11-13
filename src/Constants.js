@@ -68,5 +68,6 @@ export const C = {
   avatars: {
     [Avatars.PLAYERCAPTAIN]: playerCaptainAvatar,
   },
-  serverPrefix: "http://localhost:8080"
+  // serverPrefix: "http://localhost:8080"
+  serverPrefix: "https://mgporter-battleship-online.fly.dev"
 };

@@ -74,7 +74,7 @@ export async function getGameRoomList() {
   let response;
 
   try {
-    response = await fetch("http://localhost:8080/gamerooms");
+    response = await fetch(C.serverPrefix + "/gamerooms");
     data = await response.json();
     dataArr = Object.values(data);
   } catch(e) {

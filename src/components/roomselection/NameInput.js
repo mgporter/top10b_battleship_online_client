@@ -42,7 +42,7 @@ export default function NameInput({updateNameOnServer}) {
           ref={nameInputRef}
           type="text"
           spellCheck="false" 
-          required="true"
+          required
           pattern="[0-9A-Za-z_]+"
           id="player-name-input" 
           maxLength="24"
