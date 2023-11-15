@@ -70,6 +70,7 @@ export default class Gameboard {
       for (let coordinates of ship.getLocation()) {
         this.getCell(coordinates).removeShip();
       }
+      ship.resetLocation();
       this.#ships.splice([this.#ships.indexOf(ship)], 1);
     }
 

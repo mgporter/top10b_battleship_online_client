@@ -8,7 +8,7 @@ export default function WinnerScreen({
   battleStats, 
   playerShipsSunk, 
   opponentShipsSunk, 
-  gameTimeSeconds,
+  gameTimeSecondsFinal,
   setShowEndGameDialog}) {
 
   const playerId = useContext(PlayerIdContext);
@@ -19,9 +19,9 @@ export default function WinnerScreen({
   const myHitRate = battleStats.myShotsFired === 0 ? 0 : battleStats.myShotsHit / battleStats.myShotsFired;
   const opponentHitRate = battleStats.opponentShotsFired === 0 ? 0 : battleStats.opponentShotsHit / battleStats.opponentShotsFired;
 
-  const gameSeconds = gameTimeSeconds % 60;
-  const gameMinutes = Math.floor((gameTimeSeconds / 60) % 60);
-  const gameHours = Math.floor(gameTimeSeconds / 3600);
+  const gameSeconds = gameTimeSecondsFinal.current % 60;
+  const gameMinutes = Math.floor((gameTimeSecondsFinal.current / 60) % 60);
+  const gameHours = Math.floor(gameTimeSecondsFinal.current / 3600);
 
   function handleClick(e) {
     const buttonClicked = e.target.classList.contains("return-to-lobby");

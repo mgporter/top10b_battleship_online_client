@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef, useCallback, useMemo } from "react";
 import './roomselectioncontainer.css'
 import MessageWindow from "./MessageWindow";
 import { ApplicationState, connectionStatus, LobbyColors, MessageTypes } from '../../enums';
@@ -9,10 +9,13 @@ import RoomSelectionWindow from "./RoomSelectionWindow";
 import useSubscription from "../../useSubscription";
 import useSocketSend from "../../useSocketSend";
 import useTransition from "react-transition-state";
+import useFetch from "../../useFetch";
+import { endpoints } from "../../Endpoints";
 
-export default function RoomSelectionContainer({roomNumberRef, updateNameOnServer}) {
+export default function RoomSelectionContainer({roomNumberRef}) {
 
-  const [gameRooms, setGameRooms] = useState([]);
+  console.log("ROOM SELECTION CONTAINER RENDERED")
+
   const [messages, setMessages] = useState([{
     message: "Welcome to Battleship Online!",
     color: LobbyColors.emphasis,
@@ -23,29 +26,18 @@ export default function RoomSelectionContainer({roomNumberRef, updateNameOnServe
 
   const socketSend = useSocketSend();
 
-  const publicLobbySub = useSubscription("/lobby", onPublicMessageReceived);
+  const getGameRooms = useFetch(endpoints.getGameRooms);
 
-  const [toggleTransition, setToggleTransition] = useState(false);
-  const [{status: transitionStatus}, toggle] = useTransition({
-    timeout: 1000, 
-    initialEntered: false, 
-    preEnter: true, 
-    unmountOnExit:false});
+  
 
   useEffect(() => {
-    setToggleTransition(true);
-  }, []);
-
-  useEffect(() => {
-    if (toggleTransition === true) toggle(true);
-  }, [toggleTransition])
-
-  useEffect(() => {
-    if (publicLobbySub) socketSend.send("/app/joinLobby", playerName);
-  }, [publicLobbySub])
+    getGameRooms.request();
+  }, [])
 
 
-  function onPublicMessageReceived(payload) {
+
+
+  const onPublicMessageReceived = useCallback((payload) => {
     const message = JSON.parse(payload.body);
 
     const lobbyMessage = parseLobbyMessage(message, playerId, playerName);
@@ -58,7 +50,8 @@ export default function RoomSelectionContainer({roomNumberRef, updateNameOnServe
           roomNumber: message.roomNumber,
           playerList: []
         }
-        setGameRooms((prev) => [newGame].concat(prev));
+        // setGameRooms((prev) => [newGame].concat(prev));
+        getGameRooms.updateData((prev) => [newGame].concat(prev));
         break;
       }
 
@@ -75,7 +68,8 @@ export default function RoomSelectionContainer({roomNumberRef, updateNameOnServe
             return room;
           } 
         };
-        setGameRooms((prev) => prev.map(updateGameRoomsOnJoin));
+        // setGameRooms((prev) => prev.map(updateGameRoomsOnJoin));
+        getGameRooms.updateData((prev) => prev.map(updateGameRoomsOnJoin));
         break;
       }
 
@@ -91,7 +85,7 @@ export default function RoomSelectionContainer({roomNumberRef, updateNameOnServe
             return room;
           } 
         };
-        setGameRooms((prev) => prev.map(updateGameRoomsOnExit));
+        getGameRooms.updateData((prev) => prev.map(updateGameRoomsOnExit));
         break;
       }
 
@@ -102,26 +96,25 @@ export default function RoomSelectionContainer({roomNumberRef, updateNameOnServe
             return room.roomNumber != roomNumber;
           } 
   
-        setGameRooms((prev) => prev.filter(updateGameRoomsOnRemove));
+        getGameRooms.updateData((prev) => prev.filter(updateGameRoomsOnRemove));
         break;
       }
     }
-  }
+  }, [])
 
+  const publicLobbySub = useSubscription("/lobby", onPublicMessageReceived, "lobby");
 
-
-
+  useEffect(() => {
+    if (publicLobbySub) socketSend.send("/app/joinLobby", playerName);
+  }, [publicLobbySub])
 
 
   return (
     <div id="lobby-container">
-      <MessageWindow messages={messages} transitionStatus={transitionStatus} />
-      <RoomSelectionWindow 
-        updateNameOnServer={updateNameOnServer}
+      <MessageWindow messages={messages} />
+      <RoomSelectionWindow
         roomNumberRef={roomNumberRef}
-        gameRooms={gameRooms}
-        setGameRooms={setGameRooms}
-        transitionStatus={transitionStatus}
+        getGameRooms={getGameRooms}
       />
     </div>
   );

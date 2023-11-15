@@ -32,3 +32,32 @@
   background-color: rgb(232, 232, 232);
   box-shadow: 0 0 4px 4px rgba(156, 156, 184, 0.402);
 }
+
+.models-progress-bar-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.models-progress-bar-container h3,
+.models-progress-bar-container h4 {
+  color: rgb(180, 216, 255);
+}
+
+.model-load-progress-bar {
+  margin: 0 16px;
+  height: 20px;
+  width: 200px;
+}
+
+.opponent-ships-placed-minitext {
+  grid-area: ob;
+  box-sizing: border-box;
+  display:flex;
+  justify-content: center;
+  padding-top:100px;
+}
+
+.opponent-ships-placed-minitext h3 {
+  color: rgba(255, 255, 255, 0.581);
+}

@@ -2,6 +2,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0;
 }
 
 .message-area .sender-info {
@@ -23,7 +24,43 @@
 }
 
 .message-area .message-text {
-  /* flex: 1 0 auto; */
-  font-size: 2rem;
-  line-height: 2.5rem;
+  font-size: 1.6rem;
+  line-height: 2rem;
+  color: rgb(220, 240, 244);
+  opacity: 1;
+  text-shadow: 0 0 4px rgb(247, 254, 255);
+  animation: 2s ease-in-out 0s infinite alternate forwards running textstrobe;
+}
+
+@keyframes textstrobe {
+  from {
+    opacity: 1;
+  }
+  to {  
+    opacity:0.8;
+    text-shadow: 0 0 4px transparent;
+  }
+}
+
+
+.yellow {
+  color: yellow;
+}
+
+.green {
+  color: rgb(0, 224, 45);
+}
+
+.red {
+  color: rgb(255, 95, 95);
+}
+
+.lightblue {
+  color: rgb(168, 217, 255);
+  background-color: rgba(255, 255, 255, 0.284);
+  border-radius: 6px;
+  padding: 0.4rem 0.5rem 0.6rem;
+  animation: none;
+  line-height: 1rem;
+  display: inline-block;
 }

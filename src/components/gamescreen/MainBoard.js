@@ -2,12 +2,13 @@ import './mainboard.css';
 import { useState, useRef, useEffect, useContext } from 'react';
 import { C } from '../../Constants';
 import Gameboard from '../logic/gameboard';
-import { ApplicationState, Avatars, PacketType, battleStatsActions } from '../../enums';
+import { ApplicationState, Avatars, PacketType, battleStatsActions, inGameMessages } from '../../enums';
 import ModelContainer from "./ModelContainer";
 import { PlayerNameContext } from '../../PlayerProvider';
 import { AppStateContext } from '../../AppStateProvider';
 import ShipPlacement from '../logic/shipplacement';
-import { createBoardCells, pingBoard, addHitToHealthStatus } from '../logic/boardhelperfunctions';
+import { addHitToHealthStatus, handleAttackResult } from '../logic/boardhelperfunctions';
+import { setInGameMessagesContext } from '../../InGameMessageProvider';
 
 /* Create the board cells once on load */
 // const cells = (createBoardCells("playerboard"))();
@@ -35,23 +36,24 @@ export default function MainBoard({
   shipToPlace,
   sendPacket,
   setPlayerShipsSunk,
-  setMainMessages,
   setShipsPlaced,
+  shipsPlaced,
   attackResultOpponent,
-  dispatchBattleStats}) {
+  dispatchBattleStats,
+  gameContainerRef
+}) {
 
   const [mouseOverCell, setMouseOverCell] = useState(null);
   const [directionIndex, setDirectionIndex] = useState(0);
 
-  const playerboardElement = useRef(null);
+  const playerboardRef = useRef(null);
   const pingRef = useRef(null);
   const modelRef = useRef(null);
   const placementCells = useRef(null);
+  const mainElementRef = useRef(null);
 
-  const playerName = useContext(PlayerNameContext);
   const appState = useContext(AppStateContext);
-
-  // shipPlacement.setPlayerboardElement(playerboardElement);
+  const setInGameMessages = useContext(setInGameMessagesContext);
 
   /* Add highlighting to cells whenever the user's mouse hovers over a cell */
   if (mouseOverCell && shipToPlace.current) {
@@ -66,31 +68,22 @@ export default function MainBoard({
   useEffect(() => {
     board = new Gameboard();
     shipPlacement = ShipPlacement(board);
-    shipPlacement.setPlayerboardElement(playerboardElement);
+    shipPlacement.setPlayerboardElement(playerboardRef);
   }, []);
 
-  /* Color cells in when the opponent's attack results are received */
+
+  /* Handle the attack results when they are received */
   useEffect(() => {
     if (!attackResultOpponent) return;
-    
-    pingBoard(
-      playerboardElement,
-      pingRef,
-      attackResultOpponent.row,
-      attackResultOpponent.col,
-      attackResultOpponent.result);
 
-    if (attackResultOpponent.result === PacketType.ATTACK_MISSED) {
-      dispatchBattleStats(battleStatsActions.incrementOpponentShotsFired);
-    } else if (attackResultOpponent.result === PacketType.ATTACK_HITSHIP) {
-      addHitToHealthStatus(board, attackResultOpponent.row, attackResultOpponent.col);
-      dispatchBattleStats(battleStatsActions.incrementOpponentShotsHit);
-    } else if (attackResultOpponent.result === PacketType.ATTACK_SUNKSHIP) {
-      addHitToHealthStatus(board, attackResultOpponent.row, attackResultOpponent.col);
-      setPlayerShipsSunk((prev) => prev + 1);
-      modelRef.current.sinkShip(attackResultOpponent.shipType);
-      dispatchBattleStats(battleStatsActions.incrementOpponentShotsHit);
-    }
+    handleAttackResult(
+      playerboardRef,
+      pingRef,
+      attackResultOpponent,
+      handleMiss,
+      handleHit,
+      handleSink
+    );
     
   }, [attackResultOpponent])
 
@@ -112,6 +105,25 @@ export default function MainBoard({
     }
   }, [])
 
+  function handleMiss() {
+    dispatchBattleStats(battleStatsActions.incrementOpponentShotsFired);
+    setInGameMessages(inGameMessages.OPPONENTMISSED);
+  }
+
+  function handleHit() {
+    addHitToHealthStatus(board, attackResultOpponent.row, attackResultOpponent.col);
+    dispatchBattleStats(battleStatsActions.incrementOpponentShotsHit);
+    setInGameMessages(inGameMessages.OPPONENTHITSHIP, attackResultOpponent.shipType);
+  }
+
+  function handleSink() {
+    addHitToHealthStatus(board, attackResultOpponent.row, attackResultOpponent.col);
+    setPlayerShipsSunk((prev) => prev + 1);
+    modelRef.current.sinkShip(attackResultOpponent.shipType);
+    dispatchBattleStats(battleStatsActions.incrementOpponentShotsHit);
+    setInGameMessages(inGameMessages.OPPONENTSUNKSHIP, attackResultOpponent.shipType);
+  }
+
 
   /* Handle ship placement when a user clicks on a cell */
   function placeShip(clickedCell) {
@@ -119,31 +131,30 @@ export default function MainBoard({
 
     shipToPlace.current.setDirection(directionIndex);
 
-     /* For the first time a ship is placed only */
+     /* For the first time any particular ship is placed only */
     if (!shipToPlace.current.isPlaced()) {
-      
-      setMainMessages((prev) => {
-        const newMessage = {
-          avatar: Avatars.PLAYERCAPTAIN,
-          sender: playerName,
-          color: "yellow",
-          text: `We have placed our ${shipToPlace.current.getDisplayName()}`
-        }
-  
-        return [...prev, newMessage];
-      })
 
+      /* Handle messages */
+      if (shipsPlaced.length === 0) {
+        setInGameMessages(inGameMessages.FIRSTSHIPPLACED, shipToPlace.current.getType());
+      } else if (shipsPlaced.length >= C.totalShips - 1) {
+        setInGameMessages(inGameMessages.ALLSHIPSPLACED, shipToPlace.current.getType());
+      } else {
+        setInGameMessages(inGameMessages.SHIPPLACED, shipToPlace.current.getType());
+      }
+      
       sendPacket(PacketType.PLACED_SHIP);
 
       /* Only add the ship to the shipsPlaced array the first time it is placed */
       setShipsPlaced((prev) => [...prev, shipToPlace.current]);
 
       /* Remove boardflash in case it is still on */
-      playerboardElement.current.classList.remove('boardflash')
+      playerboardRef.current.classList.remove('boardflash')
     }
 
     shipPlacement.placeShip(shipToPlace.current, placementCells.current);
 
+    /* Add the model to the playercanvas */
     modelRef.current.addModelToScene(
       shipToPlace.current.getType(),
       directions[directionIndex],
@@ -179,9 +190,9 @@ export default function MainBoard({
 
   return (
     <>
-      <main className="section-block main-board-container">
+      <main className="section-block main-board-container" ref={mainElementRef}>
           <div id="playerboard" 
-            ref={playerboardElement}
+            ref={playerboardRef}
             className={`${mainboardFlash ? "boardflash" : ""} ${mainboardHover ? "" : "disable-hover"}`}
             onClick={handleCellClick}
             onMouseOver={handleCellMouseOver}
@@ -191,7 +202,12 @@ export default function MainBoard({
           <div className="ping-container" ref={pingRef}><div className="ping-ring"></div></div>
           </div>
       </main>
-      <ModelContainer modelRef={modelRef} />
+      <ModelContainer 
+        modelRef={modelRef} 
+        playerboardRef={playerboardRef} 
+        mainElementRef={mainElementRef}
+        gameContainerRef={gameContainerRef}
+      />
     </>
   )
 }

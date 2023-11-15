@@ -17,10 +17,7 @@ body {
   background-size: 50%, 70%;
   background-position: 60% top, 70% top;
   background-attachment: fixed;
-  /* -20 and -80 */
   background-blend-mode: normal;
-  /* width: 100vw;
-  height: 100vh; */
   overflow-y: auto;
   overflow-x: hidden;
   color: white;
@@ -32,15 +29,7 @@ body {
 #root {
   min-width: 100%;
   min-height: 100%;
-  /* overflow-y: auto;
-  overflow-x: hidden;
-  color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center; */
 }
-  
-
   
 button, .button {
   cursor: pointer;
@@ -48,13 +37,6 @@ button, .button {
 
 .backdrop.open {
   display: flex;
-}
-
-#model-load-progress-bar {
-  width: 200%;
-  position: relative;
-  left: -50%;
-  height: 20px;
 }
 
 .backdrop {
@@ -76,8 +58,4 @@ button, .button {
 
 .emphasis-text {
   font-weight: bold;
-}
-
-.yellow {
-  color: yellow;
 }

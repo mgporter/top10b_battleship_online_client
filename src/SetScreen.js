@@ -1,13 +1,17 @@
-import { useContext, useEffect, useState, useRef } from 'react';
+import { useContext, useState, useRef, useCallback } from 'react';
 import RoomSelectionContainer from './components/roomselection/RoomSelectionContainer';
 import GameContainer from './components/GameContainer';
 import { ApplicationState, MessageTypes } from './enums';
 import { AppStateContext, SetAppStateContext } from './AppStateProvider';
 import useSubscription from './useSubscription';
 import { PlayerNameContext, SetPlayerIdContext, SetPlayerNameContext } from './PlayerProvider';
+import useUpdateServerName from "./useUpdateServerName";
+import InGameMessageProvider from './InGameMessageProvider';
 import useSocketSend from './useSocketSend';
+import { endpoints } from './Endpoints';
 
 export default function SetScreen() {
+  console.log("SETSCREEN RENDERED")
 
   const [readyToAttackOpponent, setReadyToAttackOpponent] = useState(false);
 
@@ -17,15 +21,11 @@ export default function SetScreen() {
   const setPlayerId = useContext(SetPlayerIdContext);
   const playerName = useContext(PlayerNameContext);
   const setPlayerName = useContext(SetPlayerNameContext);
-
   const socketSend = useSocketSend();
+  // const updateServerName = useUpdateServerName();
 
-  const showLobby = appState === ApplicationState.ROOM_SELECTION;
-
-  const playerSubscription = useSubscription("/user/queue/player", onMessageReceived);
-  // const publicGameSub = useSubscription(`/game/${roomNumberRef.current}`, console.log);
-
-  function onMessageReceived(payload) {
+  
+  const onMessageReceived = useCallback((payload) => {
     const message = JSON.parse(payload.body);
     console.log(message)
 
@@ -36,18 +36,9 @@ export default function SetScreen() {
         break;
       }
 
-      case MessageTypes.GOFIRST: {
-        setReadyToAttackOpponent(true);
-      }
-
       case MessageTypes.CREDENTIALS: {
         setPlayerId(message.id);
-  
-        if (playerName) {
-          updateNameOnServer(playerName);
-        } else {
-          setPlayerName(message.name);
-        }
+        if (!playerName) setPlayerName(message.name);
         break;
       }
 
@@ -65,21 +56,26 @@ export default function SetScreen() {
         roomNumberRef.current = null;
         break;
       }
-    }
-  }
 
-  function updateNameOnServer(name) {
-    socketSend.send("/app/changeName", name);
-  }
+      default: {}
+    }
+  }, [])
+
+  useSubscription("/user/queue/player", onMessageReceived, "private");
+
+  const showLobby = appState === ApplicationState.ROOM_SELECTION;
 
   return (<>
     {showLobby ? (
-      <RoomSelectionContainer roomNumberRef={roomNumberRef} updateNameOnServer={updateNameOnServer} />
+      <RoomSelectionContainer roomNumberRef={roomNumberRef} />
     ) : (
-      <GameContainer 
-        roomNumberRef={roomNumberRef}
-        readyToAttackOpponent={readyToAttackOpponent}
-        setReadyToAttackOpponent={setReadyToAttackOpponent} />
+      <InGameMessageProvider>
+        <GameContainer 
+          roomNumberRef={roomNumberRef}
+          readyToAttackOpponent={readyToAttackOpponent}
+          setReadyToAttackOpponent={setReadyToAttackOpponent}
+        />
+      </InGameMessageProvider>
     )}
   </>)
 }

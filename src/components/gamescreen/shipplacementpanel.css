@@ -1,13 +1,23 @@
-.placement-panel {
-  transition: 1000ms cubic-bezier(0.12, 1.07, 1, 1) transform;
-}
-
-.placement-panel.preEnter,
-.placement-panel.exiting,
-.placement-panel.exited {
+/* .placement-panel {
   transform: translate(-140%);
+} */
+
+.placement-panel.slidein {
+  animation: 1000ms cubic-bezier(0.12, 1.07, 1, 1) 0s 1 normal forwards running placementpanelslidein;
 }
 
+.placement-panel.slideout {
+  animation: 400ms ease-in 0s 1 reverse forwards running placementpanelslidein;
+}
+
+@keyframes placementpanelslidein {
+  from {  
+    transform: translate(-140%);
+  }
+  to {
+    transform: translate(0);
+  }
+}
 
 /* Target the heading of the panel */
 .placement-panel > h3 {

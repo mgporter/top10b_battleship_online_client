@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { C } from "../../Constants";
 import './opponentboard.css';
-import { PacketType, battleStatsActions } from "../../enums";
-import { createBoardCells, pingBoard, displayShipOnOpponentBoard } from "../logic/boardhelperfunctions";
+import { PacketType, battleStatsActions, inGameMessages } from "../../enums";
+import { displayShipOnOpponentBoard, handleAttackResult } from "../logic/boardhelperfunctions";
+import { setInGameMessagesContext } from "../../InGameMessageProvider";
 
 /* Create the board cells once on load */
 // const cells = createBoardCells("opponentboard");
@@ -24,50 +25,32 @@ export default function OpponentBoard({
   setReadyToAttackOpponent,
   dispatchBattleStats,
   opponentShipsSunk,
-  setOpponentShipsSunk,
-  rightSideMenusTransitionStatus
+  setOpponentShipsSunk
 }) {
 
   // const [opponentShipsSunk, setOpponentShipsSunk] = useState(0);
   const opponentboardRef = useRef(null);
   const boardOverlayRef = useRef(null);
   const pingRef = useRef(null);
+  const opponentPanelRef = useRef(null);
+
+  const setInGameMessages = useContext(setInGameMessagesContext);
+
+  useEffect(() => {
+    opponentPanelRef.current.classList.add('slidein');
+  }, [])
 
   useEffect(() => {
     if (!attackResultPlayer) return;
 
-    pingBoard(
+    handleAttackResult(
       opponentboardRef,
       pingRef,
-      attackResultPlayer.row,
-      attackResultPlayer.col,
-      attackResultPlayer.result);
-
-    console.log("RESULT RECEIVED: " + attackResultPlayer.result)
-    
-    let setImagePosition;
-    if (attackResultPlayer.result === PacketType.ATTACK_MISSED) {
-
-      dispatchBattleStats(battleStatsActions.incrementMyShotsFired);
-
-    } else if (attackResultPlayer.result === PacketType.ATTACK_HITSHIP) {
-
-      dispatchBattleStats(battleStatsActions.incrementMyShotsHit);
-
-    } else if (attackResultPlayer.result === PacketType.ATTACK_SUNKSHIP) {
-
-      displayShipOnOpponentBoard(boardOverlayRef, attackResultPlayer);
-      // window.addEventListener('resize', setImagePosition);
-      setOpponentShipsSunk((prev) => prev + 1);
-      dispatchBattleStats(battleStatsActions.incrementMyShotsHit);
-
-    }
-
-    return;
-
-    // return () => {
-    //   window.removeEventListener('resize', setImagePosition);
-    // }
+      attackResultPlayer,
+      handleMiss,
+      handleHit,
+      handleSink
+    );
 
   }, [attackResultPlayer])
 
@@ -82,6 +65,24 @@ export default function OpponentBoard({
     }
   }, [readyToAttackOpponent])
 
+
+  function handleMiss() {
+    dispatchBattleStats(battleStatsActions.incrementMyShotsFired);
+    setInGameMessages(inGameMessages.ATTACKMISSED);
+  }
+
+  function handleHit() {
+    dispatchBattleStats(battleStatsActions.incrementMyShotsHit);
+    setInGameMessages(inGameMessages.ATTACKHITSHIP, attackResultPlayer.shipType);
+  }
+
+  function handleSink() {
+    displayShipOnOpponentBoard(boardOverlayRef, attackResultPlayer);
+    setOpponentShipsSunk((prev) => prev + 1);
+    dispatchBattleStats(battleStatsActions.incrementMyShotsHit);
+    setInGameMessages(inGameMessages.ATTACKSUNKSHIP, attackResultPlayer.shipType);
+  }
+
   function handleCellClick(e) {
     if (!isValidCell(e)) return;
     setReadyToAttackOpponent(false);
@@ -93,7 +94,7 @@ export default function OpponentBoard({
   }
 
   return (
-    <div className={`section-block opponent-board-container ${rightSideMenusTransitionStatus}`}>
+    <div ref={opponentPanelRef} className="section-block opponent-board-container">
       <h2>Opponent:</h2>
       <p>Currently {opponentShipsSunk} of {C.totalShips} ships sunk</p>
       <div ref={opponentboardRef}

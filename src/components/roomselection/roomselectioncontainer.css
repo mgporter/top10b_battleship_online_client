@@ -23,11 +23,34 @@
   align-items: flex-start;
   gap:2vh;
   height: clamp(300px, 90vh, 800px);
-  /* max-height: 100%; */
+  will-change: transform, opacity;
+  transform: translate(-100px);
+  opacity: 0;
 }
 
-#room-selection-container {
-  transition: 1000ms cubic-bezier(0.12, 1.07, 1, 1) transform;
+/* This is for animation styling */
+/* #room-selection-container {
+  transform: translate(-100px);
+  opacity: 0;
+} */
+
+#room-selection-container.slidein {
+  animation: 1000ms cubic-bezier(0.12, 1.07, 1, 1) 0s 1 normal forwards running roomselectionslidein;
+}
+
+#room-selection-container.slideout {
+  animation: 400ms ease-in 0s 1 reverse forwards running roomselectionslidein;
+}
+
+@keyframes roomselectionslidein {
+  from {  
+    transform: translate(-100px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(0);
+    opacity: 1;
+  }
 }
 
 #room-selection-container.preEnter,
@@ -88,7 +111,7 @@
 }
 
 #room-selection-name-box fieldset:invalid::before {
-  content: "*Name field can only use numbers, letters, and underscores, and cannot be empty";
+  content: "*Name field can only use numbers, letters, and dashes/underscores, and cannot be empty";
   color: rgb(218, 0, 0);
   font-size: 1.2rem;
   position: absolute;

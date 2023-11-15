@@ -1,25 +1,27 @@
 import MainBoard from "./MainBoard";
 import ShipHealthPanel from "./ShipHealthPanel";
 import ShipPlacementPanel from "./ShipPlacementPanel";
-import { ApplicationState, ShipType } from "../../enums";
-import { useState, useRef, useEffect, useContext } from "react";
+import { ApplicationState, ShipType, inGameMessages } from "../../enums";
+import { useState, useRef, useEffect, useContext, memo } from "react";
 import Ship from "../logic/ship";
 
 import { C } from "../../Constants";
 import { AppStateContext } from "../../AppStateProvider";
+import { setInGameMessagesContext } from "../../InGameMessageProvider";
 
 
 let ships;
 
-export default function MainboardAndPanel({
-  setMainMessages, 
+const MainboardAndPanel = memo(function MainboardAndPanel({
   sendPacket,
   attackResultOpponent,
   readyToAttackOpponent,
   dispatchBattleStats,
   playerShipsSunk,
   setPlayerShipsSunk,
-  addShipTransitionStatus
+  shipHealthPanelRef,
+  shipPlacementPanelRef,
+  gameContainerRef
 }) {
 
   const [shipClicked, setShipClicked] = useState(null);
@@ -27,17 +29,16 @@ export default function MainboardAndPanel({
   const [mainboardFlash, setMainboardFlash] = useState(false);
   const [mainboardHover, setMainboardHover] = useState(false);
   const [shipsPlaced, setShipsPlaced] = useState([]);
-  // const [playerShipsSunk, setPlayerShipsSunk] = useState(0);
 
   const shipToPlace = useRef(null);
   const firstPlacement = useRef(true);
 
   const appState = useContext(AppStateContext);
+  const setInGameMessages = useContext(setInGameMessagesContext);
 
   useEffect(() => {
-
+    // Create player's ships
     ships = [];
-
     let shipId = 0;
     for (let shipType in ShipType) {
       for (let i = 0; i < C.ships[shipType].numberAllowed; i++) {
@@ -46,17 +47,26 @@ export default function MainboardAndPanel({
         ships.push(ship);
       }
     }
-
   }, [])
 
   useEffect(() => {
     if (!shipClicked) return;
     shipToPlace.current = ships.filter(s => s.getType() === shipClicked)[0];
 
+    /* Add visual indicators the first time the user clicks a ship */
     if (firstPlacement) {
       setMainboardHover(true);
       setMainboardFlash(true);
       setLeftPanelFlash(false);
+    }
+
+    /* Handle messages */
+    if (shipsPlaced.length === 0) {
+      setInGameMessages(inGameMessages.FIRSTSHIPSELECTED, shipClicked);
+    } else if (shipsPlaced.length === C.totalShips) {
+      // do nothing
+    } else {
+      setInGameMessages(inGameMessages.SHIPSELECTED, shipClicked);
     }
 
     firstPlacement.current = false;
@@ -77,29 +87,34 @@ export default function MainboardAndPanel({
   useEffect(() => {
     if (appState === ApplicationState.ATTACK_PHASE) {
       setMainboardHover(false);
+      // shipPlacementPanelRef.current.classList.add('slideout');
+      // shipHealthPanelRef.current.classList.add('slidein');
     } else if (appState === ApplicationState.GAME_END) {
       setMainboardFlash(false);
       setMainboardHover(false);
     }
   }, [appState])
 
-  const showPlaceShipsPanel = 
-    appState === ApplicationState.GAME_INITIALIZED || 
+  const showShipPlacementPanel = 
     appState === ApplicationState.SHIP_PLACEMENT ||
     appState === ApplicationState.SHIPS_PLACED_AND_STARTED;
-  const showShipHealthPanel = appState === ApplicationState.ATTACK_PHASE || appState === ApplicationState.GAME_END;
+  const showShipHealthPanel = 
+    appState === ApplicationState.ATTACK_PHASE || 
+    appState === ApplicationState.GAME_END;
 
   return (
     <>
-        {showPlaceShipsPanel && <ShipPlacementPanel 
+        {showShipPlacementPanel && <ShipPlacementPanel 
           setShipClicked={setShipClicked} 
           leftPanelFlash={leftPanelFlash}
           sendPacket={sendPacket}
           shipsPlaced={shipsPlaced}
-          addShipTransitionStatus={addShipTransitionStatus} />}
+          shipPlacementPanelRef={shipPlacementPanelRef}
+        />}
         {showShipHealthPanel && <ShipHealthPanel 
           shipsPlaced={shipsPlaced}
           playerShipsSunk={playerShipsSunk}
+          shipHealthPanelRef={shipHealthPanelRef}
         />}
         <MainBoard 
           mainboardFlash={mainboardFlash} 
@@ -107,11 +122,14 @@ export default function MainboardAndPanel({
           shipToPlace={shipToPlace}
           sendPacket={sendPacket}
           setPlayerShipsSunk={setPlayerShipsSunk}
-          setMainMessages={setMainMessages} 
+          shipsPlaced={shipsPlaced}
           setShipsPlaced={setShipsPlaced}
           attackResultOpponent={attackResultOpponent}
           dispatchBattleStats={dispatchBattleStats}
+          gameContainerRef={gameContainerRef}
         />
     </>
   )
-}
+})
+
+export default MainboardAndPanel;

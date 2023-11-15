@@ -18,7 +18,7 @@ export const C = {
   numberOfPlayers: 2,
   gameboardRows: 10,
   gameboardColumns: 10,
-  numberOfModelsToLoad: 6,
+  numberOfModelsToLoad: 5,
   gameSpeed: 1,
   messageDuration: 1500,       /* How long messages are displayed in the game screen in ms */
   totalShips: 5,
@@ -68,6 +68,7 @@ export const C = {
   avatars: {
     [Avatars.PLAYERCAPTAIN]: playerCaptainAvatar,
   },
-  // serverPrefix: "http://localhost:8080"
-  serverPrefix: "https://mgporter-battleship-online.fly.dev"
+  serverPrefix: "http://localhost:5000"
+  // serverPrefix: "https://mgporter-battleship-online.fly.dev"
+  // serverPrefix: "http://battleship-online-env.eba-ktmrjpui.us-east-1.elasticbeanstalk.com"
 };

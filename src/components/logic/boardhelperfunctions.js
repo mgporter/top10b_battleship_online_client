@@ -17,10 +17,26 @@ export function createBoardCells(boardName) {
   return cellArr;
 };
 
+export function handleAttackResult(
+  boardRef,
+  pingRef,
+  attackPacket,
+  handleMiss,
+  handleHit,
+  handleSink) {
 
-export function pingBoard(boardRef, pingRef, row, column, attackResult) {
-  // const board = boardRef.current;
-  // const pingElement = board.querySelector('.ping-container');
+  if (attackPacket.result === PacketType.ATTACK_MISSED) {
+    pingBoard(boardRef, pingRef, attackPacket.row, attackPacket.col, "miss", handleMiss);
+  } else if (attackPacket.result === PacketType.ATTACK_HITSHIP) {
+    pingBoard(boardRef, pingRef, attackPacket.row, attackPacket.col, "hit", handleHit);
+  } else if (attackPacket.result === PacketType.ATTACK_SUNKSHIP) {
+    pingBoard(boardRef, pingRef, attackPacket.row, attackPacket.col, "hit", handleSink);
+  }
+
+}
+
+function pingBoard(boardRef, pingRef, row, column, resultClassname, callback) {
+
   const pingElement = pingRef.current;
 
   const halfRowSpacing = boardRef.current.clientWidth / 20;
@@ -28,9 +44,7 @@ export function pingBoard(boardRef, pingRef, row, column, attackResult) {
   const rowOffset = (row * 2 - 10 + 1) * halfRowSpacing;
   const columnOffset = (column * 2 - 10 + 1) * halfColumnSpacing;
 
-  console.log(boardRef)
   pingElement.style.transform = `translate(${columnOffset}px, ${rowOffset}px)`;
-  // pingElement.style.translate = `${columnOffset}px, ${rowOffset}px`;
   pingElement.style.display = 'block';
   pingElement.classList.add('boardping');
   pingElement.addEventListener(
@@ -39,11 +53,8 @@ export function pingBoard(boardRef, pingRef, row, column, attackResult) {
       pingElement.classList.remove('boardping');
       pingElement.style.display = 'none';
       const targetCell = coordinateToDOMCell([row, column], boardRef);
-      if (attackResult === PacketType.ATTACK_MISSED) {
-        targetCell.classList.add('miss');
-      } else {
-        targetCell.classList.add('hit');
-      }
+      targetCell.classList.add(resultClassname);
+      callback();
     },
     { once: true }
   );
@@ -99,74 +110,6 @@ export function displayShipOnOpponentBoard(boardOverlayRef, attackResult) {
   imgContainer.style.animationDuration = `${1000 * C.gameSpeed}ms`;
   imgContainer.classList.add('fade-in');
 
-
-
-  // const opponentBoard = boardRef.current;
-  // const imgContainer = document.createElement('div');
-  // imgContainer.classList.add('ship-icon-container');
-
-  // function setImagePosition() {
-  //   console.log()
-  //   const opponentBoardRect = opponentBoard.getBoundingClientRect();
-  //   const cell = coordinateToDOMCell([row, column], boardRef);
-  //   const cellRect = cell.getBoundingClientRect();
-
-  //   // We need to adjust the translation of the img based on its direction
-  //   let offsetLeft = 0;
-  //   let offsetTop = 0;
-  //   if (shipDirection === 'left') {
-  //     imgContainer.style.rotate = '0deg';
-  //   } else if (shipDirection === 'right') {
-  //     imgContainer.style.rotate = '180deg';
-  //     offsetLeft = (shipSize - 1) * cellRect.width * -1;
-  //   } else if (shipDirection === 'up') {
-  //     imgContainer.style.rotate = '90deg';
-  //     offsetLeft = Math.floor(shipSize / 2) * cellRect.width * -1;
-  //     offsetTop = Math.floor(shipSize / 2) * cellRect.height;
-  //     // For ships of length 2, 4, 6, etc, we have to make another adjustment
-  //     if (shipSize % 2 === 0) {
-  //       offsetLeft += cellRect.width / 2;
-  //       offsetTop -= cellRect.height / 2;
-  //     }
-  //   } else {
-  //     imgContainer.style.rotate = '-90deg';
-  //     offsetLeft = Math.floor(shipSize / 2) * cellRect.width * -1;
-  //     offsetTop = Math.floor(shipSize / 2) * cellRect.height * -1;
-  //     // For ships of length 2, 4, 6, etc, we have to make another adjustment
-  //     if (shipSize % 2 === 0) {
-  //       offsetLeft += cellRect.width / 2;
-  //       offsetTop += cellRect.height / 2;
-  //     }
-  //   }
-
-  //   imgContainer.style.width = `${cellRect.width * shipSize}px`;
-  //   imgContainer.style.height = `${cellRect.height}px`;
-  //   imgContainer.style.left = `${
-  //     cellRect.left - opponentBoardRect.left + offsetLeft
-  //   }px`;
-  //   imgContainer.style.top = `${
-  //     cellRect.top - opponentBoardRect.top + offsetTop
-  //   }px`;
-  // }
-
-  // setImagePosition();
-
-  // const shipimg = document.createElement('img');
-  // shipimg.classList.add('ship-icon');
-  // shipimg.src = shipImgUrl;
-  // shipimg.alt = C.ships[attackResult.shipType].displayName;
-  // imgContainer.appendChild(shipimg);
-
-  // opponentBoard.appendChild(imgContainer);
-
-  // // Trigger the fade in transition
-  // imgContainer.style.animationDuration = `${1000 * C.gameSpeed}ms`;
-  // imgContainer.classList.add('fade-in');
-
-  // // Make sure that this element resizes properly when the window is changed
-
-
-  return;
 }
 
 

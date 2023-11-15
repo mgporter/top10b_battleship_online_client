@@ -1,15 +1,19 @@
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { AppStateContext } from '../../AppStateProvider';
 import { ApplicationState } from '../../enums';
 import './bottomrightpanel.css';
 
 export default function BottomRightPanel({
   battleStats, 
-  gameTimeSeconds, 
-  setGameTimeSeconds,
-  rightSideMenusTransitionStatus}) {
+  gameTimeSecondsFinal}) {
 
   const appState = useContext(AppStateContext);
+  const bottomRightPanelRef = useRef(null);
+  const [gameTimeSeconds, setGameTimeSeconds] = useState(0);
+
+  useEffect(() => {
+    bottomRightPanelRef.current.classList.add('slidein');
+  }, [])
 
   useEffect(() => {
 
@@ -19,6 +23,7 @@ export default function BottomRightPanel({
 
     if (appState === ApplicationState.GAME_END) {
       clearInterval(interval);
+      gameTimeSecondsFinal.current = gameTimeSeconds;
     }
 
     return () => {
@@ -33,8 +38,8 @@ export default function BottomRightPanel({
   const opponentHitRate = battleStats.opponentShotsFired === 0 ? 0 : battleStats.opponentShotsHit / battleStats.opponentShotsFired;
 
   return (
-    <div className={`section-block bottom-right-panel ${rightSideMenusTransitionStatus}`}>
-      <div className='scoretext'>Score: <span className='scorenumber'>1234</span><span className='timer'>{gameMinutes}:{String(gameSeconds).padStart(2, "0")}</span></div>
+    <div ref={bottomRightPanelRef} className="section-block bottom-right-panel">
+      <div className='scoretext'>Score: <span className='scorenumber'>{Math.round(10000 * myHitRate)}</span><span className='timer'>{gameMinutes}:{String(gameSeconds).padStart(2, "0")}</span></div>
       <div className='battle-stats-container'>
         <p className='header you'>You</p>
         <p></p>

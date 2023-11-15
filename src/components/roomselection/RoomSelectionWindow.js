@@ -1,22 +1,25 @@
-import { useContext } from "react";
+import { useCallback, useContext, useEffect, useRef } from "react";
 import { PlayerIdContext, PlayerNameContext } from "../../PlayerProvider";
 import { MessageTypes } from "../../enums";
 import { postGameRoom } from "./fetchdata";
 import NameInput from "./NameInput";
 import GameRoomList from "./GameRoomList";
 import useSocketSend from "../../useSocketSend";
+import { endpoints } from "../../Endpoints";
 
 export default function RoomSelectionWindow({
-  updateNameOnServer, 
   roomNumberRef, 
-  gameRooms, 
-  setGameRooms,
-  transitionStatus
+  getGameRooms
 }) {
 
   const playerName = useContext(PlayerNameContext);
   const playerId = useContext(PlayerIdContext);
   const socketSend = useSocketSend();
+  const roomSelectionWindowRef = useRef(null);
+
+  useEffect(() => {
+    roomSelectionWindowRef.current.classList.add('slidein');
+  }, [])
 
   function createGameHandler() {
     const player = {
@@ -34,26 +37,24 @@ export default function RoomSelectionWindow({
 
   }
 
-  function joinGame(room) {
+  const joinGame = useCallback((room) => {
     roomNumberRef.current = room;
 
     // Attempt to join the room. The server will respond with an ACCEPTEDJOIN or REJECTEDJOIN
-    socketSend.send("/app/joinGame", {
+    socketSend.send(endpoints.joinGame, {
       messageType: MessageTypes.JOINGAME,
       roomNumber: room});
-  }
-
+  }, [socketSend])
 
   return (
-    <div id="room-selection-container" className={`${transitionStatus}`}>
+    <div id="room-selection-container" ref={roomSelectionWindowRef}>
       <h2>Create or join a game</h2>
-      <NameInput updateNameOnServer={updateNameOnServer} />
+      <NameInput />
       <button className="create-game-button button" onClick={createGameHandler} type="button">Create a game</button>
       <hr />
       <GameRoomList 
         joinGame={joinGame}
-        gameRooms={gameRooms}
-        setGameRooms={setGameRooms} />
+        getGameRooms={getGameRooms} />
     </div>
   )
 }

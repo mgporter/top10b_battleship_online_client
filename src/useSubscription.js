@@ -1,27 +1,29 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useWebSocketStatus from "./useWebSocketStatus";
 import getSocket from "./getSocket";
 
-export default function useSubscription(subscription, callback) {
+export default function useSubscription(subscription, callback, id) {
 
   const [isSubscribed, setIsSubscribed] = useState(false);
   const socket = getSocket();
   const wsStatus = useWebSocketStatus();
-
-  console.log("USE SUBSCRIPTION CALLED FOR " + subscription + " and isSubscribed is " + isSubscribed)
+  const isSubscribedRef = useRef(false);
 
   useEffect(() => {
-    if (!wsStatus || isSubscribed) {
+    console.log("USE SUBSCRIPTION CALLED FOR " + subscription + " " + id + " and isSubscribed is " + isSubscribed)
+    if (!wsStatus || isSubscribedRef.current === true) {
       return;
     }
-    console.log("ACTUALLY SUBSCRIBING TO " + subscription)
-    const sub = socket.subscribe(subscription, callback);
+    const sub = socket.subscribe(subscription, callback, {id: id});
+    isSubscribedRef.current = true;
     setIsSubscribed(true);
     return () => {
-      sub.unsubscribe();
+      isSubscribedRef.current = false;
       setIsSubscribed(false);
+      sub.unsubscribe();
+      
     }
-  }, [wsStatus])
+  }, [wsStatus, callback])
 
   return isSubscribed;
 

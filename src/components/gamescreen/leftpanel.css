@@ -1,5 +1,7 @@
 .left-panel {
-  background-color: rgba(255, 255, 255, 0.224);
+  /* background-color: rgba(255, 255, 255, 0.224); */
+  background: rgb(131,131,131, 0.6);
+  background: linear-gradient(149deg, rgba(131,131,131,0.6) 0%, rgba(82,82,82,0.6) 100%);
   border-radius: 24px;
   margin-left:12px;
   display: flex;

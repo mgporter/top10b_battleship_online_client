@@ -54,6 +54,10 @@ export default function Ship(type) {
     }
   }
 
+  function resetLocation() {
+    coordinates = [];
+  }
+
   function getLocation() {
     return coordinates;
   }
@@ -81,6 +85,7 @@ export default function Ship(type) {
     isPlaced,
     setLocation,
     getLocation,
+    resetLocation,
     getStartingCoordinates
   };
 }

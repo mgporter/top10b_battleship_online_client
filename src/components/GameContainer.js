@@ -1,5 +1,5 @@
-import { useState, useEffect, useContext, useRef, useReducer } from "react";
-import { ApplicationState, PacketType, Avatars } from '../enums';
+import { useState, useEffect, useContext, useRef, useReducer, useCallback, useMemo } from "react";
+import { ApplicationState, PacketType, Avatars, inGameMessages } from '../enums';
 import { PlayerIdContext } from "../PlayerProvider";
 import "./gamecontainer.css";
 import './gamescreen/winnerscreen.css';
@@ -12,23 +12,43 @@ import OpponentBoard from "./gamescreen/OpponentBoard";
 import RoomPanel from "./gamescreen/RoomPanel";
 import MainboardAndPanel from "./gamescreen/MainboardAndPanel";
 import WinnerScreen from "./gamescreen/WinnerScreen.js";
+import ModelCredits from "./gamescreen/ModelCredits.js";
 import { AppStateContext, SetAppStateContext } from "../AppStateProvider";
 import { battleCounterReducer } from './logic/boardhelperfunctions';
 import useSocketSend from "../useSocketSend.js";
 import useSubscription from "../useSubscription.js";
-import useTransition from "react-transition-state";
+import { setInGameMessagesContext } from "../InGameMessageProvider.js";
+
+/**
+ * GAME CONTAINER LAYOUT
+ * 
+ * |-----------------------------GAME CONTAINER ------------------------------|
+ * |----ROOM CONTAINER------|------MESSAGE AREA--------|---CREDITS BLOCK-----||
+ * ||                       |                          |                     ||
+ * ||                       |                          |                     ||
+ * ||-----------------------|--------------------------|---------------------||
+ * |----------------MAINBOARD AND PANEL----------------|---OPPONENT BOARD----||
+ * ||                                                  |                     ||
+ * ||---SHIP PLACEMENT---||-------MAINBOARD-----------||                     ||  
+ * |||       PANEL       ||                           ||                     ||
+ * |||     ** OR **      ||                           ||                     ||
+ * |||   SHIP HEALTH     ||  Note: Model Container    ||                     ||
+ * |||       PANEL       ||  creates a canvas that    ||                     ||
+ * |||                   || is absolutely positioned  ||--BOTTOMRIGHT PANEL--||
+ * |||                   ||   above the mainboard     ||                     ||
+ * |||                   ||                           ||                     ||
+ * |||                   ||                           ||                     ||
+ * |||-------------------||---------------------------||                     ||
+ * |---------------------------------------------------|---------------------||
+ * |--------------------------------------------------------------------------|
+ *  
+ * */
+
+
 
 export default function GameContainer({roomNumberRef, readyToAttackOpponent, setReadyToAttackOpponent}) {
 
   const [playerList, setPlayerList] = useState({playerOne: null, playerTwo: null, observerList: []});
-  const [mainMessages, setMainMessages] = useState([
-    {
-      avatar: Avatars.PLAYERCAPTAIN,
-      sender: "Player#92732",
-      color: "yellow",
-      text: "Welcome to Battleship, sir!"
-    }
-  ])
   const [opponentShipsPlaced, setOpponentShipsPlaced] = useState(0);
   const [showOpponentPanels, setShowOpponentPanels] = useState(false);
   const [notEnoughPlayers, setNotEnoughPlayers] = useState(false);
@@ -38,7 +58,7 @@ export default function GameContainer({roomNumberRef, readyToAttackOpponent, set
   const [attackResultOpponent, setAttackResultOpponent] = useState(null);
   const [winner, setWinner] = useState(null);
   const [showEndGameDialog, setShowEndGameDialog] = useState(true);
-  const [gameTimeSeconds, setGameTimeSeconds] = useState(0);
+  const [showModelCredits, setShowModelCredits] = useState(false);
 
   const [battleStats, dispatchBattleStats] = useReducer(battleCounterReducer, {
     myShotsFired: 0, 
@@ -50,46 +70,15 @@ export default function GameContainer({roomNumberRef, readyToAttackOpponent, set
   const playerId = useContext(PlayerIdContext);
   const appState = useContext(AppStateContext);
   const setAppState = useContext(SetAppStateContext);
+  const setInGameMessages = useContext(setInGameMessagesContext);
 
   const playersIDtoName = useRef({});
+  const gameTimeSecondsFinal = useRef(0);
+  const gameContainerRef = useRef(null);
 
   const socketSend = useSocketSend();
-
-  const publicGameSub = useSubscription(`/game/${roomNumberRef.current}`, onPublicMessageReceived);
-
-  // const [addShipTransitionActive, setAddShipTransitionActive] = useState(false);
-  // const [RightSideMenusTransitionActive, setRightSideMenusTransitionActive] = useState(false);
-
-  const [{status: addShipTransitionStatus}, addShipTransitionToggle] = useTransition({
-    timeout: 800, 
-    initialEntered: false, 
-    preEnter: true, 
-    unmountOnExit:true});
-
-  const [{status: rightSideMenusTransitionStatus}, rightSideMenusTransitionToggle] = useTransition({
-    timeout: 800, 
-    initialEntered: false, 
-    preEnter: true, 
-    unmountOnExit:true});
-
-  // useEffect(() => {
-  //   if (appState === ApplicationState.SHIP_PLACEMENT) {
-  //     setAddShipTransitionActive(true);
-  //   }
-  // }, [appState, addShipPanelMounted]);
-
-  // useEffect(() => {
-  //   if (addShipTransitionActive === true) addShipTransitionToggle(true);
-  // }, [addShipTransitionActive])
-
-
-
-  useEffect(() => {
-    if (publicGameSub) socketSend.send("/app/gameloaded", {roomNumber: roomNumberRef.current});
-  }, [publicGameSub])
-
   
-  function onPublicMessageReceived(payload) {
+  const onPublicMessageReceived = useCallback((payload) => {
     const message = JSON.parse(payload.body);
     const fromCurrentPlayer = message.playerId === playerId;
     
@@ -114,7 +103,7 @@ export default function GameContainer({roomNumberRef, readyToAttackOpponent, set
 
       case PacketType.GAME_START: {
         setAppState(ApplicationState.SHIP_PLACEMENT);
-        addShipTransitionToggle(true);
+        setInGameMessages(inGameMessages.WELCOME);
         break;
       }
 
@@ -134,13 +123,16 @@ export default function GameContainer({roomNumberRef, readyToAttackOpponent, set
       }
 
       case PacketType.GAME_ATTACK_PHASE_START: {
-        // if (playerOneId === playerId) {
-        //   console.log("RECEIVED GAME_ATTACK_PHASE_START PACKET and setting readytoattackopponent to true")
-        //   setReadyToAttackOpponent(true);
-        // }
         setAppState(ApplicationState.ATTACK_PHASE);
-        rightSideMenusTransitionToggle(true);
-        setShowOpponentPanels(true);
+        if (playerList.playerOne === playerId) {
+          setInGameMessages(inGameMessages.STARTGAMEFIRSTATTACK);
+          setReadyToAttackOpponent(true);
+        } else {
+          setInGameMessages(inGameMessages.STARTGAMESECONDATTACK);
+        }
+        setTimeout(() => {
+          setShowOpponentPanels(true);
+        }, 400)
         break;
       }
 
@@ -152,15 +144,24 @@ export default function GameContainer({roomNumberRef, readyToAttackOpponent, set
         }, 1200)
         break;
       }
-    }
-  }
 
-  function sendPacket(type, data = null) {
+      default: {}
+    }
+  }, [playerList]);
+
+  const publicGameSub = useSubscription(`/game/${roomNumberRef.current}`, onPublicMessageReceived, `game${roomNumberRef.current}`);
+
+  const shipHealthPanelRef = useRef(null);
+  const shipPlacementPanelRef = useRef(null);
+
+  useEffect(() => {
+    if (publicGameSub) socketSend.send("/app/gameloaded", {roomNumber: roomNumberRef.current});
+  }, [publicGameSub])
+
+  const sendPacket = useCallback((type, data = null) => {
 
     const packet = {
-      // playerId: playerId,
-      // roomNumber: roomNumberRef.current,
-      type: type,
+      type: type
     }
 
     switch(type) {
@@ -200,61 +201,59 @@ export default function GameContainer({roomNumberRef, readyToAttackOpponent, set
         socketSend.send("/app/game/loadGameData", packet);
         break;
       }
+
+      default: {}
       
     }
-  }
+  }, [socketSend]);
 
   const showWinnerScreen = appState === ApplicationState.GAME_END ? true : false;
 
   return (
-    <div id="game-container">
+    <div id="game-container" ref={gameContainerRef}>
       <RoomPanel roomNum={roomNumberRef.current} playerList={playerList} playersIDtoName={playersIDtoName} playerId={playerId} />
       <FullScreenInfoDialog opponentShipsPlaced={opponentShipsPlaced} notEnoughPlayers={notEnoughPlayers} />    
-      <>
-        <MessageArea 
-          mainMessages={mainMessages} 
-          setMainMessages={setMainMessages} 
-          showEndGameButtons={!showEndGameDialog && showWinnerScreen}
-          winner={winner}
-          setShowEndGameDialog={setShowEndGameDialog} />
-        <MainboardAndPanel 
-          setMainMessages={setMainMessages} 
-          sendPacket={sendPacket} 
-          dispatchBattleStats={dispatchBattleStats}
-          attackResultOpponent={attackResultOpponent}
-          readyToAttackOpponent={readyToAttackOpponent}
-          playerShipsSunk={playerShipsSunk}
-          setPlayerShipsSunk={setPlayerShipsSunk}
-          addShipTransitionStatus={addShipTransitionStatus}
-        />
-        <CreditsBlock />
-        {showOpponentPanels && (
-          <>
-            <OpponentBoard 
-              dispatchBattleStats={dispatchBattleStats}
-              readyToAttackOpponent={readyToAttackOpponent}
-              setReadyToAttackOpponent={setReadyToAttackOpponent}
-              sendPacket={sendPacket}
-              attackResultPlayer={attackResultPlayer}
-              opponentShipsSunk={opponentShipsSunk}
-              setOpponentShipsSunk={setOpponentShipsSunk}
-              rightSideMenusTransitionStatus={rightSideMenusTransitionStatus}
+      <MessageArea 
+        showEndGameButtons={!showEndGameDialog && showWinnerScreen}
+        winner={winner}
+        setShowEndGameDialog={setShowEndGameDialog} />
+      <MainboardAndPanel 
+        sendPacket={sendPacket} 
+        dispatchBattleStats={dispatchBattleStats}
+        attackResultOpponent={attackResultOpponent}
+        readyToAttackOpponent={readyToAttackOpponent}
+        playerShipsSunk={playerShipsSunk}
+        setPlayerShipsSunk={setPlayerShipsSunk}
+        shipPlacementPanelRef={shipPlacementPanelRef}
+        shipHealthPanelRef={shipHealthPanelRef}
+        gameContainerRef={gameContainerRef}
+      />
+      <CreditsBlock setShowModelCredits={setShowModelCredits} />
+      {showOpponentPanels && (
+        <>
+          <OpponentBoard 
+            dispatchBattleStats={dispatchBattleStats}
+            readyToAttackOpponent={readyToAttackOpponent}
+            setReadyToAttackOpponent={setReadyToAttackOpponent}
+            sendPacket={sendPacket}
+            attackResultPlayer={attackResultPlayer}
+            opponentShipsSunk={opponentShipsSunk}
+            setOpponentShipsSunk={setOpponentShipsSunk}
+          />
+          <BottomRightPanel 
+            battleStats={battleStats} 
+            gameTimeSecondsFinal={gameTimeSecondsFinal}
             />
-            <BottomRightPanel 
-              battleStats={battleStats} 
-              setGameTimeSeconds={setGameTimeSeconds}
-              gameTimeSeconds={gameTimeSeconds}
-              rightSideMenusTransitionStatus={rightSideMenusTransitionStatus} />
-          </>
-        )}
-      </>
+        </>
+      )}
       {(showWinnerScreen && showEndGameDialog) && <WinnerScreen 
         winner={winner} 
         battleStats={battleStats}
         playerShipsSunk={playerShipsSunk}
         opponentShipsSunk={opponentShipsSunk}
-        gameTimeSeconds={gameTimeSeconds}
+        gameTimeSecondsFinal={gameTimeSecondsFinal}
         setShowEndGameDialog={setShowEndGameDialog} />}
+      {showModelCredits && <ModelCredits setShowModelCredits={setShowModelCredits} />}
     </div>
   ) 
 

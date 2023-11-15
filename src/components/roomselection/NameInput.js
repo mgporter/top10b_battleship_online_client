@@ -1,12 +1,17 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { PlayerNameContext, SetPlayerNameContext } from "../../PlayerProvider";
+import useUpdateServerName from "../../useUpdateServerName";
+import useSocketSend from "../../useSocketSend";
+import { endpoints } from "../../Endpoints";
 
-export default function NameInput({updateNameOnServer}) {
+export default function NameInput() {
 
   const setPlayerName = useContext(SetPlayerNameContext);
   const playerName = useContext(PlayerNameContext);
   const nameInputRef = useRef(null);
-  const [localName, setLocalName] = useState(playerName);
+  const [localName, setLocalName] = useState("Player");
+  const socketSend = useSocketSend();
+  // const updateServerName = useUpdateServerName();
 
   useEffect(() => {
     window.addEventListener("keydown", interceptEnter);
@@ -14,6 +19,10 @@ export default function NameInput({updateNameOnServer}) {
       window.removeEventListener("keydown", interceptEnter);
     }
   }, [])
+
+  useEffect(() => {
+    setLocalName(playerName);
+  }, [playerName])
 
   function interceptEnter(e) {
     if (e.key !== "Enter") return;
@@ -31,7 +40,8 @@ export default function NameInput({updateNameOnServer}) {
     if (name === "") name = "Player";
     setPlayerName(name);
     handleNameChange(name);
-    updateNameOnServer(name);
+    // updateServerName.to(name);
+    socketSend.send(endpoints.changeName, name);
   }
 
   return (
@@ -43,7 +53,7 @@ export default function NameInput({updateNameOnServer}) {
           type="text"
           spellCheck="false" 
           required
-          pattern="[0-9A-Za-z_]+"
+          pattern="[0-9A-Za-z_\-#]+"
           id="player-name-input" 
           maxLength="24"
           value={localName}

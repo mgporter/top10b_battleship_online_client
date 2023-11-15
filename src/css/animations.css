@@ -4,7 +4,7 @@
 }
 
 .fade-in {
-  animation: 400ms linear 400ms 1 normal forwards running fade-in;
+  animation: 400ms linear 0s 1 normal forwards running fade-in;
 }
 
 .fade-out {

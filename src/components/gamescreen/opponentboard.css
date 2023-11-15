@@ -7,16 +7,25 @@
   z-index: 1;
   gap: 8px;
   padding: 0;
-}
 
-.opponent-board-container {
-  transition: 1000ms cubic-bezier(0.12, 1.07, 1, 1) 200ms transform;
-}
-
-.opponent-board-container.preEnter,
-.opponent-board-container.exiting,
-.opponent-board-container.exited {
   transform: translate(140%);
+}
+
+.opponent-board-container.slidein {
+  animation: 1000ms cubic-bezier(0.12, 1.07, 1, 1) 200ms 1 normal forwards running opponentboardslidein;
+}
+
+.opponent-board-container.slideout {
+  animation: 400ms ease-in 0s 1 reverse forwards running opponentboardslidein;
+}
+
+@keyframes opponentboardslidein {
+  from {  
+    transform: translate(140%);
+  }
+  to {
+    transform: translate(0);
+  }
 }
 
 

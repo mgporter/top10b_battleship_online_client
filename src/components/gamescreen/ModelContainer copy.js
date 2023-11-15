@@ -86,12 +86,16 @@ const normalizers = {
   },
 };
 
-function Model(playerboardRef, mainElementRef, gameContainerRef) {
+function Model() {
   const enableDebugMode = false;
 
+  const playerBoard = document.getElementById('playerboard');
+  const mainElement = document.querySelector('main');
+  const gameContainer = document.getElementById('game-container');
   const OBJloader = new OBJLoader();
   const GLTFloader = new GLTFLoader();
   const ships = {};
+  let playerBoardRect = playerBoard.getBoundingClientRect();
 
   // Create scene, camera, and renderer
   const scene = new THREE.Scene();
@@ -106,7 +110,7 @@ function Model(playerboardRef, mainElementRef, gameContainerRef) {
     alpha: true,
     antialias: true,
   });
-  gameContainerRef.current.appendChild(renderer.domElement);
+  gameContainer.appendChild(renderer.domElement);
 
   // Add lights to scene
   const light = new THREE.AmbientLight(0x404040, 1);
@@ -119,38 +123,23 @@ function Model(playerboardRef, mainElementRef, gameContainerRef) {
   camera.rotation.set(-0.730865, 0, 0);
 
   // Load the ship models.
-  // const loadModelPromises = [
-  //   loadModel(carrierGLB, ShipType.CARRIER, 'glb'),
-  //   loadModel(battleshipOBJ, ShipType.BATTLESHIP, 'obj'),
-  //   loadModel(patrolBoatGLB, ShipType.PATROLBOAT, 'glb'),
-  //   loadModel(submarineGLB, ShipType.SUBMARINE, 'glb'),
-  //   loadModel(destroyerGLB, ShipType.DESTROYER, 'glb'),
-  // ];
+  const loadModelPromises = [
+    loadModel(carrierGLB, ShipType.CARRIER, 'glb'),
+    loadModel(battleshipOBJ, ShipType.BATTLESHIP, 'obj'),
+    loadModel(patrolBoatGLB, ShipType.PATROLBOAT, 'glb'),
+    loadModel(submarineGLB, ShipType.SUBMARINE, 'glb'),
+    loadModel(destroyerGLB, ShipType.DESTROYER, 'glb'),
+  ];
 
-  // Promise.all(loadModelPromises).then(() => {
-  //   window.dispatchEvent(new Event('all_models_loaded'));
-  //   console.log(ships)
-  // });
+  Promise.all(loadModelPromises).then(() => {
+    window.dispatchEvent(new Event('all_models_loaded'));
+    console.log(ships)
+  });
 
-  loadModel(carrierGLB, ShipType.CARRIER, 'glb').then(() => {
-    window.dispatchEvent(new Event('model_loaded'));
-  })
-  loadModel(battleshipOBJ, ShipType.BATTLESHIP, 'obj').then(() => {
-    window.dispatchEvent(new Event('model_loaded'));
-  })
-  loadModel(patrolBoatGLB, ShipType.PATROLBOAT, 'glb').then(() => {
-    window.dispatchEvent(new Event('model_loaded'));
-  })
-  loadModel(submarineGLB, ShipType.SUBMARINE, 'glb').then(() => {
-    window.dispatchEvent(new Event('model_loaded'));
-  })
-  loadModel(destroyerGLB, ShipType.DESTROYER, 'glb').then(() => {
-    window.dispatchEvent(new Event('model_loaded'));
-  })
 
   // Resize renderer on window resize event
   window.addEventListener('resize', resizeCanvasToDisplaySize);
-  // setTimeout(resizeCanvasToDisplaySize, 100);
+  setTimeout(resizeCanvasToDisplaySize, 100);
 
   function resizeCanvasToDisplaySize() {
     // This is one of the most important functions. It keeps the 3d model space (controlled by
@@ -159,13 +148,13 @@ function Model(playerboardRef, mainElementRef, gameContainerRef) {
 
     // Increase this ratio to increase the size of the mainboard
     const widthModifier = windowWidth * 0.38;
-    playerboardRef.current.style.width = `${widthModifier}px`;
+    playerBoard.style.width = `${widthModifier}px`;
 
     // Set the perspective based on the size of the playerboard. This must be done BEFORE
     // the size of the playerCanvas is set below.
-    mainElementRef.current.style.perspective = `${widthModifier}px`;
+    mainElement.style.perspective = `${widthModifier}px`;
 
-    const playerBoardRect = playerboardRef.current.getBoundingClientRect();
+    playerBoardRect = playerBoard.getBoundingClientRect();
     const overflowTop = playerBoardRect.height / 10;
     const overflowBottom = playerBoardRect.height / 40;
     const width = playerBoardRect.width;
@@ -195,8 +184,7 @@ function Model(playerboardRef, mainElementRef, gameContainerRef) {
             resolve(obj);
           },
           (progressEvent) => {
-            // window.dispatchEvent(new ProgressEvent('model_loaded'));
-            // window.dispatchEvent(new Event('model_loaded'));
+            window.dispatchEvent(new ProgressEvent('model_loaded'));
           }
         );
       });
@@ -210,8 +198,7 @@ function Model(playerboardRef, mainElementRef, gameContainerRef) {
             resolve(gltf.scene);
           },
           (progressEvent) => {
-            // window.dispatchEvent(new Event('model_loaded'));
-            // window.dispatchEvent(new ProgressEvent('model_loaded'));
+            window.dispatchEvent(new ProgressEvent('model_loaded'));
           }
         );
       });
@@ -338,11 +325,6 @@ function Model(playerboardRef, mainElementRef, gameContainerRef) {
     }
   }
 
-  function removeCanvas() {
-    playerCanvas.remove();
-    window.removeEventListener('resize', resizeCanvasToDisplaySize);
-  }
-
   function parametricTransform(t) {
     return (t * t) / (2 * (t * t - t) + 1);
   }
@@ -432,21 +414,22 @@ function Model(playerboardRef, mainElementRef, gameContainerRef) {
     addModelToScene,
     resizeCanvasToDisplaySize,
     sinkShip,
-    removeCanvas
   };
 }
+window.addEventListener("model_loaded", console.log);
 
-const ModelContainer = memo(({modelRef, playerboardRef, mainElementRef, gameContainerRef}) => {
+const ModelContainer = memo(({modelRef}) => {
 
   useEffect(() => {
-    modelRef.current = Model(playerboardRef, mainElementRef, gameContainerRef);
-    modelRef.current.resizeCanvasToDisplaySize();
+    console.log("Model container useeffect")
+    modelRef.current = Model();
+
     return () => {
-      modelRef.current.removeCanvas();
+
     }
   }, [])
 
   return;
 })
 
-export default ModelContainer;
+// export default ModelContainer;
