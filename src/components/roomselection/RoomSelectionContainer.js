@@ -43,14 +43,13 @@ export default function RoomSelectionContainer({roomNumberRef}) {
     const lobbyMessage = parseLobbyMessage(message, playerId, playerName);
     setMessages((prev) => prev.concat([lobbyMessage]));
 
-    switch(message.messageType) {
+    switch(message.type) {
 
       case MessageTypes.CREATEDGAME: {
         const newGame = {
           roomNumber: message.roomNumber,
           playerList: []
         }
-        // setGameRooms((prev) => [newGame].concat(prev));
         getGameRooms.updateData((prev) => [newGame].concat(prev));
         break;
       }
@@ -68,7 +67,6 @@ export default function RoomSelectionContainer({roomNumberRef}) {
             return room;
           } 
         };
-        // setGameRooms((prev) => prev.map(updateGameRoomsOnJoin));
         getGameRooms.updateData((prev) => prev.map(updateGameRoomsOnJoin));
         break;
       }
@@ -100,7 +98,7 @@ export default function RoomSelectionContainer({roomNumberRef}) {
         break;
       }
     }
-  }, [])
+  }, [getGameRooms])
 
   const publicLobbySub = useSubscription("/lobby", onPublicMessageReceived, "lobby");
 

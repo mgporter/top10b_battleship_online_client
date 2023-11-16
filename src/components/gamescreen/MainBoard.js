@@ -143,7 +143,7 @@ export default function MainBoard({
         setInGameMessages(inGameMessages.SHIPPLACED, shipToPlace.current.getType());
       }
       
-      sendPacket(PacketType.PLACED_SHIP);
+      sendPacket(PacketType.PLACED_SHIP, shipsPlaced.length + 1);
 
       /* Only add the ship to the shipsPlaced array the first time it is placed */
       setShipsPlaced((prev) => [...prev, shipToPlace.current]);

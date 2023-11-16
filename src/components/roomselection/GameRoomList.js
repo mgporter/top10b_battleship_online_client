@@ -6,7 +6,7 @@ export default function GameRoomList({joinGame, getGameRooms}) {
 
   const [showJoinGameDialog, setShowJoinGameDialog] = useState({show: false});
 
-  const pStyle = {marginTop: "48px", fontSize: "1.6rem", alignSelf: "center"};
+  const messageStyle = {marginTop: "48px", fontSize: "1.6rem", alignSelf: "center"};
   const gameRooms = getGameRooms.data;
 
   const handleGameSelection = useCallback((e) => {
@@ -21,16 +21,6 @@ export default function GameRoomList({joinGame, getGameRooms}) {
     });
   }, [gameRooms, setShowJoinGameDialog])
 
-  // function handleGameSelection(gameroom) {
-  //   const gameNumber = gameroom.roomNumber;
-  //   const players = gameroom.playerList.map(player => player.name);
-  //   setShowJoinGameDialog({
-  //     show: true,
-  //     room: gameNumber,
-  //     players: players,
-  //     full: gameroom.playerList.length >= 2,
-  //   });
-  // }
 
   return (
     <>
@@ -39,12 +29,17 @@ export default function GameRoomList({joinGame, getGameRooms}) {
         setShowJoinGameDialog={setShowJoinGameDialog}
         joinGame={joinGame}>
       </JoinGameDialog>}
-      {getGameRooms.loading && <p style={pStyle}>Loading Gamerooms...</p>}
-      {getGameRooms.error && <p style={pStyle}>{getGameRooms.error}</p>}
+      {getGameRooms.loading && <p style={messageStyle}>Loading Gamerooms...</p>}
+      {getGameRooms.error && <p style={messageStyle}>{getGameRooms.error}</p>}
       <ul id="join-game-box">
-        {gameRooms?.map((gameroom, i) => (
-          <GameRow onClick={handleGameSelection} key={gameroom.roomNumber} {...gameroom} row={i + 1} />
-        ))}
+        {gameRooms && (
+          gameRooms.length === 0 ? 
+          <p style={messageStyle}>There are no game rooms yet. Try creating one!</p>
+          :
+          gameRooms.map((gameroom, i) => (
+            <GameRow onClick={handleGameSelection} key={gameroom.roomNumber} {...gameroom} row={i + 1} />
+          ))
+        )}
       </ul>
     </>
   )

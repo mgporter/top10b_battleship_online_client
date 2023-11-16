@@ -1,11 +1,11 @@
 import { MessageTypes, LobbyColors } from "../../enums";
 import { C } from "../../Constants";
 
-export function parseLobbyMessage(message, playerId, playerName) {
+export function parseLobbyMessage(message, playerId) {
   let lobbyMessage;
   const isCurrentPlayer = message.sender.id === playerId;
 
-  switch (message.messageType) {
+  switch (message.type) {
 
     case MessageTypes.JOINLOBBY: {
       if (isCurrentPlayer) {
@@ -48,7 +48,7 @@ export function parseLobbyMessage(message, playerId, playerName) {
 
     case MessageTypes.EXITEDGAME: {
       lobbyMessage = {
-        message: `${message.sender.name} has left a game.`,
+        message: `Game ${message.roomNumber} has been removed.`,
         color: LobbyColors.playerLeave,
       }
       break;

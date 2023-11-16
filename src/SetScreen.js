@@ -29,7 +29,7 @@ export default function SetScreen() {
     const message = JSON.parse(payload.body);
     console.log(message)
 
-    switch(message.messageType) {
+    switch(message.type) {
 
       case MessageTypes.ACCEPTEDJOIN: {
         setAppState(ApplicationState.GAME_INITIALIZED);
@@ -39,6 +39,11 @@ export default function SetScreen() {
       case MessageTypes.CREDENTIALS: {
         setPlayerId(message.id);
         if (!playerName) setPlayerName(message.name);
+        break;
+      }
+
+      case MessageTypes.LOAD_ALL_DATA: {
+        console.log(message);
         break;
       }
 

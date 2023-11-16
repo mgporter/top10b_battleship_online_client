@@ -75,88 +75,10 @@ export default function GameContainer({roomNumberRef, readyToAttackOpponent, set
   const playersIDtoName = useRef({});
   const gameTimeSecondsFinal = useRef(0);
   const gameContainerRef = useRef(null);
-
-  const socketSend = useSocketSend();
-  
-  const onPublicMessageReceived = useCallback((payload) => {
-    const message = JSON.parse(payload.body);
-    const fromCurrentPlayer = message.playerId === playerId;
-    
-    console.log(message);
-
-    switch(message.type) {
-
-      case PacketType.ATTACK: {
-        if (fromCurrentPlayer) {
-          setAttackResultPlayer(message);
-        } else {
-          setAttackResultOpponent(message);
-          setReadyToAttackOpponent(true);
-        }
-        break;
-      }
-
-      case PacketType.PLACED_SHIP: {
-        if (!fromCurrentPlayer) setOpponentShipsPlaced((prev) => prev + 1);
-        break;
-      }
-
-      case PacketType.GAME_START: {
-        setAppState(ApplicationState.SHIP_PLACEMENT);
-        setInGameMessages(inGameMessages.WELCOME);
-        break;
-      }
-
-      case PacketType.PLAYERLIST_UPDATE: {
-        const atLeastTwoPlayers = updatePlayerList(setPlayerList, message, playersIDtoName, playerId);
-        if (atLeastTwoPlayers) {
-          setNotEnoughPlayers(false);
-        } else {
-          setNotEnoughPlayers(true);
-        }
-        break;
-      }
-
-      case PacketType.PLACED_COMPLETE: {
-        sendPacket(PacketType.LOAD_ALL_DATA);
-        break;
-      }
-
-      case PacketType.GAME_ATTACK_PHASE_START: {
-        setAppState(ApplicationState.ATTACK_PHASE);
-        if (playerList.playerOne === playerId) {
-          setInGameMessages(inGameMessages.STARTGAMEFIRSTATTACK);
-          setReadyToAttackOpponent(true);
-        } else {
-          setInGameMessages(inGameMessages.STARTGAMESECONDATTACK);
-        }
-        setTimeout(() => {
-          setShowOpponentPanels(true);
-        }, 400)
-        break;
-      }
-
-      case PacketType.ATTACK_ALLSUNK: {
-        setWinner(message.playerId);
-        setReadyToAttackOpponent(false);
-        setTimeout(() => {        // Give a slight delay in order to let the final boardping animation play
-          setAppState(ApplicationState.GAME_END);
-        }, 1200)
-        break;
-      }
-
-      default: {}
-    }
-  }, [playerList]);
-
-  const publicGameSub = useSubscription(`/game/${roomNumberRef.current}`, onPublicMessageReceived, `game${roomNumberRef.current}`);
-
   const shipHealthPanelRef = useRef(null);
   const shipPlacementPanelRef = useRef(null);
 
-  useEffect(() => {
-    if (publicGameSub) socketSend.send("/app/gameloaded", {roomNumber: roomNumberRef.current});
-  }, [publicGameSub])
+  const socketSend = useSocketSend();
 
   const sendPacket = useCallback((type, data = null) => {
 
@@ -167,6 +89,7 @@ export default function GameContainer({roomNumberRef, readyToAttackOpponent, set
     switch(type) {
 
       case PacketType.PLACED_SHIP: {
+        packet["shipsPlacedCount"] = data;
         socketSend.send("/app/game/placeShip", packet);
         break;
       }
@@ -202,10 +125,100 @@ export default function GameContainer({roomNumberRef, readyToAttackOpponent, set
         break;
       }
 
+      case PacketType.SAVESTATE: {
+        socketSend.send("/app/game/saveState", packet);
+        break;
+      }
+
       default: {}
       
     }
   }, [socketSend]);
+  
+  const onPublicMessageReceived = useCallback((payload) => {
+    const message = JSON.parse(payload.body);
+    const fromCurrentPlayer = message.playerId === playerId;
+    
+    console.log(message);
+    console.log(playerId)
+
+    switch(message.type) {
+
+      case PacketType.ATTACK: {
+        if (fromCurrentPlayer) {
+          setAttackResultPlayer(message);
+        } else {
+          setAttackResultOpponent(message);
+          setReadyToAttackOpponent(true);
+        }
+        break;
+      }
+
+      case PacketType.PLACED_SHIP: {
+        if (!fromCurrentPlayer) setOpponentShipsPlaced(message.shipsPlacedCount);
+        break;
+      }
+
+      case PacketType.GAME_START: {
+        setAppState(ApplicationState.SHIP_PLACEMENT);
+        setInGameMessages(inGameMessages.WELCOME);
+        break;
+      }
+
+      case PacketType.PLAYERLIST_UPDATE: {
+        const atLeastTwoPlayers = updatePlayerList(setPlayerList, message, playersIDtoName, playerId);
+        if (atLeastTwoPlayers) {
+          setNotEnoughPlayers(false);
+        } else {
+          setNotEnoughPlayers(true);
+
+          // If playerOne or playerTwo is missing, we send a saveState packet to save our game
+          // That way, if someone new joins, they can pick up where we left off
+          
+          sendPacket(PacketType.SAVESTATE);
+        }
+        break;
+      }
+
+      case PacketType.PLACED_COMPLETE: {
+        sendPacket(PacketType.LOAD_ALL_DATA);
+        break;
+      }
+
+      case PacketType.GAME_ATTACK_PHASE_START: {
+        setAppState(ApplicationState.ATTACK_PHASE);
+        if (playerList.playerOne === playerId) {
+          setInGameMessages(inGameMessages.STARTGAMEFIRSTATTACK);
+          setReadyToAttackOpponent(true);
+        } else {
+          setInGameMessages(inGameMessages.STARTGAMESECONDATTACK);
+        }
+        setTimeout(() => {
+          setShowOpponentPanels(true);
+        }, 400)
+        break;
+      }
+
+      case PacketType.ATTACK_ALLSUNK: {
+        setWinner(message.playerId);
+        setReadyToAttackOpponent(false);
+        setTimeout(() => {        // Give a slight delay in order to let the final boardping animation play
+          setAppState(ApplicationState.GAME_END);
+        }, 1200)
+        break;
+      }
+
+      default: {}
+    }
+  }, [playerList, sendPacket, playerId]);
+
+  const publicGameSub = useSubscription(`/game/${roomNumberRef.current}`, onPublicMessageReceived, `game${roomNumberRef.current}`);
+
+  useEffect(() => {
+    if (publicGameSub) socketSend.send("/app/gameloaded", {roomNumber: roomNumberRef.current});
+  }, [publicGameSub])
+
+
 
   const showWinnerScreen = appState === ApplicationState.GAME_END ? true : false;
 

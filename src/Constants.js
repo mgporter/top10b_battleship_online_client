@@ -68,7 +68,5 @@ export const C = {
   avatars: {
     [Avatars.PLAYERCAPTAIN]: playerCaptainAvatar,
   },
-  serverPrefix: "http://localhost:5000"
-  // serverPrefix: "https://mgporter-battleship-online.fly.dev"
-  // serverPrefix: "http://battleship-online-env.eba-ktmrjpui.us-east-1.elasticbeanstalk.com"
+  serverPrefix: process.env.REACT_APP_SERVERPREFIX
 };

@@ -5,7 +5,7 @@ export default function useFetch(endpoint) {
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null);
 
   const request = async function getRequest() {
     setLoading(true);
@@ -20,9 +20,15 @@ export default function useFetch(endpoint) {
     }
   };
 
-  const updateData = useCallback((newData) => {
-    setData(newData);
-  }, []);
+  function updateData(newData) {
+    console.log(loading, error)
+    if (!loading && !error) setData(newData);
+  }
+
+  // const updateData = useCallback((newData) => {
+  //   console.log(loading, error)
+  //   if (!loading && !error) setData(newData);
+  // }, [loading, error, setData]);
 
   return {
     request,
