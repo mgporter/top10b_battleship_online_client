@@ -1,14 +1,12 @@
 import { useState, useEffect, useContext, useRef, useCallback, useMemo } from "react";
 import './roomselectioncontainer.css'
 import MessageWindow from "./MessageWindow";
-import { ApplicationState, connectionStatus, LobbyColors, MessageTypes } from '../../enums';
-import { PlayerIdContext, PlayerNameContext, SetPlayerIdContext, SetPlayerNameContext } from "../../PlayerProvider";
-import { parseLobbyMessage, getGameRoomList, postGameRoom } from "./fetchdata";
-import { SetAppStateContext } from "../../AppStateProvider";
+import { LobbyColors, MessageTypes } from '../../enums';
+import { PlayerIdContext, PlayerNameContext } from "../../PlayerProvider";
+import { parseLobbyMessage } from "./fetchdata";
 import RoomSelectionWindow from "./RoomSelectionWindow";
 import useSubscription from "../../useSubscription";
 import useSocketSend from "../../useSocketSend";
-import useTransition from "react-transition-state";
 import useFetch from "../../useFetch";
 import { endpoints } from "../../Endpoints";
 import githubLogo from "../../images/github-logo.png"
@@ -112,7 +110,7 @@ export default function RoomSelectionContainer({roomNumberRef}) {
   return (
     <div id="lobby-container">
       <div className="logo-title">
-        <h1>BATTLESHIP!</h1>
+        <h1>BATTLESHIP!ER</h1>
         <h2>online</h2>
         <div className='link-container'>
           <a href={C.githubLink} target="_blank" className="created-by-container">

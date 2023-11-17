@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { C } from "./Constants";
 
 export default function useFetch(endpoint) {
@@ -24,11 +24,6 @@ export default function useFetch(endpoint) {
     console.log(loading, error)
     if (!loading && !error) setData(newData);
   }
-
-  // const updateData = useCallback((newData) => {
-  //   console.log(loading, error)
-  //   if (!loading && !error) setData(newData);
-  // }, [loading, error, setData]);
 
   return {
     request,

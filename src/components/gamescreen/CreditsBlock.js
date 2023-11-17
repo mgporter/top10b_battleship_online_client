@@ -10,6 +10,8 @@ export default function CreditsBlock({setShowModelCredits}) {
   const [showQuitConfirmation, setShowQuitConfirmation] = useState(false);
   const setAppState = useContext(SetAppStateContext);
 
+
+  /* Hide the quit confirmation after 3 seconds */
   useEffect(() => {
     if (!showQuitConfirmation) return
     
