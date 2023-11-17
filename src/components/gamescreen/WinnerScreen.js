@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { PlayerIdContext } from '../../PlayerProvider';
+import { PlayerContext, PlayerIdContext } from '../../PlayerProvider';
 import { SetAppStateContext } from '../../AppStateProvider';
 import { ApplicationState } from '../../enums';
 
@@ -11,7 +11,7 @@ export default function WinnerScreen({
   gameTimeSecondsFinal,
   setShowEndGameDialog}) {
 
-  const playerId = useContext(PlayerIdContext);
+  const {playerId} = useContext(PlayerContext);
   const setAppState = useContext(SetAppStateContext);
 
   const winnerWasMe = winner === playerId;

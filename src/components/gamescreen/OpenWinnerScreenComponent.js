@@ -1,11 +1,11 @@
 import { useContext } from "react"
-import { PlayerIdContext } from "../../PlayerProvider";
+import { PlayerContext, PlayerIdContext } from "../../PlayerProvider";
 import { SetAppStateContext } from "../../AppStateProvider";
 import { ApplicationState } from "../../enums";
 
 export default function OpenWinnerScreenComponent({winner, setShowEndGameDialog}) {
 
-  const playerId = useContext(PlayerIdContext);
+  const {playerId} = useContext(PlayerContext);
   const setAppState = useContext(SetAppStateContext);
 
   const message = playerId === winner ? "Congratulations!" : "";

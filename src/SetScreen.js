@@ -4,7 +4,7 @@ import GameContainer from './components/GameContainer';
 import { ApplicationState, MessageTypes, inGameMessages } from './enums';
 import { AppStateContext, SetAppStateContext } from './AppStateProvider';
 import useSubscription from './useSubscription';
-import { PlayerNameContext, SetPlayerIdContext, SetPlayerNameContext } from './PlayerProvider';
+import { PlayerContext, PlayerNameContext, SetPlayerIdContext, SetPlayerNameContext } from './PlayerProvider';
 import useUpdateServerName from "./useUpdateServerName";
 import { setInGameMessagesContext } from './InGameMessageProvider';
 import useSocketSend from './useSocketSend';
@@ -19,9 +19,6 @@ export default function SetScreen() {
   const appState = useContext(AppStateContext);
   const setAppState = useContext(SetAppStateContext);
   const roomNumberRef = useRef(null);
-  const setPlayerId = useContext(SetPlayerIdContext);
-  const playerName = useContext(PlayerNameContext);
-  const setPlayerName = useContext(SetPlayerNameContext);
   const setInGameMessages = useContext(setInGameMessagesContext);
 
   const [gameStateData, setGameStateData] = useState(null);
@@ -39,17 +36,6 @@ export default function SetScreen() {
     console.log(message)
 
     switch(message.type) {
-
-      case MessageTypes.ACCEPTEDJOIN: {
-        setAppState(ApplicationState.GAME_INITIALIZED);
-        break;
-      }
-
-      case MessageTypes.CREDENTIALS: {
-        setPlayerId(message.id);
-        if (!playerName) setPlayerName(message.name);
-        break;
-      }
 
       case MessageTypes.LOAD_ALL_DATA: {
         window.addEventListener("all_models_loaded", () => {
@@ -73,8 +59,6 @@ export default function SetScreen() {
         roomNumberRef.current = null;
         break;
       }
-
-      default: {}
     }
   }, [])
 
@@ -91,7 +75,7 @@ export default function SetScreen() {
     setShowOpponentPanels(true);
   }
 
-  useSubscription("/user/queue/player", onMessageReceived, "private");
+  // useSubscription("/user/queue/player", onMessageReceived, "private");
 
   const showLobby = appState === ApplicationState.ROOM_SELECTION;
 

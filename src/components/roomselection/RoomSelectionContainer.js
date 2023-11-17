@@ -1,12 +1,11 @@
-import { useState, useEffect, useContext, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useContext, useCallback } from "react";
 import './roomselectioncontainer.css'
 import MessageWindow from "./MessageWindow";
 import { LobbyColors, MessageTypes } from '../../enums';
-import { PlayerIdContext, PlayerNameContext } from "../../PlayerProvider";
+import { PlayerContext } from "../../PlayerProvider";
 import { parseLobbyMessage } from "./fetchdata";
 import RoomSelectionWindow from "./RoomSelectionWindow";
 import useSubscription from "../../useSubscription";
-import useSocketSend from "../../useSocketSend";
 import useFetch from "../../useFetch";
 import { endpoints } from "../../Endpoints";
 import githubLogo from "../../images/github-logo.png"
@@ -21,20 +20,13 @@ export default function RoomSelectionContainer({roomNumberRef}) {
     color: LobbyColors.emphasis,
   }]);
 
-  const playerName = useContext(PlayerNameContext);
-  const playerId = useContext(PlayerIdContext);
+  const {playerName, playerId} = useContext(PlayerContext);
 
-  const socketSend = useSocketSend();
-
-  const getGameRooms = useFetch(endpoints.getGameRooms);
-
-  
+  const [requestGameRooms, updateGameRooms, gameRooms] = useFetch(endpoints.getGameRooms);
 
   useEffect(() => {
-    getGameRooms.request();
-  }, [])
-
-
+    requestGameRooms();
+  }, [requestGameRooms])
 
 
   const onPublicMessageReceived = useCallback((payload) => {
@@ -50,7 +42,7 @@ export default function RoomSelectionContainer({roomNumberRef}) {
           roomNumber: message.roomNumber,
           playerList: []
         }
-        getGameRooms.updateData((prev) => [newGame].concat(prev));
+        updateGameRooms((prev) => [newGame].concat(prev));
         break;
       }
 
@@ -67,7 +59,7 @@ export default function RoomSelectionContainer({roomNumberRef}) {
             return room;
           } 
         };
-        getGameRooms.updateData((prev) => prev.map(updateGameRoomsOnJoin));
+        updateGameRooms((prev) => prev.map(updateGameRoomsOnJoin));
         break;
       }
 
@@ -83,7 +75,7 @@ export default function RoomSelectionContainer({roomNumberRef}) {
             return room;
           } 
         };
-        getGameRooms.updateData((prev) => prev.map(updateGameRoomsOnExit));
+        updateGameRooms((prev) => prev.map(updateGameRoomsOnExit));
         break;
       }
 
@@ -94,26 +86,26 @@ export default function RoomSelectionContainer({roomNumberRef}) {
             return room.roomNumber != roomNumber;
           } 
   
-        getGameRooms.updateData((prev) => prev.filter(updateGameRoomsOnRemove));
+          updateGameRooms((prev) => prev.filter(updateGameRoomsOnRemove));
         break;
       }
     }
-  }, [getGameRooms])
+  }, [updateGameRooms, playerId, playerName])
 
-  const publicLobbySub = useSubscription("/lobby", onPublicMessageReceived, "lobby");
+  const updateCallback = useSubscription("/lobby", onPublicMessageReceived, "lobby");
 
   useEffect(() => {
-    if (publicLobbySub) socketSend.send("/app/joinLobby", playerName);
-  }, [publicLobbySub])
+    updateCallback(onPublicMessageReceived);
+  }, [onPublicMessageReceived, updateCallback])
 
 
   return (
     <div id="lobby-container">
       <div className="logo-title">
-        <h1>BATTLESHIP!ER</h1>
+        <h1>BATTLESHIP!</h1>
         <h2>online</h2>
         <div className='link-container'>
-          <a href={C.githubLink} target="_blank" className="created-by-container">
+          <a href={C.githubLink} target="_blank" rel="noreferrer" className="created-by-container">
             <img src={githubLogo} alt="Source code hosted on GitHub" />
             <span>Created by mgporter</span>
           </a>
@@ -122,7 +114,7 @@ export default function RoomSelectionContainer({roomNumberRef}) {
       <MessageWindow messages={messages} />
       <RoomSelectionWindow
         roomNumberRef={roomNumberRef}
-        getGameRooms={getGameRooms}
+        gameRooms={gameRooms}
       />
     </div>
   );

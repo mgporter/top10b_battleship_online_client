@@ -1,17 +1,15 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import { PlayerNameContext, SetPlayerNameContext } from "../../PlayerProvider";
+import { PlayerContext, PlayerNameContext, SetPlayerNameContext } from "../../PlayerProvider";
 import useUpdateServerName from "../../useUpdateServerName";
 import useSocketSend from "../../useSocketSend";
 import { endpoints } from "../../Endpoints";
 
 export default function NameInput() {
 
-  const setPlayerName = useContext(SetPlayerNameContext);
-  const playerName = useContext(PlayerNameContext);
+  const {playerName, setPlayerName} = useContext(PlayerContext);
   const nameInputRef = useRef(null);
   const [localName, setLocalName] = useState("Player");
-  const socketSend = useSocketSend();
-  // const updateServerName = useUpdateServerName();
+  const sendTo = useSocketSend();
 
   useEffect(() => {
     window.addEventListener("keydown", interceptEnter);
@@ -40,8 +38,7 @@ export default function NameInput() {
     if (name === "") name = "Player";
     setPlayerName(name);
     handleNameChange(name);
-    // updateServerName.to(name);
-    socketSend.send(endpoints.changeName, name);
+    sendTo(endpoints.changeName, name);
   }
 
   return (

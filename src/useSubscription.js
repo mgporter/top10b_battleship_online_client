@@ -1,33 +1,39 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import useWebSocketStatus from "./useWebSocketStatus";
 import getSocket from "./getSocket";
 
-export default function useSubscription(subscription, callback, id) {
+export default function useSubscription(destination, callback, id) {
 
-  const [isSubscribed, setIsSubscribed] = useState(false);
   const socket = getSocket();
   const wsStatus = useWebSocketStatus();
-  const isSubscribedRef = useRef(isSubscribed);
+  const subscribeObjRef = useRef(null);
+  const shouldSubscribe = useRef(true); // Make sure the component only subscribes once
 
+  /* Instead of adding 'callback' to the dependency array here, we will instead
+  offer an updateCallback function. This way, when the callback reference
+  changes, a new subscription does not have to be made. The updateCallback
+  can be used inside of an useEffect hook */
+  console.log("use subscribe hook called for " + destination + " and shouldSubscribe is "+ shouldSubscribe.current)
   useEffect(() => {
-    console.log(isSubscribed)
-    console.log("USE SUBSCRIPTION CALLED FOR " + subscription + " " + id + " and isSubscribed is " + isSubscribedRef.current)
-    console.log(wsStatus);
-    if (!wsStatus || isSubscribedRef.current === true) {
-      return;
-    }
-    console.log("subscribing to " + subscription)
-    const sub = socket.subscribe(subscription, callback, {id: id});
-    isSubscribedRef.current = true;
-    setIsSubscribed(true);
-    return () => {
-      isSubscribedRef.current = false;
-      setIsSubscribed(false);
-      sub.unsubscribe();
-      
-    }
-  }, [wsStatus, callback])
+    if (!wsStatus || !shouldSubscribe.current) return;
+    console.log("subscribing to " + destination)
+    shouldSubscribe.current = false;
+    subscribeObjRef.current = socket.subscribe(destination, callback, {id: id});
 
-  return isSubscribed;
+    return () => {
+      if (subscribeObjRef.current) {
+        subscribeObjRef.current.unsubscribe();
+        subscribeObjRef.current = null;
+        shouldSubscribe.current = true;
+      }
+    }
+  }, [wsStatus, destination, id, socket]);
+
+  const updateCallback = useCallback((callback) => {
+    if (!subscribeObjRef.current) return;
+    socket[id] = callback;
+  }, [socket, id])
+
+  return updateCallback;
 
 }

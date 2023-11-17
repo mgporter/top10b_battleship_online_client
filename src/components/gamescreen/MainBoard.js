@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useContext } from 'react';
 import { C } from '../../Constants';
 import Gameboard from '../logic/gameboard';
 import { ApplicationState, Avatars, PacketType, battleStatsActions, inGameMessages } from '../../enums';
-import ModelContainer from "./ModelContainer";
+import ModelContainerMemo from "./ModelContainer";
 import { AppStateContext } from '../../AppStateProvider';
 import ShipPlacement from '../logic/shipplacement';
 import { addHitToHealthStatus, handleAttackResult, coordinateToDOMCell } from '../logic/boardhelperfunctions';
@@ -263,7 +263,7 @@ export default function MainBoard({
           <div className="ping-container" ref={pingRef}><div className="ping-ring"></div></div>
           </div>
       </main>
-      <ModelContainer 
+      <ModelContainerMemo 
         modelRef={modelRef} 
         playerboardRef={playerboardRef} 
         mainElementRef={mainElementRef}

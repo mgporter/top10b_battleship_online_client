@@ -1,12 +1,6 @@
 import { createContext, useState } from "react";
-// import { v4 as uuidv4 } from "uuid";
 
-// const uuid = uuidv4();
-
-export const PlayerIdContext = createContext(null);
-export const SetPlayerIdContext = createContext(null);
-export const PlayerNameContext = createContext(null);
-export const SetPlayerNameContext = createContext(null);
+export const PlayerContext = createContext(null);
 
 export function PlayerProvider({children}) {
   
@@ -16,15 +10,16 @@ export function PlayerProvider({children}) {
   const [playerName, setPlayerName] = useState(initialName ? initialName : null);
   const [playerId, setPlayerId] = useState(initialId ? initialId : null);
 
+  const playerContextObject = {
+    playerName,
+    setPlayerName,
+    playerId,
+    setPlayerId
+  }
+
   return (
-    <PlayerIdContext.Provider value={playerId}>
-      <SetPlayerIdContext.Provider value={setPlayerId}>
-        <PlayerNameContext.Provider value={playerName}>
-          <SetPlayerNameContext.Provider value={setPlayerName}>
-            {children}
-          </SetPlayerNameContext.Provider>
-        </PlayerNameContext.Provider>
-      </SetPlayerIdContext.Provider>
-    </PlayerIdContext.Provider>
+    <PlayerContext.Provider value={playerContextObject}>
+      {children}
+    </PlayerContext.Provider>
   );
 }

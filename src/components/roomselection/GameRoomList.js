@@ -2,15 +2,15 @@ import { useState, useCallback } from "react";
 import GameRow from "./GameRow";
 import JoinGameDialog from "./JoinGameDialog";
 
-export default function GameRoomList({joinGame, getGameRooms}) {
+export default function GameRoomList({joinGame, gameRooms}) {
 
   const [showJoinGameDialog, setShowJoinGameDialog] = useState({show: false});
 
   const messageStyle = {marginTop: "48px", fontSize: "1.6rem", alignSelf: "center"};
-  const gameRooms = getGameRooms.data;
+  const gameRoomsList = gameRooms.data;
 
   const handleGameSelection = useCallback((e) => {
-    const gameroom = gameRooms[e.target.id - 1];
+    const gameroom = gameRoomsList[e.target.id - 1];
     const gameNumber = gameroom.roomNumber;
     const players = gameroom.playerList.map(player => player.name);
     setShowJoinGameDialog({
@@ -19,7 +19,7 @@ export default function GameRoomList({joinGame, getGameRooms}) {
       players: players,
       full: gameroom.playerList.length >= 2,
     });
-  }, [gameRooms, setShowJoinGameDialog])
+  }, [gameRoomsList, setShowJoinGameDialog])
 
 
   return (
@@ -29,14 +29,14 @@ export default function GameRoomList({joinGame, getGameRooms}) {
         setShowJoinGameDialog={setShowJoinGameDialog}
         joinGame={joinGame}>
       </JoinGameDialog>}
-      {getGameRooms.loading && <p style={messageStyle}>Loading Gamerooms...</p>}
-      {getGameRooms.error && <p style={messageStyle}>{getGameRooms.error}</p>}
+      {gameRooms.loading && <p style={messageStyle}>Loading Gamerooms...</p>}
+      {gameRooms.error && <p style={messageStyle}>{gameRooms.error}</p>}
       <ul id="join-game-box">
-        {gameRooms && (
-          gameRooms.length === 0 ? 
+        {gameRooms.data && (
+          gameRooms.data.length === 0 ? 
           <p style={messageStyle}>There are no game rooms yet. Try creating one!</p>
           :
-          gameRooms.map((gameroom, i) => (
+          gameRooms.data.map((gameroom, i) => (
             <GameRow onClick={handleGameSelection} key={gameroom.roomNumber} {...gameroom} row={i + 1} />
           ))
         )}

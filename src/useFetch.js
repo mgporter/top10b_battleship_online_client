@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { C } from "./Constants";
 
 export default function useFetch(endpoint) {
@@ -7,7 +7,7 @@ export default function useFetch(endpoint) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const request = async function getRequest() {
+  const request = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(C.serverPrefix + endpoint);
@@ -18,19 +18,20 @@ export default function useFetch(endpoint) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [endpoint]);
 
-  function updateData(newData) {
-    console.log(loading, error)
+  const updateData = useCallback((newData) => {
     if (!loading && !error) setData(newData);
-  }
+  }, [error, loading]);
 
-  return {
+  return [
     request,
-    data,
-    loading,
-    error,
-    updateData
-  }
+    updateData,
+    {
+      data,
+      loading,
+      error
+    }
+  ]
 
 }

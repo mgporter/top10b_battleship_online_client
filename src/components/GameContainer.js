@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext, useRef, useReducer, useCallback, useMemo } from "react";
 import { ApplicationState, PacketType, Avatars, inGameMessages } from '../enums';
-import { PlayerIdContext } from "../PlayerProvider";
+import { PlayerContext, PlayerIdContext } from "../PlayerProvider";
 import "./gamecontainer.css";
 import './gamescreen/winnerscreen.css';
 import FullScreenInfoDialog from "./FullScreenInfoDialog.js";
@@ -78,7 +78,7 @@ export default function GameContainer({
   });
 
   // load contexts
-  const playerId = useContext(PlayerIdContext);
+  const {playerId} = useContext(PlayerContext);
   const appState = useContext(AppStateContext);
   const setAppState = useContext(SetAppStateContext);
   const setInGameMessages = useContext(setInGameMessagesContext);
@@ -92,7 +92,9 @@ export default function GameContainer({
   const shipHealthPanelRef = useRef(null);
   const shipPlacementPanelRef = useRef(null);
 
-  const socketSend = useSocketSend();
+  const sendTo = useSocketSend();
+
+  console.log("GAMECONTAINER RENDERED");
 
   const sendPacket = useCallback((type, data = null) => {
 
@@ -104,7 +106,7 @@ export default function GameContainer({
 
       case PacketType.PLACED_SHIP: {
         packet["shipsPlacedCount"] = data;
-        socketSend.send("/app/game/placeShip", packet);
+        sendTo("/app/game/placeShip", packet);
         break;
       }
 
@@ -123,38 +125,34 @@ export default function GameContainer({
         })
 
         packet["placementList"] = packetizedShips;
-        socketSend.send("/app/game/placementComplete", packet);
+        sendTo("/app/game/placementComplete", packet);
         break;
       }
 
       case PacketType.ATTACK: {
         packet["row"] = data[0];
         packet["col"] = data[1];
-        socketSend.send("/app/game/attack", packet);
+        sendTo("/app/game/attack", packet);
         break;
       }
 
       case PacketType.LOAD_ALL_DATA: {
-        socketSend.send("/app/game/loadGameData", packet);
+        sendTo("/app/game/loadGameData", packet);
         break;
       }
 
       case PacketType.SAVESTATE: {
-        socketSend.send("/app/game/saveState", packet);
+        sendTo("/app/game/saveState", packet);
         break;
       }
-
-      default: {}
       
     }
-  }, [socketSend]);
+  }, [sendTo]);
   
   const onPublicMessageReceived = useCallback((payload) => {
     const message = JSON.parse(payload.body);
     const fromCurrentPlayer = message.playerId === playerId;
-    
-    console.log(message);
-    console.log(playerId)
+
 
     switch(message.type) {
 
@@ -183,6 +181,7 @@ export default function GameContainer({
       received, then setNotEnoughPlayers will cause a dialog to show on the screen  */
 
       case PacketType.PLAYERLIST_UPDATE: {
+        console.log("GOT PLAYERLIST UPDATE: " + message)
         const atLeastTwoPlayers = updatePlayerList(setPlayerList, message, playersIDtoName, playerId);
         if (atLeastTwoPlayers) {
           setNotEnoughPlayers(false);
@@ -228,15 +227,18 @@ export default function GameContainer({
         break;
       }
 
-      default: {}
     }
-  }, [playerList, sendPacket, playerId]);
+  }, [playerList, sendPacket, playerId, appState, setAppState, setInGameMessages, setReadyToAttackOpponent, setShowOpponentPanels]);
 
-  const publicGameSub = useSubscription(`/game/${roomNumberRef.current}`, onPublicMessageReceived, `game${roomNumberRef.current}`);
+  const updateCallback = useSubscription(`/game/${roomNumberRef.current}`, onPublicMessageReceived, `game${roomNumberRef.current}`);
 
   useEffect(() => {
-    if (publicGameSub) socketSend.send("/app/gameloaded", {roomNumber: roomNumberRef.current});
-  }, [publicGameSub])
+    updateCallback(onPublicMessageReceived)
+  }, [updateCallback, onPublicMessageReceived])
+
+  // useEffect(() => {
+  //   if (publicGameSub) sendTo("/app/gameloaded", {roomNumber: roomNumberRef.current});
+  // }, [publicGameSub])
 
 
 

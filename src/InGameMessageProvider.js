@@ -1,7 +1,7 @@
 import { createContext, useContext, useState } from "react"
 import { inGameMessages as types, Avatars } from "./enums"
 import { C } from "./Constants";
-import { PlayerNameContext } from "./PlayerProvider";
+import { PlayerContext, PlayerNameContext } from "./PlayerProvider";
 
 export const setInGameMessagesContext = createContext(null);
 export const inGameMessagesContext = createContext(null);
@@ -9,7 +9,7 @@ export const inGameMessagesContext = createContext(null);
 export default function InGameMessageProvider({children}) {
 
   const [inGameMessages, setInGameMessages] = useState([]);
-  const playerName = useContext(PlayerNameContext);
+  const {playerName} = useContext(PlayerContext);
 
   function createMessage(inGameMessageType, shipType = null) {
     let shipName;
@@ -30,7 +30,7 @@ export default function InGameMessageProvider({children}) {
       }
 
       case types.FIRSTSHIPSELECTED: {
-        message.text = <div className='message-text'>Now, place our <span className="yellow">{shipName}</span> somewhere the enemy will never think to look. You can rotate the ship's position with the <span className="lightblue">mousewheel</span> and <span className="lightblue">arrowkeys</span>.</div>
+        message.text = <div className='message-text'>Now, place our <span className="yellow">{shipName}</span> somewhere the enemy will never think to look. You can rotate the ship&apos;s position with the <span className="lightblue">mousewheel</span> and <span className="lightblue">arrowkeys</span>.</div>
         break;
       }
 
@@ -80,7 +80,7 @@ export default function InGameMessageProvider({children}) {
       }
 
       case types.ATTACKSUNKSHIP: {
-        message.text = <div className='message-text'>The enemy's <span className="red">{shipName}</span> has been sunk.</div>
+        message.text = <div className='message-text'>The enemy&apos;s <span className="red">{shipName}</span> has been sunk.</div>
         break;
       }
 
@@ -95,7 +95,7 @@ export default function InGameMessageProvider({children}) {
       }
 
       case types.OPPONENTSUNKSHIP: {
-        message.text = <div className='message-text'>I'm sorry, sir. Our <span className="yellow">{shipName}</span> has been sunk.</div>
+        message.text = <div className='message-text'>I&apos;m sorry, sir. Our <span className="yellow">{shipName}</span> has been sunk.</div>
         break;
       }
 

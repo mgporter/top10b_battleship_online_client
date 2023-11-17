@@ -87,10 +87,6 @@ const normalizers = {
 };
 
 function Model(playerboardRef, mainElementRef, gameContainerRef) {
-  console.log("Model Module loaded with ");
-  console.log(playerboardRef)
-  console.log(mainElementRef)
-  console.log(gameContainerRef);
   const enableDebugMode = false;
 
   const OBJloader = new OBJLoader();
@@ -270,7 +266,6 @@ function Model(playerboardRef, mainElementRef, gameContainerRef) {
   }
 
   function render() {
-    console.log("render called")
     renderer.render(scene, camera);
   }
 
@@ -441,7 +436,7 @@ function Model(playerboardRef, mainElementRef, gameContainerRef) {
   };
 }
 
-const ModelContainer = memo(({modelRef, playerboardRef, mainElementRef, gameContainerRef}) => {
+const ModelContainerMemo = memo(function ModelContainer({modelRef, playerboardRef, mainElementRef, gameContainerRef}) {
 
   useEffect(() => {
     modelRef.current = Model(playerboardRef, mainElementRef, gameContainerRef);
@@ -454,4 +449,4 @@ const ModelContainer = memo(({modelRef, playerboardRef, mainElementRef, gameCont
   return;
 })
 
-export default ModelContainer;
+export default ModelContainerMemo;
