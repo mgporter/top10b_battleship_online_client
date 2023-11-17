@@ -1,7 +1,9 @@
 import { SetAppStateContext } from '../../AppStateProvider';
 import { ApplicationState } from '../../enums';
 import './creditsblock.css';
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
+import { C } from '../../Constants';
+import githubLogo from "../../images/github-logo.png"
 
 export default function CreditsBlock({setShowModelCredits}) {
 
@@ -23,9 +25,9 @@ export default function CreditsBlock({setShowModelCredits}) {
   return (
     <div className="section-block credits-block">
       <div className='link-container'>
-        <a href="https://github.com/mgporter/top10_battleship" target="_blank" className="created-by-container">
+        <a href={C.githubLink} target="_blank" className="created-by-container">
           <span>Created by mgporter</span>
-          <img src="https://mgporter.github.io/top10_battleship/5abea1d6dcb1d5aa96a3.png" alt="Source code hosted on GitHub" />
+          <img src={githubLogo} alt="Source code hosted on GitHub" />
         </a>
       </div>
       <div className='link-container'>

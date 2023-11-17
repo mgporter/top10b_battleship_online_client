@@ -68,5 +68,6 @@ export const C = {
   avatars: {
     [Avatars.PLAYERCAPTAIN]: playerCaptainAvatar,
   },
-  serverPrefix: process.env.REACT_APP_SERVERPREFIX
+  serverPrefix: process.env.REACT_APP_SERVERPREFIX,
+  githubLink: "https://github.com/mgporter/top10b_battleship_online_client"
 };

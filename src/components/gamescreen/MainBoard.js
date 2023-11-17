@@ -4,14 +4,13 @@ import { C } from '../../Constants';
 import Gameboard from '../logic/gameboard';
 import { ApplicationState, Avatars, PacketType, battleStatsActions, inGameMessages } from '../../enums';
 import ModelContainer from "./ModelContainer";
-import { PlayerNameContext } from '../../PlayerProvider';
 import { AppStateContext } from '../../AppStateProvider';
 import ShipPlacement from '../logic/shipplacement';
-import { addHitToHealthStatus, handleAttackResult } from '../logic/boardhelperfunctions';
+import { addHitToHealthStatus, handleAttackResult, coordinateToDOMCell } from '../logic/boardhelperfunctions';
 import { setInGameMessagesContext } from '../../InGameMessageProvider';
+import { shipFromJSON } from '../logic/ship';
 
 /* Create the board cells once on load */
-// const cells = (createBoardCells("playerboard"))();
 
 const cells = (function createPlayerboardCells() {
   const cellArr = []
@@ -23,9 +22,6 @@ const cells = (function createPlayerboardCells() {
   return cellArr;
 })();
 
-
-// const board = new Gameboard();
-// const shipPlacement = ShipPlacement(board);
 let board;
 let shipPlacement;
 const directions = Object.keys(C.paths);
@@ -40,7 +36,8 @@ export default function MainBoard({
   shipsPlaced,
   attackResultOpponent,
   dispatchBattleStats,
-  gameContainerRef
+  gameContainerRef,
+  gameStateData
 }) {
 
   const [mouseOverCell, setMouseOverCell] = useState(null);
@@ -64,6 +61,59 @@ export default function MainBoard({
       directions[directionIndex]
     )
   }
+
+  /* If the player is joining a game that was in progress, then the current
+  game state will be loaded here */
+  useEffect(() => {
+    if (!gameStateData) return;
+    const myShips = gameStateData.myShips;
+    const opponentAttacks = gameStateData.opponentAttacks;
+
+    let mySunkShips = 0;
+    for (let JsonShip of myShips) {
+      const ship = shipFromJSON(JsonShip);
+      setShipsPlaced((prev) => [...prev, ship]);
+      shipPlacement.placeShip(ship, ship.getLocation());
+
+      modelRef.current.addModelToScene(
+        ship.getType(),
+        directions[ship.getDirection()],
+        ship.getStartingCoordinates()[0],
+        ship.getStartingCoordinates()[1]
+      );
+      
+      if (ship.isSunk()) {
+        modelRef.current.sinkShip(ship.getType());
+        mySunkShips++;
+      }
+    }
+
+    setPlayerShipsSunk(mySunkShips);
+
+    modelRef.current.resizeCanvasToDisplaySize();
+    playerboardRef.current.classList.add("fade-in-result");
+
+    /* Give the Ship Health Container some time to load and get in the screen,
+     * otherwise handleMiss/Hit/Sink will run before they are rendered to the DOM.
+     * We also fade in the colors on the attacked cells, and add an
+     * event listener on the last cell to turn off the fade.
+     * This is a temporary solution for now.
+     */
+    setTimeout(() => {
+      let targetCell;
+      for (let attack of opponentAttacks) {
+        targetCell = coordinateToDOMCell([attack.row, attack.col], playerboardRef);
+        if (attack.result === PacketType.M) handleMiss(targetCell, true);
+        else if (attack.result === PacketType.H) handleHit(targetCell, true, attack.row, attack.col);
+        else if (attack.result === PacketType.S) handleSink(targetCell, true, attack.row, attack.col);
+      }
+      targetCell.addEventListener("transitionend" , () => {
+        console.log("transitionend")
+        playerboardRef.current.classList.remove("fade-in-result");
+      }, {once: true})
+    }, 100)
+
+  }, [gameStateData])
 
   useEffect(() => {
     board = new Gameboard();
@@ -105,23 +155,34 @@ export default function MainBoard({
     }
   }, [])
 
-  function handleMiss() {
+  function handleMiss(targetCell, loadingData = false) {
+    targetCell.classList.add("miss");
     dispatchBattleStats(battleStatsActions.incrementOpponentShotsFired);
-    setInGameMessages(inGameMessages.OPPONENTMISSED);
+    if (loadingData === false) setInGameMessages(inGameMessages.OPPONENTMISSED);
   }
 
-  function handleHit() {
-    addHitToHealthStatus(board, attackResultOpponent.row, attackResultOpponent.col);
+  function handleHit(targetCell, loadingData = false, row = null, col = null) {
+    targetCell.classList.add("hit");
     dispatchBattleStats(battleStatsActions.incrementOpponentShotsHit);
-    setInGameMessages(inGameMessages.OPPONENTHITSHIP, attackResultOpponent.shipType);
+    if (loadingData === false) {
+      setInGameMessages(inGameMessages.OPPONENTHITSHIP, attackResultOpponent.shipType);
+      addHitToHealthStatus(board, attackResultOpponent.row, attackResultOpponent.col);
+    } else {
+      addHitToHealthStatus(board, row, col);
+    }
   }
 
-  function handleSink() {
-    addHitToHealthStatus(board, attackResultOpponent.row, attackResultOpponent.col);
-    setPlayerShipsSunk((prev) => prev + 1);
-    modelRef.current.sinkShip(attackResultOpponent.shipType);
+  function handleSink(targetCell, loadingData = false, row = null, col = null) {
+    targetCell.classList.add("hit");
     dispatchBattleStats(battleStatsActions.incrementOpponentShotsHit);
-    setInGameMessages(inGameMessages.OPPONENTSUNKSHIP, attackResultOpponent.shipType);
+    if (loadingData === false) {
+      setPlayerShipsSunk((prev) => prev + 1);
+      setInGameMessages(inGameMessages.OPPONENTSUNKSHIP, attackResultOpponent.shipType);
+      addHitToHealthStatus(board, attackResultOpponent.row, attackResultOpponent.col);
+      modelRef.current.sinkShip(attackResultOpponent.shipType);
+    } else {
+      addHitToHealthStatus(board, row, col);
+    }
   }
 
 

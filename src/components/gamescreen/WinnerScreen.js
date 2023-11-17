@@ -45,7 +45,7 @@ export default function WinnerScreen({
             <h1>Though now we flee, from the ashes we shall rise another day...</h1>
             <h2 style={{color: 'rgb(255, 65, 65)'}}>You have lost.</h2>
           </>}
-          <h2>Battle Report</h2>
+          <h2>Final score: {Math.round(battleStats.score)}</h2>
           <div id="end-game-stats-container">
             <p>You</p>
             <p>Shots fired: {battleStats.myShotsFired}</p>

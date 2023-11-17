@@ -11,6 +11,8 @@ import useSocketSend from "../../useSocketSend";
 import useTransition from "react-transition-state";
 import useFetch from "../../useFetch";
 import { endpoints } from "../../Endpoints";
+import githubLogo from "../../images/github-logo.png"
+import { C } from "../../Constants";
 
 export default function RoomSelectionContainer({roomNumberRef}) {
 
@@ -109,6 +111,16 @@ export default function RoomSelectionContainer({roomNumberRef}) {
 
   return (
     <div id="lobby-container">
+      <div className="logo-title">
+        <h1>BATTLESHIP!</h1>
+        <h2>online</h2>
+        <div className='link-container'>
+          <a href={C.githubLink} target="_blank" className="created-by-container">
+            <img src={githubLogo} alt="Source code hosted on GitHub" />
+            <span>Created by mgporter</span>
+          </a>
+        </div>
+      </div>
       <MessageWindow messages={messages} />
       <RoomSelectionWindow
         roomNumberRef={roomNumberRef}

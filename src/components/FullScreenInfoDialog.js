@@ -21,10 +21,17 @@ export default function FullScreenInfoDialog({opponentShipsPlaced, notEnoughPlay
     setModelsLoadedCount((prev) => prev + 1);
   }
 
+  useEffect(() => {
+    if (modelsLoadedCount == process.env.REACT_APP_MODELLOADCOUNT) {
+      window.dispatchEvent(new Event("all_models_loaded"));
+    }
+  }, [modelsLoadedCount])
+
   const allModelsLoaded = modelsLoadedCount >= C.numberOfModelsToLoad;
   const waitingForAnotherPlayer = appState === ApplicationState.GAME_INITIALIZED;
   const waitingForPlayerToPressStart = appState === ApplicationState.SHIPS_PLACED_AND_STARTED;
   const showOpponentShipsPlacedMinitext = appState === ApplicationState.SHIP_PLACEMENT;
+
 
   if (appState === ApplicationState.GAME_END) return;
 

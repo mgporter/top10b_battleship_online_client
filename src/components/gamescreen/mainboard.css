@@ -45,12 +45,6 @@
 
 #playercanvas {
   position: absolute;
-  /* top: 0px;
-  left: -50px;
-  right: 50px;
-  bottom: 0px; */
-  /* transform: rotateX(55deg); */
-  /* border: 2px solid red; */
   pointer-events: none;
   z-index: 100;
 }
@@ -70,6 +64,11 @@
 .cell.hit, .cell.miss {
   cursor: default;
   pointer-events: none;
+}
+
+.fade-in-result .cell.hit, 
+.fade-in-result .cell.miss {
+  transition: 1.5s background-color;
 }
 
 .disable-hover .cell:hover {

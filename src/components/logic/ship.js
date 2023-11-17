@@ -1,5 +1,17 @@
 import { C } from "../../Constants";
-import { ShipType } from "../../enums";
+
+export function shipFromJSON(JsonShip) {
+  const ship = Ship(JsonShip.type);
+  ship.setId(JsonShip.shipId);
+  ship.setDirection(JsonShip.direction);
+  ship.setHits(JsonShip.hits);
+
+  for (let coord of JsonShip.location) {
+    ship.addCoordinateToLocation([coord.row, coord.col]);
+  }
+  
+  return ship;
+}
 
 export default function Ship(type) {
   let hits = 0;
@@ -40,6 +52,10 @@ export default function Ship(type) {
     hits += 1;
   }
 
+  function setHits(newHits) {
+    hits = newHits;
+  }
+
   function getHitCount() {
     return hits;
   }
@@ -52,6 +68,10 @@ export default function Ship(type) {
     for (let coordinate of coordinateList) {
       coordinates.push(coordinate);
     }
+  }
+
+  function addCoordinateToLocation(coordinate) {
+    coordinates.push(coordinate);
   }
 
   function resetLocation() {
@@ -67,7 +87,7 @@ export default function Ship(type) {
   }
 
   function getStartingCoordinates() {
-    if (coordinates.length === 0) throw new Error("Ship coordinates not set yet");
+    if (coordinates.length === 0) return [null, null];
     return coordinates[0];
   }
 
@@ -80,10 +100,12 @@ export default function Ship(type) {
     setId,
     getId,
     receiveHit,
+    setHits,
     getHitCount,
     isSunk,
     isPlaced,
     setLocation,
+    addCoordinateToLocation,
     getLocation,
     resetLocation,
     getStartingCoordinates

@@ -1,12 +1,12 @@
-import { useContext, useState, useRef, useCallback } from 'react';
+import { useContext, useState, useRef, useCallback, useEffect } from 'react';
 import RoomSelectionContainer from './components/roomselection/RoomSelectionContainer';
 import GameContainer from './components/GameContainer';
-import { ApplicationState, MessageTypes } from './enums';
+import { ApplicationState, MessageTypes, inGameMessages } from './enums';
 import { AppStateContext, SetAppStateContext } from './AppStateProvider';
 import useSubscription from './useSubscription';
 import { PlayerNameContext, SetPlayerIdContext, SetPlayerNameContext } from './PlayerProvider';
 import useUpdateServerName from "./useUpdateServerName";
-import InGameMessageProvider from './InGameMessageProvider';
+import { setInGameMessagesContext } from './InGameMessageProvider';
 import useSocketSend from './useSocketSend';
 import { endpoints } from './Endpoints';
 
@@ -14,6 +14,7 @@ export default function SetScreen() {
   console.log("SETSCREEN RENDERED")
 
   const [readyToAttackOpponent, setReadyToAttackOpponent] = useState(false);
+  const [showOpponentPanels, setShowOpponentPanels] = useState(false);
 
   const appState = useContext(AppStateContext);
   const setAppState = useContext(SetAppStateContext);
@@ -21,10 +22,18 @@ export default function SetScreen() {
   const setPlayerId = useContext(SetPlayerIdContext);
   const playerName = useContext(PlayerNameContext);
   const setPlayerName = useContext(SetPlayerNameContext);
-  const socketSend = useSocketSend();
-  // const updateServerName = useUpdateServerName();
+  const setInGameMessages = useContext(setInGameMessagesContext);
 
-  
+  const [gameStateData, setGameStateData] = useState(null);
+
+  useEffect(() => {
+    if (appState === ApplicationState.ROOM_SELECTION) {
+      setGameStateData(null);
+      setShowOpponentPanels(false);
+      setReadyToAttackOpponent(false);
+    }
+  }, [appState])
+
   const onMessageReceived = useCallback((payload) => {
     const message = JSON.parse(payload.body);
     console.log(message)
@@ -43,7 +52,10 @@ export default function SetScreen() {
       }
 
       case MessageTypes.LOAD_ALL_DATA: {
-        console.log(message);
+        window.addEventListener("all_models_loaded", () => {
+          console.log("All models loaded event received")
+          changeToAttackMode(message);
+        }, {once: true})
         break;
       }
 
@@ -66,6 +78,19 @@ export default function SetScreen() {
     }
   }, [])
 
+  function changeToAttackMode(message) {
+    setGameStateData(message);
+    setAppState(ApplicationState.ATTACK_PHASE);
+    if (message.goFirst) {
+      setReadyToAttackOpponent(true);
+      setInGameMessages(inGameMessages.STARTGAMEFIRSTATTACK);
+    } else {
+      setReadyToAttackOpponent(false);
+      setInGameMessages(inGameMessages.STARTGAMESECONDATTACK);
+    }
+    setShowOpponentPanels(true);
+  }
+
   useSubscription("/user/queue/player", onMessageReceived, "private");
 
   const showLobby = appState === ApplicationState.ROOM_SELECTION;
@@ -74,13 +99,14 @@ export default function SetScreen() {
     {showLobby ? (
       <RoomSelectionContainer roomNumberRef={roomNumberRef} />
     ) : (
-      <InGameMessageProvider>
-        <GameContainer 
-          roomNumberRef={roomNumberRef}
-          readyToAttackOpponent={readyToAttackOpponent}
-          setReadyToAttackOpponent={setReadyToAttackOpponent}
-        />
-      </InGameMessageProvider>
+      <GameContainer 
+        roomNumberRef={roomNumberRef}
+        readyToAttackOpponent={readyToAttackOpponent}
+        setReadyToAttackOpponent={setReadyToAttackOpponent}
+        gameStateData={gameStateData}
+        showOpponentPanels={showOpponentPanels}
+        setShowOpponentPanels={setShowOpponentPanels}
+      />
     )}
   </>)
 }

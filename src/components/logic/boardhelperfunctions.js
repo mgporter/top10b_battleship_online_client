@@ -26,16 +26,15 @@ export function handleAttackResult(
   handleSink) {
 
   if (attackPacket.result === PacketType.ATTACK_MISSED) {
-    pingBoard(boardRef, pingRef, attackPacket.row, attackPacket.col, "miss", handleMiss);
+    pingBoard(boardRef, pingRef, attackPacket.row, attackPacket.col, handleMiss);
   } else if (attackPacket.result === PacketType.ATTACK_HITSHIP) {
-    pingBoard(boardRef, pingRef, attackPacket.row, attackPacket.col, "hit", handleHit);
+    pingBoard(boardRef, pingRef, attackPacket.row, attackPacket.col, handleHit);
   } else if (attackPacket.result === PacketType.ATTACK_SUNKSHIP) {
-    pingBoard(boardRef, pingRef, attackPacket.row, attackPacket.col, "hit", handleSink);
+    pingBoard(boardRef, pingRef, attackPacket.row, attackPacket.col, handleSink);
   }
-
 }
 
-function pingBoard(boardRef, pingRef, row, column, resultClassname, callback) {
+function pingBoard(boardRef, pingRef, row, column, callback) {
 
   const pingElement = pingRef.current;
 
@@ -53,8 +52,8 @@ function pingBoard(boardRef, pingRef, row, column, resultClassname, callback) {
       pingElement.classList.remove('boardping');
       pingElement.style.display = 'none';
       const targetCell = coordinateToDOMCell([row, column], boardRef);
-      targetCell.classList.add(resultClassname);
-      callback();
+      // targetCell.classList.add(resultClassname);
+      callback(targetCell);
     },
     { once: true }
   );
@@ -115,6 +114,10 @@ export function displayShipOnOpponentBoard(boardOverlayRef, attackResult) {
 
 export function addHitToHealthStatus(board, row, column) {
   const cellObj = board.getCell([row, column]);
+  console.log(board)
+  console.log(Boolean(cellObj.getShip()))
+  console.log(cellObj.getShip().getType())
+  console.log(cellObj.getShipPartNumber())
   if (!cellObj.getShip()) return;
   const shipType = cellObj.getShip().getType();
   const partNumber = cellObj.getShipPartNumber();
@@ -123,47 +126,89 @@ export function addHitToHealthStatus(board, row, column) {
     `.ship-health-container[data-shiptype="${shipType}"] .health-box[data-shipsection="${partNumber}"]`
   );
 
+  console.log(healthCell)
+
   if (healthCell) healthCell.classList.add('hit');
 }
 
 
-export function battleCounterReducer(current, action) {
+function calculateScore(newStats, currentScore) {
 
+  let hitStreak = 1
+  
+  for (let i = newStats.streak.length - 1; i >= newStats.streak.length - 3; i--) {
+    hitStreak += newStats.streak[i];
+  }
+
+  const newPoints = (500 * newStats.myHitRate) * (hitStreak/3);
+  return currentScore + newPoints;
+}
+
+export function battleCounterReducer(current, action) {
+  console.log(current.streak)
   switch(action) {
     case battleStatsActions.incrementMyShotsFired: {
-      return {
+      const newStats = {
         myShotsFired: current.myShotsFired + 1, 
         opponentShotsFired: current.opponentShotsFired, 
         myShotsHit: current.myShotsHit, 
-        opponentShotsHit: current.opponentShotsHit
+        opponentShotsHit: current.opponentShotsHit,
+        streak: [...current.streak, 0],
+        score: current.score
       };
+
+      newStats.myHitRate = newStats.myShotsHit / newStats.myShotsFired;
+      newStats.opponentHitRate = current.opponentHitRate;
+
+      return newStats;
     }
 
     case battleStatsActions.incrementMyShotsHit: {
-      return {
+      const newStats = {
         myShotsFired: current.myShotsFired + 1, 
         opponentShotsFired: current.opponentShotsFired, 
         myShotsHit: current.myShotsHit + 1, 
-        opponentShotsHit: current.opponentShotsHit
+        opponentShotsHit: current.opponentShotsHit,
+        streak: [...current.streak, 1],
       };
+
+      newStats.myHitRate = newStats.myShotsHit / newStats.myShotsFired;
+      newStats.opponentHitRate = current.opponentHitRate;
+      newStats.score = calculateScore(newStats, current.score);
+
+      return newStats;
     }
 
     case battleStatsActions.incrementOpponentShotsFired: {
-      return {
+      const newStats = {
         myShotsFired: current.myShotsFired, 
         opponentShotsFired: current.opponentShotsFired + 1, 
         myShotsHit: current.myShotsHit, 
-        opponentShotsHit: current.opponentShotsHit
+        opponentShotsHit: current.opponentShotsHit,
+        streak: current.streak,
+        score: current.score
       };
+
+      newStats.myHitRate = current.myHitRate;
+      newStats.opponentHitRate = newStats.opponentShotsHit / newStats.opponentShotsFired;
+
+      return newStats;
     }
 
     case battleStatsActions.incrementOpponentShotsHit: {
-      return {
+      const newStats = {
         myShotsFired: current.myShotsFired, 
         opponentShotsFired: current.opponentShotsFired + 1, 
         myShotsHit: current.myShotsHit, 
-        opponentShotsHit: current.opponentShotsHit + 1
+        opponentShotsHit: current.opponentShotsHit + 1,
+        streak: current.streak,
+        score: current.score
       };
+
+      newStats.myHitRate = current.myHitRate;
+      newStats.opponentHitRate = newStats.opponentShotsHit / newStats.opponentShotsFired;
+
+      return newStats;
     }
   }
 }

@@ -46,11 +46,17 @@ import { setInGameMessagesContext } from "../InGameMessageProvider.js";
 
 
 
-export default function GameContainer({roomNumberRef, readyToAttackOpponent, setReadyToAttackOpponent}) {
+export default function GameContainer({
+  roomNumberRef, 
+  readyToAttackOpponent, 
+  setReadyToAttackOpponent,
+  gameStateData,
+  showOpponentPanels,
+  setShowOpponentPanels
+}) {
 
   const [playerList, setPlayerList] = useState({playerOne: null, playerTwo: null, observerList: []});
   const [opponentShipsPlaced, setOpponentShipsPlaced] = useState(0);
-  const [showOpponentPanels, setShowOpponentPanels] = useState(false);
   const [notEnoughPlayers, setNotEnoughPlayers] = useState(false);
   const [playerShipsSunk, setPlayerShipsSunk] = useState(0);
   const [opponentShipsSunk, setOpponentShipsSunk] = useState(0);
@@ -64,7 +70,12 @@ export default function GameContainer({roomNumberRef, readyToAttackOpponent, set
     myShotsFired: 0, 
     opponentShotsFired: 0, 
     myShotsHit: 0, 
-    opponentShotsHit: 0});
+    opponentShotsHit: 0,
+    streak: [0,0,0],
+    myHitRate: 0,
+    opponentHitRate: 0,
+    score: 0
+  });
 
   // load contexts
   const playerId = useContext(PlayerIdContext);
@@ -75,6 +86,9 @@ export default function GameContainer({roomNumberRef, readyToAttackOpponent, set
   const playersIDtoName = useRef({});
   const gameTimeSecondsFinal = useRef(0);
   const gameContainerRef = useRef(null);
+
+  /* Right now, these could be moved down into their child components, however
+   * we may want to add animations later, so I'll leave them here. */
   const shipHealthPanelRef = useRef(null);
   const shipPlacementPanelRef = useRef(null);
 
@@ -165,17 +179,23 @@ export default function GameContainer({roomNumberRef, readyToAttackOpponent, set
         break;
       }
 
+      /* If there are less than two players after a playerList packet is
+      received, then setNotEnoughPlayers will cause a dialog to show on the screen  */
+
       case PacketType.PLAYERLIST_UPDATE: {
         const atLeastTwoPlayers = updatePlayerList(setPlayerList, message, playersIDtoName, playerId);
         if (atLeastTwoPlayers) {
           setNotEnoughPlayers(false);
         } else {
           setNotEnoughPlayers(true);
+          setOpponentShipsPlaced(0);
 
           // If playerOne or playerTwo is missing, we send a saveState packet to save our game
           // That way, if someone new joins, they can pick up where we left off
           
-          sendPacket(PacketType.SAVESTATE);
+          if (appState !== ApplicationState.GAME_INITIALIZED) {
+            sendPacket(PacketType.SAVESTATE);
+          }
         }
         break;
       }
@@ -240,6 +260,7 @@ export default function GameContainer({roomNumberRef, readyToAttackOpponent, set
         shipPlacementPanelRef={shipPlacementPanelRef}
         shipHealthPanelRef={shipHealthPanelRef}
         gameContainerRef={gameContainerRef}
+        gameStateData={gameStateData}
       />
       <CreditsBlock setShowModelCredits={setShowModelCredits} />
       {showOpponentPanels && (
@@ -252,6 +273,7 @@ export default function GameContainer({roomNumberRef, readyToAttackOpponent, set
             attackResultPlayer={attackResultPlayer}
             opponentShipsSunk={opponentShipsSunk}
             setOpponentShipsSunk={setOpponentShipsSunk}
+            gameStateData={gameStateData}
           />
           <BottomRightPanel 
             battleStats={battleStats} 
@@ -265,7 +287,8 @@ export default function GameContainer({roomNumberRef, readyToAttackOpponent, set
         playerShipsSunk={playerShipsSunk}
         opponentShipsSunk={opponentShipsSunk}
         gameTimeSecondsFinal={gameTimeSecondsFinal}
-        setShowEndGameDialog={setShowEndGameDialog} />}
+        setShowEndGameDialog={setShowEndGameDialog}
+       />}
       {showModelCredits && <ModelCredits setShowModelCredits={setShowModelCredits} />}
     </div>
   ) 

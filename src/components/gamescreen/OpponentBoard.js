@@ -2,7 +2,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { C } from "../../Constants";
 import './opponentboard.css';
 import { PacketType, battleStatsActions, inGameMessages } from "../../enums";
-import { displayShipOnOpponentBoard, handleAttackResult } from "../logic/boardhelperfunctions";
+import { displayShipOnOpponentBoard, handleAttackResult, coordinateToDOMCell } from "../logic/boardhelperfunctions";
 import { setInGameMessagesContext } from "../../InGameMessageProvider";
 
 /* Create the board cells once on load */
@@ -25,10 +25,10 @@ export default function OpponentBoard({
   setReadyToAttackOpponent,
   dispatchBattleStats,
   opponentShipsSunk,
-  setOpponentShipsSunk
+  setOpponentShipsSunk,
+  gameStateData
 }) {
 
-  // const [opponentShipsSunk, setOpponentShipsSunk] = useState(0);
   const opponentboardRef = useRef(null);
   const boardOverlayRef = useRef(null);
   const pingRef = useRef(null);
@@ -39,6 +39,33 @@ export default function OpponentBoard({
   useEffect(() => {
     opponentPanelRef.current.classList.add('slidein');
   }, [])
+
+  /* If the player is joining a game that was in progress, then the current
+  game state will be loaded here */
+  useEffect(() => {
+   if (!gameStateData) return;
+    const opponentSunkShips = gameStateData.opponentSunkShips;
+    const myAttacks = gameStateData.myAttacks;
+
+    for (let attack of myAttacks) {
+      const targetCell = coordinateToDOMCell([attack.row, attack.col], opponentboardRef);
+      if (attack.result === PacketType.M) handleMiss(targetCell, true);
+      else if (attack.result === PacketType.H) handleHit(targetCell, true);
+      else if (attack.result === PacketType.S) handleSink(targetCell, true);
+    }
+
+    for (let sunkShip of opponentSunkShips) {
+      displayShipOnOpponentBoard(boardOverlayRef, {
+        shipType: sunkShip.type,
+        direction: sunkShip.direction,
+        startingRow: sunkShip.location[0].row,
+        startingCol: sunkShip.location[0].col
+      });
+    }
+
+    setOpponentShipsSunk(opponentSunkShips.length);
+
+  }, [gameStateData])
 
   useEffect(() => {
     if (!attackResultPlayer) return;
@@ -66,21 +93,26 @@ export default function OpponentBoard({
   }, [readyToAttackOpponent])
 
 
-  function handleMiss() {
+  function handleMiss(targetCell, loadingData = false) {
+    targetCell.classList.add("miss");
     dispatchBattleStats(battleStatsActions.incrementMyShotsFired);
-    setInGameMessages(inGameMessages.ATTACKMISSED);
+    if (loadingData === false) setInGameMessages(inGameMessages.ATTACKMISSED);
   }
 
-  function handleHit() {
+  function handleHit(targetCell, loadingData = false) {
+    targetCell.classList.add("hit");
     dispatchBattleStats(battleStatsActions.incrementMyShotsHit);
-    setInGameMessages(inGameMessages.ATTACKHITSHIP, attackResultPlayer.shipType);
+    if (loadingData === false) setInGameMessages(inGameMessages.ATTACKHITSHIP, attackResultPlayer.shipType);
   }
 
-  function handleSink() {
-    displayShipOnOpponentBoard(boardOverlayRef, attackResultPlayer);
-    setOpponentShipsSunk((prev) => prev + 1);
+  function handleSink(targetCell, loadingData = false) {
+    targetCell.classList.add("hit");
     dispatchBattleStats(battleStatsActions.incrementMyShotsHit);
-    setInGameMessages(inGameMessages.ATTACKSUNKSHIP, attackResultPlayer.shipType);
+    if (loadingData === false) {
+      setOpponentShipsSunk((prev) => prev + 1);
+      setInGameMessages(inGameMessages.ATTACKSUNKSHIP, attackResultPlayer.shipType);
+      displayShipOnOpponentBoard(boardOverlayRef, attackResultPlayer);
+    }
   }
 
   function handleCellClick(e) {
