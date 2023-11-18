@@ -42,7 +42,7 @@ export default function RoomSelectionWindow({
     roomSelectionWindowRef.current.classList.add('slidein');
   }, [])
 
-  const updateCallback = useSubscription("/user/queue/player", onPrivateMsgReceived, "lobbyPrivateMsg");
+  const updateCallback = useSubscription("/user/queue/lobby", onPrivateMsgReceived, "lobbyPrivateMsg");
 
   useEffect(() => {
     updateCallback(onPrivateMsgReceived)

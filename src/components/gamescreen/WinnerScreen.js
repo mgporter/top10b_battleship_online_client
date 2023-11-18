@@ -6,8 +6,7 @@ import { ApplicationState } from '../../enums';
 export default function WinnerScreen({
   winner, 
   battleStats, 
-  playerShipsSunk, 
-  opponentShipsSunk, 
+  shipStats,
   gameTimeSecondsFinal,
   setShowEndGameDialog}) {
 
@@ -51,12 +50,12 @@ export default function WinnerScreen({
             <p>Shots fired: {battleStats.myShotsFired}</p>
             <p>Shots hit: {battleStats.myShotsHit}</p>
             <p>Hit rate: {(myHitRate * 100).toFixed(2)}%</p>
-            <p>Boats sunk: {opponentShipsSunk}</p>
+            <p>Boats sunk: {shipStats.opponentShipsSunk}</p>
             <p>Your opponent</p>
             <p>Shots fired: {battleStats.opponentShotsFired}</p>
             <p>Shots hit: {battleStats.opponentShotsHit}</p>
             <p>Hit rate: {(opponentHitRate * 100).toFixed(2)}%</p>
-            <p>Boats sunk: {playerShipsSunk}</p>
+            <p>Boats sunk: {shipStats.playerShipsSunk}</p>
           </div>
           <p id="play-time">Total time: {gameHours}:{String(gameMinutes).padStart(2, "0")}:{String(gameSeconds).padStart(2, "0")}</p>
           <div className='button-row'>

@@ -17,10 +17,8 @@ const MainboardAndPanel = memo(function MainboardAndPanel({
   attackResultOpponent,
   readyToAttackOpponent,
   dispatchBattleStats,
-  playerShipsSunk,
-  setPlayerShipsSunk,
-  shipHealthPanelRef,
-  shipPlacementPanelRef,
+  shipStats,
+  dispatchShipStats,
   gameContainerRef,
   gameStateData
 }) {
@@ -110,19 +108,17 @@ const MainboardAndPanel = memo(function MainboardAndPanel({
           leftPanelFlash={leftPanelFlash}
           sendPacket={sendPacket}
           shipsPlaced={shipsPlaced}
-          shipPlacementPanelRef={shipPlacementPanelRef}
         />}
         {showShipHealthPanel && <ShipHealthPanel 
           shipsPlaced={shipsPlaced}
-          playerShipsSunk={playerShipsSunk}
-          shipHealthPanelRef={shipHealthPanelRef}
+          shipStats={shipStats}
         />}
         <MainBoard 
           mainboardFlash={mainboardFlash} 
           mainboardHover={mainboardHover}
           shipToPlace={shipToPlace}
           sendPacket={sendPacket}
-          setPlayerShipsSunk={setPlayerShipsSunk}
+          dispatchShipStats={dispatchShipStats}
           shipsPlaced={shipsPlaced}
           setShipsPlaced={setShipsPlaced}
           attackResultOpponent={attackResultOpponent}

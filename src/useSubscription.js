@@ -13,18 +13,18 @@ export default function useSubscription(destination, callback, id) {
   offer an updateCallback function. This way, when the callback reference
   changes, a new subscription does not have to be made. The updateCallback
   can be used inside of an useEffect hook */
-  console.log("use subscribe hook called for " + destination + " and shouldSubscribe is "+ shouldSubscribe.current)
+  // console.log("use subscribe hook called for " + destination + " and shouldSubscribe is "+ shouldSubscribe.current)
   useEffect(() => {
     if (!wsStatus || !shouldSubscribe.current) return;
-    console.log("subscribing to " + destination)
+    // console.log("subscribing to " + destination)
     shouldSubscribe.current = false;
     subscribeObjRef.current = socket.subscribe(destination, callback, {id: id});
 
     return () => {
       if (subscribeObjRef.current) {
+        shouldSubscribe.current = true;
         subscribeObjRef.current.unsubscribe();
         subscribeObjRef.current = null;
-        shouldSubscribe.current = true;
       }
     }
   }, [wsStatus, destination, id, socket]);

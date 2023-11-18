@@ -2,7 +2,7 @@ import './mainboard.css';
 import { useState, useRef, useEffect, useContext } from 'react';
 import { C } from '../../Constants';
 import Gameboard from '../logic/gameboard';
-import { ApplicationState, Avatars, PacketType, battleStatsActions, inGameMessages } from '../../enums';
+import { ApplicationState, Avatars, PacketType, battleStatsActions, inGameMessages, shipStatsActions } from '../../enums';
 import ModelContainerMemo from "./ModelContainer";
 import { AppStateContext } from '../../AppStateProvider';
 import ShipPlacement from '../logic/shipplacement';
@@ -31,7 +31,7 @@ export default function MainBoard({
   mainboardHover,
   shipToPlace,
   sendPacket,
-  setPlayerShipsSunk,
+  dispatchShipStats,
   setShipsPlaced,
   shipsPlaced,
   attackResultOpponent,
@@ -88,7 +88,7 @@ export default function MainBoard({
       }
     }
 
-    setPlayerShipsSunk(mySunkShips);
+    dispatchShipStats({type: shipStatsActions.SETPLAYERSHIPSSUNK, data: mySunkShips})
 
     modelRef.current.resizeCanvasToDisplaySize();
     playerboardRef.current.classList.add("fade-in-result");
@@ -176,7 +176,7 @@ export default function MainBoard({
     targetCell.classList.add("hit");
     dispatchBattleStats(battleStatsActions.incrementOpponentShotsHit);
     if (loadingData === false) {
-      setPlayerShipsSunk((prev) => prev + 1);
+      dispatchShipStats({type: shipStatsActions.INCREMENTPLAYERSHIPSUNK})
       setInGameMessages(inGameMessages.OPPONENTSUNKSHIP, attackResultOpponent.shipType);
       addHitToHealthStatus(board, attackResultOpponent.row, attackResultOpponent.col);
       modelRef.current.sinkShip(attackResultOpponent.shipType);
@@ -208,6 +208,7 @@ export default function MainBoard({
 
       /* Only add the ship to the shipsPlaced array the first time it is placed */
       setShipsPlaced((prev) => [...prev, shipToPlace.current]);
+      dispatchShipStats({type: shipStatsActions.INCREMENTPLAYERSHIPPLACED});
 
       /* Remove boardflash in case it is still on */
       playerboardRef.current.classList.remove('boardflash')

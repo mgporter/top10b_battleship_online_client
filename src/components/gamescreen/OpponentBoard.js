@@ -1,7 +1,7 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { C } from "../../Constants";
 import './opponentboard.css';
-import { PacketType, battleStatsActions, inGameMessages } from "../../enums";
+import { PacketType, battleStatsActions, inGameMessages, shipStatsActions } from "../../enums";
 import { displayShipOnOpponentBoard, handleAttackResult, coordinateToDOMCell } from "../logic/boardhelperfunctions";
 import { setInGameMessagesContext } from "../../InGameMessageProvider";
 
@@ -24,8 +24,8 @@ export default function OpponentBoard({
   attackResultPlayer,
   setReadyToAttackOpponent,
   dispatchBattleStats,
-  opponentShipsSunk,
-  setOpponentShipsSunk,
+  shipStats,
+  dispatchShipStats,
   gameStateData
 }) {
 
@@ -63,7 +63,7 @@ export default function OpponentBoard({
       });
     }
 
-    setOpponentShipsSunk(opponentSunkShips.length);
+    dispatchShipStats({type: shipStatsActions.SETOPPONENTSHIPSUNK, data: opponentSunkShips.length})
 
   }, [gameStateData])
 
@@ -109,7 +109,7 @@ export default function OpponentBoard({
     targetCell.classList.add("hit");
     dispatchBattleStats(battleStatsActions.incrementMyShotsHit);
     if (loadingData === false) {
-      setOpponentShipsSunk((prev) => prev + 1);
+      dispatchShipStats({type: shipStatsActions.INCREMENTOPPONENTSHIPSUNK})
       setInGameMessages(inGameMessages.ATTACKSUNKSHIP, attackResultPlayer.shipType);
       displayShipOnOpponentBoard(boardOverlayRef, attackResultPlayer);
     }
@@ -128,7 +128,7 @@ export default function OpponentBoard({
   return (
     <div ref={opponentPanelRef} className="section-block opponent-board-container">
       <h2>Opponent:</h2>
-      <p>Currently {opponentShipsSunk} of {C.totalShips} ships sunk</p>
+      <p>Currently {shipStats.opponentShipsSunk} of {C.totalShips} ships sunk</p>
       <div ref={opponentboardRef}
         className="miniboard disable-hover"
         onClick={handleCellClick}

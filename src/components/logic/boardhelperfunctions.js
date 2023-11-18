@@ -1,11 +1,11 @@
 import { C } from "../../Constants";
-import { PacketType, battleStatsActions } from "../../enums";
+import { PacketType, battleStatsActions, playerListActions, shipStatsActions } from "../../enums";
 
 const directions = Object.keys(C.paths);
 
 export function coordinateToDOMCell(cellCoordinates, boardElement) {
   return boardElement.current.querySelector(`.cell[data-row="${cellCoordinates[0]}"][data-column="${cellCoordinates[1]}"]`)
-};
+}
 
 export function createBoardCells(boardName) {
   const cellArr = []
@@ -15,7 +15,7 @@ export function createBoardCells(boardName) {
     }
   }
   return cellArr;
-};
+}
 
 export function handleAttackResult(
   boardRef,
@@ -144,7 +144,7 @@ function calculateScore(newStats, currentScore) {
   return currentScore + newPoints;
 }
 
-export function battleCounterReducer(current, action) {
+export function battleStatsReducer(current, action) {
   console.log(current.streak)
   switch(action) {
     case battleStatsActions.incrementMyShotsFired: {
@@ -211,4 +211,107 @@ export function battleCounterReducer(current, action) {
       return newStats;
     }
   }
+}
+
+
+export function playerReducer(current, action) {
+
+  switch(action.type) {
+
+    case playerListActions.UPDATEPLAYERLIST: {
+
+      const observerList = [];
+      const idList = {};
+    
+      for (let player of action.data.playerList) {
+        if (player.id !== action.data.playerOneId && player.id !== action.data.playerTwoId) {
+          observerList.push(player.id);
+        }
+        // Also put the player's ID in an object so we can look up their name later
+        idList[player.id] = player.name;
+      }
+      
+      return {
+        playerOne: action.data.playerOneId,
+        playerTwo: action.data.playerTwoId,
+        observerList: observerList,
+        idToNames: idList,
+        winner: current.winner,
+        room: current.room
+      }
+    }
+
+    case playerListActions.SETWINNER: {
+
+      return {
+        ...current,
+        winner: action.data.winner
+      }
+
+    }
+  }
+}
+
+export function shipStatsReducer(current, action) {
+
+  switch(action.type) {
+
+    case shipStatsActions.INCREMENTPLAYERSHIPPLACED: {
+      return {
+        ...current,
+        playerShipsPlaced: current.playerShipsPlaced + 1,
+      }
+    }
+
+    case shipStatsActions.INCREMENTPLAYERSHIPSUNK: {
+      return {
+        ...current,
+        playerShipsSunk: current.playerShipsSunk + 1,
+      }
+    }
+
+    case shipStatsActions.SETPLAYERSHIPSPLACED: {
+      return {
+        ...current,
+        playerShipsPlaced: action.data,
+      }
+    }
+    
+    case shipStatsActions.SETPLAYERSHIPSSUNK: {
+      return {
+        ...current,
+        playerShipsSunk: action.data,
+      }
+    }
+
+    case shipStatsActions.INCREMENTOPPONENTSHIPPLACED: {
+      return {
+        ...current,
+        opponentShipsPlaced: current.opponentShipsPlaced + 1,
+      }
+    }
+
+    case shipStatsActions.INCREMENTOPPONENTSHIPSUNK: {
+      return {
+        ...current,
+        opponentShipsSunk: current.opponentShipsSunk + 1,
+      }
+    }
+
+    case shipStatsActions.SETOPPONENTSHIPSPLACED: {
+      return {
+        ...current,
+        opponentShipsPlaced: action.data,
+      }
+    }
+
+    case shipStatsActions.SETOPPONENTSHIPSUNK: {
+      return {
+        ...current,
+        opponentShipsSunk: action.data,
+      }
+    }
+
+  }
+
 }

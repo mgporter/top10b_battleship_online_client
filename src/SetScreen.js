@@ -26,8 +26,8 @@ export default function SetScreen() {
   useEffect(() => {
     if (appState === ApplicationState.ROOM_SELECTION) {
       setGameStateData(null);
-      setShowOpponentPanels(false);
-      setReadyToAttackOpponent(false);
+      // setShowOpponentPanels(false);
+      // setReadyToAttackOpponent(false);
     }
   }, [appState])
 
@@ -88,6 +88,7 @@ export default function SetScreen() {
         readyToAttackOpponent={readyToAttackOpponent}
         setReadyToAttackOpponent={setReadyToAttackOpponent}
         gameStateData={gameStateData}
+        setGameStateData={setGameStateData}
         showOpponentPanels={showOpponentPanels}
         setShowOpponentPanels={setShowOpponentPanels}
       />

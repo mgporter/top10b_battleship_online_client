@@ -3,17 +3,18 @@ import { C } from '../../Constants';
 import './leftpanel.css';
 import './shipplacementpanel.css';
 import { AppStateContext, SetAppStateContext } from '../../AppStateProvider';
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 
 export default function ShipPlacementPanel({
   setShipClicked, 
   leftPanelFlash, 
   shipsPlaced, 
-  sendPacket, 
-  shipPlacementPanelRef}) {
+  sendPacket
+}) {
 
   const appState = useContext(AppStateContext);
   const setAppState = useContext(SetAppStateContext);
+  const shipPlacementPanelRef = useRef(null);
 
   useEffect(() => {
     shipPlacementPanelRef.current.classList.add("slidein");
