@@ -13,6 +13,8 @@ export default function WinnerScreen({
   const {playerId} = useContext(PlayerContext);
   const setAppState = useContext(SetAppStateContext);
 
+  console.log("Winner is: " + winner);
+
   const winnerWasMe = winner === playerId;
 
   const myHitRate = battleStats.myShotsFired === 0 ? 0 : battleStats.myShotsHit / battleStats.myShotsFired;

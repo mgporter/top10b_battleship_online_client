@@ -7,7 +7,7 @@ export default function useSubscription(destination, callback, id) {
   const socket = getSocket();
   const wsStatus = useWebSocketStatus();
   const subscribeObjRef = useRef(null);
-  const shouldSubscribe = useRef(true); // Make sure the component only subscribes once
+  // const shouldSubscribe = useRef(true); // Make sure the component only subscribes once
 
   /* Instead of adding 'callback' to the dependency array here, we will instead
   offer an updateCallback function. This way, when the callback reference
@@ -15,14 +15,13 @@ export default function useSubscription(destination, callback, id) {
   can be used inside of an useEffect hook */
   // console.log("use subscribe hook called for " + destination + " and shouldSubscribe is "+ shouldSubscribe.current)
   useEffect(() => {
-    if (!wsStatus || !shouldSubscribe.current) return;
+    if (!wsStatus) return;
     // console.log("subscribing to " + destination)
-    shouldSubscribe.current = false;
+    // shouldSubscribe.current = false;
     subscribeObjRef.current = socket.subscribe(destination, callback, {id: id});
 
     return () => {
       if (subscribeObjRef.current) {
-        shouldSubscribe.current = true;
         subscribeObjRef.current.unsubscribe();
         subscribeObjRef.current = null;
       }

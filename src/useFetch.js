@@ -20,13 +20,9 @@ export default function useFetch(endpoint) {
     }
   }, [endpoint]);
 
-  const updateData = useCallback((newData) => {
-    if (!loading && !error) setData(newData);
-  }, [error, loading]);
-
   return [
     request,
-    updateData,
+    setData,
     {
       data,
       loading,

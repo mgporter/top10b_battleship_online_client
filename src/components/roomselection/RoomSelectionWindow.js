@@ -31,7 +31,6 @@ export default function RoomSelectionWindow({
       case MessageTypes.CREDENTIALS: {
         setPlayerId(message.id);
         if (!playerName) setPlayerName(message.name);
-        sendTo("/app/joinLobby", playerName);
         break;
       }
     }
@@ -41,6 +40,10 @@ export default function RoomSelectionWindow({
   useEffect(() => {
     roomSelectionWindowRef.current.classList.add('slidein');
   }, [])
+
+  useEffect(() => {
+    sendTo("/app/joinLobby", playerName);
+  }, []);
 
   const updateCallback = useSubscription("/user/queue/lobby", onPrivateMsgReceived, "lobbyPrivateMsg");
 

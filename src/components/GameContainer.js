@@ -19,6 +19,7 @@ import useSocketSend from "../useSocketSend.js";
 import useSubscription from "../useSubscription.js";
 import { setInGameMessagesContext } from "../InGameMessageProvider.js";
 import useFullScreenDialog from "../useFullScreenDialog";
+import OpponentShipsPlacedMinidialog from "./gamescreen/OpponentShipsPlacedMinidialog";
 
 /**
  * GAME CONTAINER LAYOUT
@@ -162,7 +163,7 @@ export default function GameContainer({
       }
       
     }
-  }, [sendTo]);
+  }, [sendTo, fullScreenDialog, shipStats]);
   
   const onPublicMessageReceived = useCallback((payload) => {
     const message = JSON.parse(payload.body);
@@ -184,7 +185,7 @@ export default function GameContainer({
       case PacketType.PLACED_SHIP: {
         if (!fromCurrentPlayer) {
           dispatchShipStats({type: shipStatsActions.SETOPPONENTSHIPSPLACED, data: message.shipsPlacedCount});
-          fullScreenDialog.show(dialogBoxTypes.WAITINGFORPLACEMENT, message.shipsPlacedCount);
+          // fullScreenDialog.show(dialogBoxTypes.WAITINGFORPLACEMENT, message.shipsPlacedCount);
           // setOpponentShipsPlaced(message.shipsPlacedCount);
         }
         break;
@@ -206,6 +207,8 @@ export default function GameContainer({
       case PacketType.GAME_ATTACK_PHASE_START: {
         setAppState(ApplicationState.ATTACK_PHASE);
         fullScreenDialog.hide();
+        console.log("current player id: " + playerId);
+        console.log(playerId === players.playerOne)
         if (playerId === players.playerOne) {
           setInGameMessages(inGameMessages.STARTGAMEFIRSTATTACK);
           setReadyToAttackOpponent(true);
@@ -278,16 +281,20 @@ export default function GameContainer({
 
 
   const updatePrivateCallback = useSubscription(
-    `/game/private/${roomNumberRef.current}`, 
+    "/user/queue/game", 
     onPrivateMessageReceived, 
-    `game-private-${roomNumberRef.current}`);
+    "game-private-msg");
 
   useEffect(() => {
     updatePrivateCallback(onPrivateMessageReceived)
   }, [updatePrivateCallback, onPrivateMessageReceived])
 
+  console.log("Player Stats")
+  console.log(players);
+
 
   const showWinnerScreen = appState === ApplicationState.GAME_END ? true : false;
+  const showOpponentShipsMinidialog = appState === ApplicationState.SHIP_PLACEMENT && !fullScreenDialog.shouldDisplay
 
   return (
     <div id="game-container" ref={gameContainerRef}>
@@ -298,6 +305,7 @@ export default function GameContainer({
         dispatchPlayers={dispatchPlayers}
         dispatchShipStats={dispatchShipStats} />
       {fullScreenDialog.shouldDisplay && <FullScreenInfoDialog fullScreenDialog={fullScreenDialog} shipStats={shipStats} />}
+      {showOpponentShipsMinidialog && <OpponentShipsPlacedMinidialog shipStats={shipStats}/>}
       <MessageArea 
         showEndGameButtons={!showEndGameDialog && showWinnerScreen}
         winner={players.winner}

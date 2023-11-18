@@ -38,6 +38,7 @@ export default function RoomSelectionContainer({roomNumberRef}) {
     switch(message.type) {
 
       case MessageTypes.CREATEDGAME: {
+        console.log("Game created function called")
         const newGame = {
           roomNumber: message.roomNumber,
           playerList: []

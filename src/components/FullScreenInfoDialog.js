@@ -33,6 +33,7 @@ export default function FullScreenInfoDialog({fullScreenDialog, shipStats}) {
   let messageBlock = null;
   
   switch(fullScreenDialog.type) {
+    
 
     case dialogBoxTypes.WAITINGFORJOIN: {
       messageBlock = 
@@ -48,6 +49,7 @@ export default function FullScreenInfoDialog({fullScreenDialog, shipStats}) {
     }
 
     case dialogBoxTypes.PLAYERLEFT: {
+      console.log("we got here: " + fullScreenDialog.type)
       messageBlock = <h2>A player has left. Waiting for another player to continue the game.</h2>
       break;
     }
@@ -55,7 +57,7 @@ export default function FullScreenInfoDialog({fullScreenDialog, shipStats}) {
     case dialogBoxTypes.WAITINGFORPLACEMENT: {
 
       if (Number(fullScreenDialog.data) !== C.totalShips) messageBlock = 
-        <h2>Waiting for the other player to finish placing their ships. They have placed {fullScreenDialog.data} of {C.totalShips} ships.</h2>
+        <h2>Waiting for the other player to finish placing their ships. They have placed {shipStats.opponentShipsPlaced} of {C.totalShips} ships.</h2>
       else 
         messageBlock = <h2>The other player has placed all {C.totalShips} of their ships. Just waiting for them to start the game.</h2>
 
@@ -64,10 +66,6 @@ export default function FullScreenInfoDialog({fullScreenDialog, shipStats}) {
 
   }
 
-
-  // <div className="opponent-ships-placed-minitext">
-  //   <h3>Opponent has placed {opponentShipsPlaced} of {C.totalShips} ships.</h3>
-  // </div>
 
   return (
     <div className='backdrop'>

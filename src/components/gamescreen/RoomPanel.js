@@ -18,7 +18,7 @@ export default function RoomPanel({
 
   const currentPlayerMarker = "(You)";
 
-  const onPlayerListReceived = useCallback((payload) => {
+  const onPlayerListReceived = (payload) => {
     const message = JSON.parse(payload.body);
 
     dispatchPlayers({
@@ -46,15 +46,15 @@ export default function RoomPanel({
       } else if (appState === ApplicationState.GAME_END) {
         // Do nothing
       } else {
-        dispatchShipStats({type: shipStatsActions.SETOPPONENTSHIPSUNK});
+        dispatchShipStats({type: shipStatsActions.SETOPPONENTSHIPSUNK, data: 0});
         fullScreenDialog.show(dialogBoxTypes.PLAYERLEFT);
         sendPacket(PacketType.SAVESTATE);
       }
       
     }
-
-  }, [appState, fullScreenDialog, sendPacket, dispatchPlayers, dispatchShipStats]);
-
+  }
+  // }, [appState, fullScreenDialog, sendPacket, dispatchPlayers, dispatchShipStats]);
+  console.log(appState)
 
   const updateCallback = useSubscription(`/game/playerlist/${players.room}`, onPlayerListReceived, `game${players.room}-playerlist`);
 
