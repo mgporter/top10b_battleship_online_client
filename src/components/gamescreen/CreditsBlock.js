@@ -27,7 +27,7 @@ export default function CreditsBlock({setShowModelCredits}) {
   return (
     <div className="section-block credits-block">
       <div className='link-container'>
-        <a href={C.githubLink} target="_blank" className="created-by-container">
+        <a href={C.githubLink} target="_blank" rel="noreferrer" className="created-by-container">
           <span>Created by mgporter</span>
           <img src={githubLogo} alt="Source code hosted on GitHub" />
         </a>

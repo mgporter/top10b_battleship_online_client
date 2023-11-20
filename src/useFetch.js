@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { C } from "./Constants";
 
 export default function useFetch(endpoint) {
@@ -13,6 +13,7 @@ export default function useFetch(endpoint) {
       const response = await fetch(C.serverPrefix + endpoint);
       const resultParsed = await response.json();
       setData(resultParsed);
+      console.log("UseFetch " + endpoint)
     } catch (e) {
       setError(e.message || "Unexpected Error fetching data");
     } finally {
@@ -20,14 +21,18 @@ export default function useFetch(endpoint) {
     }
   }, [endpoint]);
 
-  return [
-    request,
-    setData,
-    {
+  const info = useMemo(() => {
+    return {
       data,
       loading,
       error
     }
+  }, [data, loading, error])
+
+  return [
+    request,
+    setData,
+    info
   ]
 
 }

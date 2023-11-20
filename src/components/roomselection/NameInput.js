@@ -1,15 +1,14 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import { PlayerContext, PlayerNameContext, SetPlayerNameContext } from "../../PlayerProvider";
-import useUpdateServerName from "../../useUpdateServerName";
+import { PlayerContext } from "../../PlayerProvider";
 import useSocketSend from "../../useSocketSend";
-import { endpoints } from "../../Endpoints";
+import { MessageTypes } from "../../enums";
 
 export default function NameInput() {
 
-  const {playerName, setPlayerName} = useContext(PlayerContext);
+  const { playerName, setPlayerName } = useContext(PlayerContext); 
   const nameInputRef = useRef(null);
-  const [localName, setLocalName] = useState("Player");
-  const sendTo = useSocketSend();
+  const [localName, setLocalName] = useState(playerName);
+  const sendPacket = useSocketSend();
 
   useEffect(() => {
     window.addEventListener("keydown", interceptEnter);
@@ -38,7 +37,7 @@ export default function NameInput() {
     if (name === "") name = "Player";
     setPlayerName(name);
     handleNameChange(name);
-    sendTo(endpoints.changeName, name);
+    sendPacket(MessageTypes.CHANGENAME, name);
   }
 
   return (
@@ -53,7 +52,7 @@ export default function NameInput() {
           pattern="[0-9A-Za-z_\-#]+"
           id="player-name-input" 
           maxLength="24"
-          value={localName}
+          value={localName || "Player"}
           onChange={(e) => handleNameChange(e.target.value)}
           onBlur={handleNameChangeOnBlur} />
         </fieldset>

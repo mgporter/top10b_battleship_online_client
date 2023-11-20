@@ -1,50 +1,60 @@
 import { useContext, useEffect, useState } from "react"
-import { SetAppStateContext } from "../AppStateProvider"
-import { ApplicationState, dialogBoxTypes } from "../enums";
+import { AppStateContext, SetAppStateContext } from "../AppStateProvider"
+import { ApplicationState, Events, dialogBoxTypes } from "../enums";
 import { C } from "../Constants";
+import EventEmitter from "../EventEmitter";
 
-export default function FullScreenInfoDialog({fullScreenDialog, shipStats}) {
+export default function FullScreenInfoDialog({fullScreenDialog, setGameLoaded, shipStats}) {
 
+  const appState = useContext(AppStateContext);
   const setAppState = useContext(SetAppStateContext);
-  const [modelsLoadedCount, setModelsLoadedCount] = useState(0);
+  const [modelsLoaded, setModelsLoaded] = useState(0);
+
+  // eslint-disable-next-line no-undef
+  const allModelsLoaded = modelsLoaded === Number(process.env.REACT_APP_MODELLOADCOUNT);
 
   useEffect(() => {
-    console.log("model-loaded listener added")
-    window.addEventListener("model_loaded", incrementCounter);
+    if (appState != ApplicationState.GAME_INITIALIZED) return;
+    console.log("FullScreenDialog -> UseEffect -> incrementModelsLoaded")
+    function incrementModelsLoaded() {
+      setModelsLoaded(prev => prev + 1);
+    }
+    window.addEventListener("model_loaded", incrementModelsLoaded);
 
     return () => {
-      window.removeEventListener("model_loaded", incrementCounter);
+      window.removeEventListener("model_loaded", incrementModelsLoaded);
     }
-  }, [])
-
-  function incrementCounter() {
-    setModelsLoadedCount((prev) => prev + 1);
-  }
+  }, [appState]);
+  
+  // useEffect(() => {
+  //   if (allModelsLoaded) setGameLoaded(true);
+  // }, [allModelsLoaded, setGameLoaded])
 
   useEffect(() => {
-    // eslint-disable-next-line no-undef
-    if (modelsLoadedCount == process.env.REACT_APP_MODELLOADCOUNT) {
-      window.dispatchEvent(new Event("all_models_loaded"));
-    }
-  }, [modelsLoadedCount])
-
-  const allModelsLoaded = modelsLoadedCount >= C.numberOfModelsToLoad;
+    if (allModelsLoaded) EventEmitter.dispatch(Events.GAMEROOMLOADED)
+  }, [allModelsLoaded])
 
   let messageBlock = null;
+  const showBackToLobbyButton = fullScreenDialog.type != dialogBoxTypes.LOADINGMODELS;
   
   switch(fullScreenDialog.type) {
     
+    case dialogBoxTypes.LOADINGMODELS: {
+
+      messageBlock = 
+        <div className="models-progress-bar-container">
+          {allModelsLoaded && <h2>Waiting for another player to start the game...</h2>}
+          <h4>{allModelsLoaded ? "All models loaded!" : "Loading 3D models:"}</h4>
+          <progress className="model-load-progress-bar" max={C.numberOfModelsToLoad} value={modelsLoaded}></progress>
+          <h3>{modelsLoaded}</h3>
+        </div>
+
+      break;
+    }
 
     case dialogBoxTypes.WAITINGFORJOIN: {
       messageBlock = 
-        <>
           <h2>Waiting for another player to start the game...</h2>
-          <div className="models-progress-bar-container">
-            <h4>{allModelsLoaded ? "All models loaded!" : "Loading 3D models:"}</h4>
-            <progress className="model-load-progress-bar" max={C.numberOfModelsToLoad} value={modelsLoadedCount}></progress>
-            <h3>{modelsLoadedCount}</h3>
-          </div>
-        </>
       break;
     }
 
@@ -71,7 +81,7 @@ export default function FullScreenInfoDialog({fullScreenDialog, shipStats}) {
     <div className='backdrop'>
       <div className='confirmation-dialog join-game-dialog'>
         {messageBlock}
-        <button type="button" onClick={() => setAppState(ApplicationState.ROOM_SELECTION)}>Return to the lobby</button>
+        {showBackToLobbyButton && <button type="button" onClick={() => setAppState(ApplicationState.ROOM_SELECTION)}>Return to the lobby</button>}
       </div>
     </div>
   )

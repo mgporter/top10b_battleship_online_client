@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext, useCallback } from "react";
 import './roomselectioncontainer.css'
 import MessageWindow from "./MessageWindow";
-import { LobbyColors, MessageTypes } from '../../enums';
+import { LobbyColors, MessageTypes, PacketType } from '../../enums';
 import { PlayerContext } from "../../PlayerProvider";
 import { parseLobbyMessage } from "./fetchdata";
 import RoomSelectionWindow from "./RoomSelectionWindow";
@@ -10,10 +10,12 @@ import useFetch from "../../useFetch";
 import { endpoints } from "../../Endpoints";
 import githubLogo from "../../images/github-logo.png"
 import { C } from "../../Constants";
+import useWebSocketStatus from "../../useWebSocketStatus";
+import useSocketSend from "../../useSocketSend";
 
 export default function RoomSelectionContainer({roomNumberRef}) {
 
-  console.log("ROOM SELECTION CONTAINER RENDERED")
+  console.log("RoomSelectionContainer")
 
   const [messages, setMessages] = useState([{
     message: "Welcome to Battleship Online!",
@@ -21,36 +23,33 @@ export default function RoomSelectionContainer({roomNumberRef}) {
   }]);
 
   const {playerName, playerId} = useContext(PlayerContext);
-
   const [requestGameRooms, updateGameRooms, gameRooms] = useFetch(endpoints.getGameRooms);
+  const wsStatus = useWebSocketStatus();
+  const sendPacket = useSocketSend();
 
   useEffect(() => {
     requestGameRooms();
   }, [requestGameRooms])
 
-
   const onPublicMessageReceived = useCallback((payload) => {
     const message = JSON.parse(payload.body);
 
     const lobbyMessage = parseLobbyMessage(message, playerId, playerName);
-    setMessages((prev) => prev.concat([lobbyMessage]));
+    setMessages((prev) => [...prev, lobbyMessage]);
 
     switch(message.type) {
 
       case MessageTypes.CREATEDGAME: {
-        console.log("Game created function called")
         const newGame = {
           roomNumber: message.roomNumber,
           playerList: []
         }
-        updateGameRooms((prev) => [newGame].concat(prev));
+        updateGameRooms((prev) => [newGame, ...prev]);
         break;
       }
 
       case MessageTypes.JOINGAME: {
         const roomNumber = message.roomNumber;
-        console.log(message);
-
         const updateGameRoomsOnJoin = (room) => {
           if (room.roomNumber === roomNumber) {
             const num = room.roomNumber;
@@ -66,7 +65,6 @@ export default function RoomSelectionContainer({roomNumberRef}) {
 
       case MessageTypes.EXITEDGAME: {
         const roomNumber = message.roomNumber;
-
         const updateGameRoomsOnExit = (room) => {
           if (room.roomNumber === roomNumber) {
             const num = room.roomNumber;
@@ -82,24 +80,23 @@ export default function RoomSelectionContainer({roomNumberRef}) {
 
       case MessageTypes.GAMEREMOVED: {
         const roomNumber = message.roomNumber;
-
         const updateGameRoomsOnRemove = (room) => {
             return room.roomNumber != roomNumber;
           } 
-  
-          updateGameRooms((prev) => prev.filter(updateGameRoomsOnRemove));
+        updateGameRooms((prev) => prev.filter(updateGameRoomsOnRemove));
         break;
       }
     }
   }, [updateGameRooms, playerId, playerName])
 
-  const updateCallback = useSubscription("/lobby", onPublicMessageReceived, "lobby");
-
+  useSubscription("/lobby", onPublicMessageReceived, "lobby");
+  
   useEffect(() => {
-    updateCallback(onPublicMessageReceived);
-  }, [onPublicMessageReceived, updateCallback])
+    if (!wsStatus) return;
+    sendPacket(MessageTypes.JOINLOBBY);
+  }, [wsStatus, sendPacket])
 
-
+  
   return (
     <div id="lobby-container">
       <div className="logo-title">

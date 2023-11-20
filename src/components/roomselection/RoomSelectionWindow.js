@@ -1,6 +1,6 @@
 import { useCallback, useContext, useEffect, useRef } from "react";
 import { PlayerContext, PlayerIdContext, PlayerNameContext, SetPlayerIdContext } from "../../PlayerProvider";
-import { ApplicationState, MessageTypes } from "../../enums";
+import { ApplicationState, MessageTypes, PacketType } from "../../enums";
 import { postGameRoom } from "./fetchdata";
 import NameInput from "./NameInput";
 import GameRoomList from "./GameRoomList";
@@ -8,16 +8,19 @@ import { endpoints } from "../../Endpoints";
 import { SetAppStateContext } from "../../AppStateProvider";
 import useSubscription from "../../useSubscription";
 import useSocketSend from "../../useSocketSend";
+import useWebSocketStatus from "../../useWebSocketStatus";
 
 export default function RoomSelectionWindow({
   roomNumberRef, 
   gameRooms
 }) {
 
+  // console.log("RoomSelectionWindow")
+
   const {playerName, setPlayerName, playerId, setPlayerId} = useContext(PlayerContext);
   const setAppState = useContext(SetAppStateContext);
   const roomSelectionWindowRef = useRef(null);
-  const sendTo = useSocketSend();
+  const sendPacket = useSocketSend();
 
   const onPrivateMsgReceived = useCallback((payload) => {
     const message = JSON.parse(payload.body);
@@ -27,30 +30,15 @@ export default function RoomSelectionWindow({
         setAppState(ApplicationState.GAME_INITIALIZED);
         break;
       }
-
-      case MessageTypes.CREDENTIALS: {
-        setPlayerId(message.id);
-        if (!playerName) setPlayerName(message.name);
-        break;
-      }
     }
 
-  }, [sendTo, setAppState, playerName, setPlayerName, setPlayerId]);
+  }, [setAppState]);
 
   useEffect(() => {
     roomSelectionWindowRef.current.classList.add('slidein');
   }, [])
 
-  useEffect(() => {
-    sendTo("/app/joinLobby", playerName);
-  }, []);
-
-  const updateCallback = useSubscription("/user/queue/lobby", onPrivateMsgReceived, "lobbyPrivateMsg");
-
-  useEffect(() => {
-    updateCallback(onPrivateMsgReceived)
-  }, [updateCallback, onPrivateMsgReceived])
-
+  useSubscription("/user/queue/lobby", onPrivateMsgReceived, "lobbyPrivateMsg");
 
   function createGameHandler() {
     const player = {
@@ -70,10 +58,10 @@ export default function RoomSelectionWindow({
     roomNumberRef.current = room;
 
     // Attempt to join the room. The server will respond with an ACCEPTEDJOIN or REJECTEDJOIN
-    sendTo(endpoints.joinGame, {
+    sendPacket(MessageTypes.JOINGAME, {
       messageType: MessageTypes.JOINGAME,
       roomNumber: room});
-  }, [sendTo])
+  }, [sendPacket, roomNumberRef])
 
   return (
     <div id="room-selection-container" ref={roomSelectionWindowRef}>

@@ -234,6 +234,7 @@ export function playerReducer(current, action) {
       return {
         playerOne: action.data.playerOneId,
         playerTwo: action.data.playerTwoId,
+        atLeastTwoPlayers: action.data.playerOneId && action.data.playerTwoId,
         observerList: observerList,
         idToNames: idList,
         winner: current.winner,

@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext, useRef, useReducer, useCallback, useMemo } from "react";
-import { ApplicationState, PacketType, dialogBoxTypes, inGameMessages, playerListActions, shipStatsActions, MessageTypes } from '../enums';
+import { ApplicationState, PacketType, dialogBoxTypes, inGameMessages, playerListActions, shipStatsActions, MessageTypes, Events } from '../enums';
 import { PlayerContext, PlayerIdContext } from "../PlayerProvider";
 import "./gamecontainer.css";
 import './gamescreen/winnerscreen.css';
@@ -16,10 +16,14 @@ import ModelCredits from "./gamescreen/ModelCredits.js";
 import { AppStateContext, SetAppStateContext } from "../AppStateProvider";
 import { battleStatsReducer, playerReducer, shipStatsReducer } from './logic/boardhelperfunctions';
 import useSocketSend from "../useSocketSend.js";
-import useSubscription from "../useSubscription.js";
+import useSubscription from "../useSubscription";
 import { setInGameMessagesContext } from "../InGameMessageProvider.js";
 import useFullScreenDialog from "../useFullScreenDialog";
 import OpponentShipsPlacedMinidialog from "./gamescreen/OpponentShipsPlacedMinidialog";
+import { C } from "../Constants";
+import getSocket from "../getSocket";
+import useWebSocketStatus from "../useWebSocketStatus";
+import EventEmitter from "../EventEmitter";
 
 /**
  * GAME CONTAINER LAYOUT
@@ -47,28 +51,46 @@ import OpponentShipsPlacedMinidialog from "./gamescreen/OpponentShipsPlacedMinid
  * */
 
 
+/**
+ * GAME STATES:
+ * 1. GAME_INITIALIZED: after the server accepts the joingame request, it sends a packet
+ *  and a function in the lobby moves the game to this state. In this state, the gameboard
+ *  is displayed and we load the models. If there is a saved gameState, then we jump
+ *  directly to the ATTACK_PHASE after loading.
+ * 2. SHIP_PLACEMENT: after the models have been loaded and there are at least two players
+ *  in the room, then we move to the SHIP_PLACEMENT state, where players place their ships
+ *  on the board. No information is saved until the player places all their ships and
+ *  presses the start button. 
+ * 3. SHIPS_PLACED_AND_STARTED: After the user presses the start button, the game moves to
+ *  this state. The ship placement data is sent to the server, and the player cannot change
+ *  their placements.
+ * 4. ATTACK_PHASE: Once both players have pressed the start button and entered the 
+ *  SHIPS_PLACED_AND_STARTED state, the game moves to the ATTACK_PHASE. This is where
+ *  players start attacking each other.
+ * 5. GAME_END: once a player's ships have all been sunk, then we move to the GAME_END state,
+ *  where players can no longer attack each other and the end game screen is displayed.
+ *  */
+
 
 export default function GameContainer({
   roomNumberRef, 
-  readyToAttackOpponent, 
-  setReadyToAttackOpponent,
   gameStateData,
   setGameStateData,
-  showOpponentPanels,
-  setShowOpponentPanels
 }) {
 
+  console.log("GameContainer");
 
-  const fullScreenDialog = useFullScreenDialog();
-  // const [showNotEnoughPlayersDialog, setShowNotEnoughPlayersDialog] = useState(false);
+  const gameContainerRef = useRef(null);
 
-  // const [playerShipsSunk, setPlayerShipsSunk] = useState(0);
-  // const [opponentShipsSunk, setOpponentShipsSunk] = useState(0);
+  const fullScreenDialog = useFullScreenDialog(dialogBoxTypes.LOADINGMODELS);
+  const [gameLoaded, setGameLoaded] = useState(false);
 
   const [attackResultPlayer, setAttackResultPlayer] = useState(null);
   const [attackResultOpponent, setAttackResultOpponent] = useState(null);
-  const [showEndGameDialog, setShowEndGameDialog] = useState(true);
+  const [showEndGameDialog, setShowEndGameDialog] = useState(true);  // change this, or move messagearea endgame to main endgame container
   const [showModelCredits, setShowModelCredits] = useState(false);
+  const [readyToAttackOpponent, setReadyToAttackOpponent] = useState(false);
+  const [showOpponentPanels, setShowOpponentPanels] = useState(false);
 
   const [shipStats, dispatchShipStats] = useReducer(shipStatsReducer, {
     playerShipsPlaced: 0,
@@ -80,6 +102,7 @@ export default function GameContainer({
   const [players, dispatchPlayers] = useReducer(playerReducer, {
     playerOne: null,
     playerTwo: null,
+    atLeastTwoPlayers: false,
     observerList: [],
     idToNames: {},
     winner: null,
@@ -104,66 +127,74 @@ export default function GameContainer({
   const setInGameMessages = useContext(setInGameMessagesContext);
 
   const gameTimeSecondsFinal = useRef(0);
-  const gameContainerRef = useRef(null);
+
+  const sendPacket = useSocketSend();
 
 
-  const sendTo = useSocketSend();
+  // /**
+  //  * Listen for updates to the players in the room and the appropriate
+  //  * dialog if there are not enough players. Otherwise, if there are
+  //  * two players, move the game to the SHIP_PLACEMENT state. */
 
-  console.log("GAMECONTAINER RENDERED");
+  useEffect(() => {
+    EventEmitter.subscribe(Events.NOTENOUGHPLAYERS, "GameCon", handleNotEnoughPlayers);
+    EventEmitter.subscribe(Events.GAMEROOMLOADED, "GameCon", handleGameRoomLoaded);
+    EventEmitter.subscribe(Events.PLACEMENTSSUBMITTED, "GameCon", handlePlacementsSubmitted);
 
-  const sendPacket = useCallback((type, data = null) => {
-
-    const packet = {
-      type: type
+    return () => {
+      EventEmitter.unsubscribe(Events.NOTENOUGHPLAYERS, "GameCon");
+      EventEmitter.unsubscribe(Events.GAMEROOMLOADED, "GameCon");
+      EventEmitter.unsubscribe(Events.PLACEMENTSSUBMITTED, "GameCon");
     }
+  }, [handleNotEnoughPlayers, handleGameRoomLoaded, handlePlacementsSubmitted])
 
-    switch(type) {
-
-      case PacketType.PLACED_SHIP: {
-        packet["shipsPlacedCount"] = data;
-        sendTo("/app/game/placeShip", packet);
-        break;
-      }
-
-      case PacketType.PLACED_COMPLETE: {
-        const packetizedShips = data.map((ship) => {
-          const coordinates = ship.getLocation().map((coord) => {
-            return {row: coord[0], col: coord[1]}
-          })
-
-          return {
-            shipId: ship.getId(),
-            type: ship.getType(),
-            location: coordinates,
-            direction: ship.getDirection()
-          }
-        })
-
-        packet["placementList"] = packetizedShips;
-        sendTo("/app/game/placementComplete", packet);
-        fullScreenDialog.show(dialogBoxTypes.WAITINGFORPLACEMENT, shipStats.opponentShipsPlaced);
-        break;
-      }
-
-      case PacketType.ATTACK: {
-        packet["row"] = data[0];
-        packet["col"] = data[1];
-        sendTo("/app/game/attack", packet);
-        break;
-      }
-
-      case PacketType.LOAD_ALL_DATA: {
-        sendTo("/app/game/loadGameData", packet);
-        break;
-      }
-
-      case PacketType.SAVESTATE: {
-        sendTo("/app/game/saveState", packet);
-        break;
-      }
-      
+  function handleNotEnoughPlayers() {
+    if (appState === ApplicationState.SHIPS_PLACED_AND_STARTED ||
+      appState === ApplicationState.SHIP_PLACEMENT) {
+      dispatchShipStats({type: shipStatsActions.SETOPPONENTSHIPSPLACED, data: 0});
     }
-  }, [sendTo, fullScreenDialog, shipStats]);
+    if (appState >= ApplicationState.SHIP_PLACEMENT &&
+      appState != ApplicationState.GAME_END) {
+        fullScreenDialog.show(dialogBoxTypes.PLAYERLEFT);
+      }
+  }
+
+  function handleGameRoomLoaded() {
+    sendPacket(PacketType.GAMEROOMLOADED);
+    setGameLoaded(true);
+  }
+
+  function handlePlacementsSubmitted() {
+    setAppState(ApplicationState.SHIPS_PLACED_AND_STARTED);
+    fullScreenDialog.show(dialogBoxTypes.WAITINGFORPLACEMENT, shipStats.opponentShipsPlaced);
+  }
+
+
+
+  // useEffect(() => {
+    
+  //   if (!players.atLeastTwoPlayers &&
+  //     appState >= ApplicationState.SHIP_PLACEMENT &&
+  //     appState != ApplicationState.GAME_END) {
+  //       fullScreenDialog.show(dialogBoxTypes.PLAYERLEFT);
+  //   }
+
+  // }, [appState, players, fullScreenDialog, setAppState])
+
+  // useEffect(() => {
+  //   if (appState === ApplicationState.GAME_INITIALIZED && gameLoaded) 
+  //     sendPacket(PacketType.GAMEROOMLOADED);
+  // }, [gameLoaded, sendPacket, appState])
+
+  // useEffect(() => {
+  //   if (appState === ApplicationState.SHIPS_PLACED_AND_STARTED) {
+  //     fullScreenDialog.show(dialogBoxTypes.WAITINGFORPLACEMENT, shipStats.opponentShipsPlaced);
+  //   }
+  // }, [appState, fullScreenDialog, shipStats])
+
+
+// When the placed_complete packet is sent, do this also!
+  //         fullScreenDialog.show(dialogBoxTypes.WAITINGFORPLACEMENT, shipStats.opponentShipsPlaced);
   
   const onPublicMessageReceived = useCallback((payload) => {
     const message = JSON.parse(payload.body);
@@ -183,21 +214,23 @@ export default function GameContainer({
       }
 
       case PacketType.PLACED_SHIP: {
-        if (!fromCurrentPlayer) {
+        if (!fromCurrentPlayer) 
           dispatchShipStats({type: shipStatsActions.SETOPPONENTSHIPSPLACED, data: message.shipsPlacedCount});
-          // fullScreenDialog.show(dialogBoxTypes.WAITINGFORPLACEMENT, message.shipsPlacedCount);
-          // setOpponentShipsPlaced(message.shipsPlacedCount);
-        }
         break;
       }
 
+      /**
+       * When there are two players in the room and all models have been loaded,
+       * The game moves to the SHIP_PLACEMENT state.*/
+
       case PacketType.GAME_START: {
-        console.log("GAME STARTING")
         fullScreenDialog.hide();
         setAppState(ApplicationState.SHIP_PLACEMENT);
         setInGameMessages(inGameMessages.WELCOME);
         break;
       }
+
+      /*  */
 
       case PacketType.PLACED_COMPLETE: {
         sendPacket(PacketType.LOAD_ALL_DATA);
@@ -243,14 +276,7 @@ export default function GameContainer({
   ]);
 
 
-  const updatePublicCallback = useSubscription(
-    `/game/public/${roomNumberRef.current}`, 
-    onPublicMessageReceived, 
-    `game-public-${roomNumberRef.current}`);
-
-  useEffect(() => {
-    updatePublicCallback(onPublicMessageReceived)
-  }, [updatePublicCallback, onPublicMessageReceived])
+  useSubscription(`/game/public/${roomNumberRef.current}`, onPublicMessageReceived, `game-public-${roomNumberRef.current}`);
 
 
   const onPrivateMessageReceived = useCallback((payload) => {
@@ -279,74 +305,70 @@ export default function GameContainer({
     }
   }, [setAppState, setGameStateData, setReadyToAttackOpponent, setInGameMessages, setShowOpponentPanels])
 
-
-  const updatePrivateCallback = useSubscription(
-    "/user/queue/game", 
-    onPrivateMessageReceived, 
-    "game-private-msg");
-
-  useEffect(() => {
-    updatePrivateCallback(onPrivateMessageReceived)
-  }, [updatePrivateCallback, onPrivateMessageReceived])
-
-  console.log("Player Stats")
-  console.log(players);
-
+  useSubscription("/user/queue/game", onPrivateMessageReceived, "game-private-msg");
 
   const showWinnerScreen = appState === ApplicationState.GAME_END ? true : false;
-  const showOpponentShipsMinidialog = appState === ApplicationState.SHIP_PLACEMENT && !fullScreenDialog.shouldDisplay
+  const showOpponentShipsMinidialog = appState === ApplicationState.SHIP_PLACEMENT && !fullScreenDialog.shouldDisplay;
+
+
 
   return (
     <div id="game-container" ref={gameContainerRef}>
-      <RoomPanel 
+      {/* <button onClick={() => {SETTEST(!TEST)}}>PRESS ME</button> */}
+      {fullScreenDialog.shouldDisplay && <FullScreenInfoDialog 
+        fullScreenDialog={fullScreenDialog} 
+        setGameLoaded={setGameLoaded}
+        shipStats={shipStats} />}
+      <MainboardAndPanel 
+          sendPacket={sendPacket} 
+          dispatchBattleStats={dispatchBattleStats}
+          attackResultOpponent={attackResultOpponent}
+          readyToAttackOpponent={readyToAttackOpponent}
+          shipStats={shipStats}
+          dispatchShipStats={dispatchShipStats}
+          gameContainerRef={gameContainerRef}
+          gameStateData={gameStateData}
+        />
+      {gameLoaded && <RoomPanel 
         fullScreenDialog={fullScreenDialog} 
         sendPacket={sendPacket}
         players={players}
         dispatchPlayers={dispatchPlayers}
-        dispatchShipStats={dispatchShipStats} />
-      {fullScreenDialog.shouldDisplay && <FullScreenInfoDialog fullScreenDialog={fullScreenDialog} shipStats={shipStats} />}
-      {showOpponentShipsMinidialog && <OpponentShipsPlacedMinidialog shipStats={shipStats}/>}
-      <MessageArea 
-        showEndGameButtons={!showEndGameDialog && showWinnerScreen}
-        winner={players.winner}
-        setShowEndGameDialog={setShowEndGameDialog} />
-      <MainboardAndPanel 
-        sendPacket={sendPacket} 
-        dispatchBattleStats={dispatchBattleStats}
-        attackResultOpponent={attackResultOpponent}
-        readyToAttackOpponent={readyToAttackOpponent}
-        shipStats={shipStats}
         dispatchShipStats={dispatchShipStats}
-        gameContainerRef={gameContainerRef}
-        gameStateData={gameStateData}
-      />
-      <CreditsBlock setShowModelCredits={setShowModelCredits} />
-      {showOpponentPanels && (
-        <>
-          <OpponentBoard 
-            dispatchBattleStats={dispatchBattleStats}
-            readyToAttackOpponent={readyToAttackOpponent}
-            setReadyToAttackOpponent={setReadyToAttackOpponent}
-            sendPacket={sendPacket}
-            attackResultPlayer={attackResultPlayer}
-            shipStats={shipStats}
-            dispatchShipStats={dispatchShipStats}
-            gameStateData={gameStateData}
-          />
-          <BottomRightPanel 
-            battleStats={battleStats} 
-            gameTimeSecondsFinal={gameTimeSecondsFinal}
+        gameLoaded={gameLoaded} />}
+      {showOpponentShipsMinidialog && <OpponentShipsPlacedMinidialog shipStats={shipStats} />}
+        <MessageArea 
+          showEndGameButtons={!showEndGameDialog && showWinnerScreen}
+          winner={players.winner}
+          setShowEndGameDialog={setShowEndGameDialog} />
+        <CreditsBlock setShowModelCredits={setShowModelCredits} />
+        {showOpponentPanels && (
+          <>
+            <OpponentBoard 
+              dispatchBattleStats={dispatchBattleStats}
+              readyToAttackOpponent={readyToAttackOpponent}
+              setReadyToAttackOpponent={setReadyToAttackOpponent}
+              sendPacket={sendPacket}
+              attackResultPlayer={attackResultPlayer}
+              shipStats={shipStats}
+              dispatchShipStats={dispatchShipStats}
+              gameStateData={gameStateData}
             />
-        </>
-      )}
-      {(showWinnerScreen && showEndGameDialog) && <WinnerScreen 
-        winner={players.winner} 
-        battleStats={battleStats}
-        shipStats={shipStats}
-        gameTimeSecondsFinal={gameTimeSecondsFinal}
-        setShowEndGameDialog={setShowEndGameDialog}
-       />}
-      {showModelCredits && <ModelCredits setShowModelCredits={setShowModelCredits} />}
+            <BottomRightPanel 
+              battleStats={battleStats} 
+              gameTimeSecondsFinal={gameTimeSecondsFinal}
+              />
+          </>
+        )}
+        {(showWinnerScreen && showEndGameDialog) && <WinnerScreen 
+          winner={players.winner} 
+          battleStats={battleStats}
+          shipStats={shipStats}
+          gameTimeSecondsFinal={gameTimeSecondsFinal}
+          setShowEndGameDialog={setShowEndGameDialog}
+        />}
+        {showModelCredits && <ModelCredits setShowModelCredits={setShowModelCredits} />}
+
     </div>
   ) 
 

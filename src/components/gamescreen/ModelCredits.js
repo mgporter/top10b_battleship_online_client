@@ -12,10 +12,10 @@ export default function ModelCredits({setShowModelCredits}) {
 
   const assets = credits.map((asset) => {
     return (
-      <tr onClick={() => window.open(asset.url, "_blank", "noreferrer")}>
+      <tr key={asset.name} onClick={() => window.open(asset.url, "_blank", "noreferrer")}>
         <td>{asset.name}</td>
         <td>{asset.author}</td>
-        <td className="asset-links"><a href={asset.url} target="_blank">{asset.urlDisplay}</a></td>
+        <td className="asset-links"><a href={asset.url} rel="noreferrer" target="_blank">{asset.urlDisplay}</a></td>
       </tr>
     )
   })

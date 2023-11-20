@@ -80,7 +80,7 @@ const MainboardAndPanel = memo(function MainboardAndPanel({
     } else {
       setMainboardFlash(true);
     }
-  }, [readyToAttackOpponent])
+  }, [readyToAttackOpponent, appState])
 
 
   useEffect(() => {

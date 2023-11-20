@@ -1,24 +1,27 @@
 import { useCallback, useContext, useEffect } from "react";
-import { ApplicationState, PacketType, playerListActions, dialogBoxTypes, shipStatsActions } from "../../enums";
+import { ApplicationState, PacketType, playerListActions, dialogBoxTypes, shipStatsActions, Events } from "../../enums";
 import './roompanel.css';
 import { PlayerContext } from "../../PlayerProvider";
-import { AppStateContext } from "../../AppStateProvider";
+import { AppStateContext, SetAppStateContext } from "../../AppStateProvider";
 import useSubscription from "../../useSubscription";
+import EventEmitter from "../../EventEmitter";
 
 export default function RoomPanel({
   fullScreenDialog, 
   sendPacket,
   players,
   dispatchPlayers,
+  gameLoaded,
   dispatchShipStats
 }) {
 
-  const {playerId} = useContext(PlayerContext);
+  const { playerId } = useContext(PlayerContext);
   const appState = useContext(AppStateContext);
+  const setAppState = useContext(SetAppStateContext);
 
   const currentPlayerMarker = "(You)";
 
-  const onPlayerListReceived = (payload) => {
+  const onPlayerListReceived = useCallback((payload) => {
     const message = JSON.parse(payload.body);
 
     dispatchPlayers({
@@ -26,42 +29,13 @@ export default function RoomPanel({
       data: message
     })
 
-
-    /**
-     * If there are two players in the room, then hide any dialogs.
-     * If there are not yet two players, we have two cases. If the appState is
-     * INITIALIZED, it means we just entered and are waiting for a second player.
-     * If the appState is anythign else, it means that we had previously progressed to
-     * a further appState, but the opponent left. In this case, we reset the opponent's
-     * shipplaced counter and send a message to save the gamestate, so that another
-     * player who joins can pick up where we left off.
-     *  */
-
-    if (message.playerOneId && message.playerTwoId) {
-      fullScreenDialog.hide();
-    } else {
-      console.log(appState)
-      if (appState === ApplicationState.GAME_INITIALIZED) {
-        fullScreenDialog.show(dialogBoxTypes.WAITINGFORJOIN);
-      } else if (appState === ApplicationState.GAME_END) {
-        // Do nothing
-      } else {
-        dispatchShipStats({type: shipStatsActions.SETOPPONENTSHIPSUNK, data: 0});
-        fullScreenDialog.show(dialogBoxTypes.PLAYERLEFT);
-        sendPacket(PacketType.SAVESTATE);
-      }
-      
+    if (!message.playerOneId || !message.playerTwoId) {
+      EventEmitter.dispatch(Events.NOTENOUGHPLAYERS);
     }
-  }
-  // }, [appState, fullScreenDialog, sendPacket, dispatchPlayers, dispatchShipStats]);
-  console.log(appState)
 
-  const updateCallback = useSubscription(`/game/playerlist/${players.room}`, onPlayerListReceived, `game${players.room}-playerlist`);
+  }, [dispatchPlayers]);
 
-  useEffect(() => {
-    updateCallback(onPlayerListReceived)
-  }, [updateCallback, onPlayerListReceived])
-
+  useSubscription(`/game/playerlist/${players.room}`, onPlayerListReceived, `game${players.room}-playerlist`);
 
 
   return (

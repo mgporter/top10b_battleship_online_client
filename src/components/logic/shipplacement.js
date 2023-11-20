@@ -73,7 +73,7 @@ export default function ShipPlacement(board) {
     return cellCoordinates.filter(coord => board.isInBounds(coord)).map(
       coord => playerboardElement.querySelector(`.cell[data-row="${coord[0]}"][data-column="${coord[1]}"]`)
     )
-  };
+  }
 
   function placeShip(ship, cells) {
     board.placeShip(ship, cells);
