@@ -73,9 +73,7 @@ import EventEmitter from "../EventEmitter";
 
 
 export default function GameContainer({
-  roomNumberRef, 
-  gameStateData,
-  setGameStateData,
+  roomNumberRef
 }) {
 
   console.log("GameContainer");
@@ -84,6 +82,7 @@ export default function GameContainer({
 
   const fullScreenDialog = useFullScreenDialog(dialogBoxTypes.LOADINGMODELS);
   const [gameLoaded, setGameLoaded] = useState(false);
+  const [gameData, setGameData] = useState(null);
 
   const [attackResultPlayer, setAttackResultPlayer] = useState(null);
   const [attackResultOpponent, setAttackResultOpponent] = useState(null);
@@ -125,155 +124,223 @@ export default function GameContainer({
   const appState = useContext(AppStateContext);
   const setAppState = useContext(SetAppStateContext);
   const setInGameMessages = useContext(setInGameMessagesContext);
-
   const gameTimeSecondsFinal = useRef(0);
-
   const sendPacket = useSocketSend();
 
 
-  // /**
-  //  * Listen for updates to the players in the room and the appropriate
-  //  * dialog if there are not enough players. Otherwise, if there are
-  //  * two players, move the game to the SHIP_PLACEMENT state. */
 
-  useEffect(() => {
-    EventEmitter.subscribe(Events.NOTENOUGHPLAYERS, "GameCon", handleNotEnoughPlayers);
-    EventEmitter.subscribe(Events.GAMEROOMLOADED, "GameCon", handleGameRoomLoaded);
-    EventEmitter.subscribe(Events.PLACEMENTSSUBMITTED, "GameCon", handlePlacementsSubmitted);
+  const handlePlayerListChange = useCallback((message) => {
+    // console.log(message)
+    
+    dispatchPlayers({
+      type: playerListActions.UPDATEPLAYERLIST,
+      data: message
+    })
 
-    return () => {
-      EventEmitter.unsubscribe(Events.NOTENOUGHPLAYERS, "GameCon");
-      EventEmitter.unsubscribe(Events.GAMEROOMLOADED, "GameCon");
-      EventEmitter.unsubscribe(Events.PLACEMENTSSUBMITTED, "GameCon");
-    }
-  }, [handleNotEnoughPlayers, handleGameRoomLoaded, handlePlacementsSubmitted])
+    if (message.playerOneId && message.playerTwoId) {
 
-  function handleNotEnoughPlayers() {
-    if (appState === ApplicationState.SHIPS_PLACED_AND_STARTED ||
-      appState === ApplicationState.SHIP_PLACEMENT) {
-      dispatchShipStats({type: shipStatsActions.SETOPPONENTSHIPSPLACED, data: 0});
-    }
-    if (appState >= ApplicationState.SHIP_PLACEMENT &&
-      appState != ApplicationState.GAME_END) {
-        fullScreenDialog.show(dialogBoxTypes.PLAYERLEFT);
+      console.log("hide dialog")
+      fullScreenDialog.hide();
+
+    } else {
+
+      if (appState === ApplicationState.SHIPS_PLACED_AND_STARTED ||
+        appState === ApplicationState.SHIP_PLACEMENT) {
+        dispatchShipStats({type: shipStatsActions.SETOPPONENTSHIPSPLACED, data: 0});
       }
-  }
+      if (appState >= ApplicationState.SHIP_PLACEMENT &&
+        appState != ApplicationState.GAME_END) {
+          fullScreenDialog.show(dialogBoxTypes.PLAYERLEFT);
+          sendPacket(PacketType.SAVESTATE);
+        }      
 
-  function handleGameRoomLoaded() {
+    }
+
+  }, [appState, fullScreenDialog, sendPacket]);
+
+  const handleGameRoomLoaded = useCallback(() => {
     sendPacket(PacketType.GAMEROOMLOADED);
     setGameLoaded(true);
-  }
+  }, [sendPacket]);
 
-  function handlePlacementsSubmitted() {
+  const handleStartPlacement = useCallback(() => {
+    fullScreenDialog.hide();
+    setAppState(ApplicationState.SHIP_PLACEMENT);
+    setInGameMessages(inGameMessages.WELCOME);
+  }, [fullScreenDialog, setAppState, setInGameMessages]);
+
+  const handleOpponentPlacedShip = useCallback((shipcount) => {
+    dispatchShipStats({type: shipStatsActions.SETOPPONENTSHIPSPLACED, data: shipcount});
+  }, []);
+
+  const handlePlacementsSubmitted = useCallback(() => {
     setAppState(ApplicationState.SHIPS_PLACED_AND_STARTED);
     fullScreenDialog.show(dialogBoxTypes.WAITINGFORPLACEMENT, shipStats.opponentShipsPlaced);
-  }
+  }, [setAppState, fullScreenDialog, shipStats]);
+
+  const handleOpponentAttackReceived = useCallback(() => {
+    setReadyToAttackOpponent(true);
+  }, []);
+
+  const handleTellServerToLoadData = useCallback(() => {
+    sendPacket(PacketType.LOAD_ALL_DATA);
+  }, [sendPacket]);
+
+  const handleStartAttackPhase = useCallback(() => {
+    setAppState(ApplicationState.ATTACK_PHASE);
+    fullScreenDialog.hide();
+    if (playerId === players.playerOne) {
+      setInGameMessages(inGameMessages.STARTGAMEFIRSTATTACK);
+      setReadyToAttackOpponent(true);
+    } else {
+      setInGameMessages(inGameMessages.STARTGAMESECONDATTACK);
+    }
+    setTimeout(() => {
+      setShowOpponentPanels(true);
+    }, 100)
+  }, [setAppState, fullScreenDialog, setInGameMessages, playerId, players]);
+
+  const handleSetWinnerScreen = useCallback((winnerId) => {
+    dispatchPlayers({type: playerListActions.SETWINNER, data: winnerId});
+    setReadyToAttackOpponent(false);
+
+    // Give a slight delay in order to let the final boardping animation play
+    setTimeout(() => {        
+      setAppState(ApplicationState.GAME_END);
+    }, 1200)
+  }, [setAppState]);
+
+  const handleLoadSavedGame = useCallback((message) => {
+    setAppState(ApplicationState.ATTACK_PHASE);
+    setGameData(message);
+    fullScreenDialog.hide();
+    if (message.goFirst) {
+      setReadyToAttackOpponent(true);
+      setInGameMessages(inGameMessages.STARTGAMEFIRSTATTACK);
+    } else {
+      setReadyToAttackOpponent(false);
+      setInGameMessages(inGameMessages.STARTGAMESECONDATTACK);
+    }
+    setTimeout(() => {
+      setShowOpponentPanels(true);
+    }, 100)
+  }, [setAppState, setInGameMessages, fullScreenDialog]);
+
+  
+  useEffect(() => {
+    EventEmitter.subscribe(Events.PLAYERLISTCHANGE, "GameCon", handlePlayerListChange);
+    return () => {
+      EventEmitter.unsubscribe(Events.PLAYERLISTCHANGE, "GameCon");
+    }
+  }, [handlePlayerListChange])
+
+  useEffect(() => {
+    EventEmitter.subscribe(Events.GAMEROOMLOADED, "GameCon", handleGameRoomLoaded);
+    return () => {
+      EventEmitter.unsubscribe(Events.GAMEROOMLOADED, "GameCon");
+    }
+  }, [handleGameRoomLoaded])
+
+  useEffect(() => {
+    EventEmitter.subscribe(Events.STARTPLACEMENT, "GameCon", handleStartPlacement);
+    return () => {
+      EventEmitter.unsubscribe(Events.STARTPLACEMENT, "GameCon");
+    }
+  }, [handleStartPlacement])
+
+  useEffect(() => {
+    EventEmitter.subscribe(Events.OPPONENTPLACEDSHIP, "GameCon", handleOpponentPlacedShip);
+    return () => {
+      EventEmitter.unsubscribe(Events.OPPONENTPLACEDSHIP, "GameCon");
+    }
+  }, [handleOpponentPlacedShip])
+
+  useEffect(() => {
+    EventEmitter.subscribe(Events.PLACEMENTSSUBMITTED, "GameCon", handlePlacementsSubmitted);
+    return () => {
+      EventEmitter.unsubscribe(Events.PLACEMENTSSUBMITTED, "GameCon");
+    }
+  }, [handlePlacementsSubmitted])
+
+  useEffect(() => {
+    EventEmitter.subscribe(Events.OPPONENTATTACKRECEIVED, "GameCon", handleOpponentAttackReceived);
+    return () => {
+      EventEmitter.unsubscribe(Events.OPPONENTATTACKRECEIVED, "GameCon");
+    }
+  }, [handleOpponentAttackReceived])
+
+  useEffect(() => {
+    EventEmitter.subscribe(Events.TELLSERVERTOLOADDATA, "GameCon", handleTellServerToLoadData);
+    return () => {
+      EventEmitter.unsubscribe(Events.TELLSERVERTOLOADDATA, "GameCon");
+    }
+  }, [handleTellServerToLoadData])
+
+  useEffect(() => {
+    EventEmitter.subscribe(Events.STARTATTACKPHASE, "GameCon", handleStartAttackPhase);
+    return () => {
+      EventEmitter.unsubscribe(Events.STARTATTACKPHASE, "GameCon");
+    }
+  }, [handleStartAttackPhase])
+
+  useEffect(() => {
+    EventEmitter.subscribe(Events.SETWINNERSCREEN, "GameCon", handleSetWinnerScreen);
+    return () => {
+      EventEmitter.unsubscribe(Events.SETWINNERSCREEN, "GameCon");
+    }
+  }, [handleSetWinnerScreen])
+
+  useEffect(() => {
+    EventEmitter.subscribe(Events.LOADSAVEDGAME, "GameCon", handleLoadSavedGame);
+    return () => {
+      EventEmitter.unsubscribe(Events.LOADSAVEDGAME, "GameCon");
+    }
+  }, [handleLoadSavedGame])
 
 
 
-  // useEffect(() => {
-    
-  //   if (!players.atLeastTwoPlayers &&
-  //     appState >= ApplicationState.SHIP_PLACEMENT &&
-  //     appState != ApplicationState.GAME_END) {
-  //       fullScreenDialog.show(dialogBoxTypes.PLAYERLEFT);
-  //   }
-
-  // }, [appState, players, fullScreenDialog, setAppState])
-
-  // useEffect(() => {
-  //   if (appState === ApplicationState.GAME_INITIALIZED && gameLoaded) 
-  //     sendPacket(PacketType.GAMEROOMLOADED);
-  // }, [gameLoaded, sendPacket, appState])
-
-  // useEffect(() => {
-  //   if (appState === ApplicationState.SHIPS_PLACED_AND_STARTED) {
-  //     fullScreenDialog.show(dialogBoxTypes.WAITINGFORPLACEMENT, shipStats.opponentShipsPlaced);
-  //   }
-  // }, [appState, fullScreenDialog, shipStats])
-
-
-// When the placed_complete packet is sent, do this also!
-  //         fullScreenDialog.show(dialogBoxTypes.WAITINGFORPLACEMENT, shipStats.opponentShipsPlaced);
   
   const onPublicMessageReceived = useCallback((payload) => {
     const message = JSON.parse(payload.body);
     const fromCurrentPlayer = message.playerId === playerId;
 
-
     switch(message.type) {
 
       case PacketType.ATTACK: {
-        if (fromCurrentPlayer) {
-          setAttackResultPlayer(message);
-        } else {
-          setAttackResultOpponent(message);
-          setReadyToAttackOpponent(true);
-        }
+        if (fromCurrentPlayer)
+          EventEmitter.dispatch(Events.MYATTACKRESULTSRECEIVED, message);
+        else EventEmitter.dispatch(Events.OPPONENTATTACKRECEIVED, message);
         break;
       }
 
       case PacketType.PLACED_SHIP: {
         if (!fromCurrentPlayer) 
-          dispatchShipStats({type: shipStatsActions.SETOPPONENTSHIPSPLACED, data: message.shipsPlacedCount});
+          EventEmitter.dispatch(Events.OPPONENTPLACEDSHIP, message.shipsPlacedCount);
         break;
       }
-
-      /**
-       * When there are two players in the room and all models have been loaded,
-       * The game moves to the SHIP_PLACEMENT state.*/
 
       case PacketType.GAME_START: {
-        fullScreenDialog.hide();
-        setAppState(ApplicationState.SHIP_PLACEMENT);
-        setInGameMessages(inGameMessages.WELCOME);
+        EventEmitter.dispatch(Events.STARTPLACEMENT);
         break;
       }
 
-      /*  */
-
       case PacketType.PLACED_COMPLETE: {
-        sendPacket(PacketType.LOAD_ALL_DATA);
+        EventEmitter.dispatch(Events.TELLSERVERTOLOADDATA);
         break;
       }
 
       case PacketType.GAME_ATTACK_PHASE_START: {
-        setAppState(ApplicationState.ATTACK_PHASE);
-        fullScreenDialog.hide();
-        console.log("current player id: " + playerId);
-        console.log(playerId === players.playerOne)
-        if (playerId === players.playerOne) {
-          setInGameMessages(inGameMessages.STARTGAMEFIRSTATTACK);
-          setReadyToAttackOpponent(true);
-        } else {
-          setInGameMessages(inGameMessages.STARTGAMESECONDATTACK);
-        }
-        setTimeout(() => {
-          setShowOpponentPanels(true);
-        }, 400)
+        EventEmitter.dispatch(Events.STARTATTACKPHASE);
         break;
       }
 
       case PacketType.ATTACK_ALLSUNK: {
-        dispatchPlayers({type: playerListActions.SETWINNER, data: message.playerId});
-        setReadyToAttackOpponent(false);
-        setTimeout(() => {        // Give a slight delay in order to let the final boardping animation play
-          setAppState(ApplicationState.GAME_END);
-        }, 1200)
+        EventEmitter.dispatch(Events.SETWINNERSCREEN, message.playerId);
         break;
       }
 
     }
-  }, [
-    players, 
-    sendPacket, 
-    playerId, 
-    setAppState, 
-    setInGameMessages, 
-    setReadyToAttackOpponent, 
-    setShowOpponentPanels, 
-    fullScreenDialog
-  ]);
+  }, [playerId]);
 
 
   useSubscription(`/game/public/${roomNumberRef.current}`, onPublicMessageReceived, `game-public-${roomNumberRef.current}`);
@@ -285,25 +352,13 @@ export default function GameContainer({
     switch(message.type) {
 
       case MessageTypes.LOAD_ALL_DATA: {
-        window.addEventListener("all_models_loaded", () => {
-          console.log("All models loaded event received")
-
-          setGameStateData(message);
-          setAppState(ApplicationState.ATTACK_PHASE);
-          if (message.goFirst) {
-            setReadyToAttackOpponent(true);
-            setInGameMessages(inGameMessages.STARTGAMEFIRSTATTACK);
-          } else {
-            setReadyToAttackOpponent(false);
-            setInGameMessages(inGameMessages.STARTGAMESECONDATTACK);
-          }
-          setShowOpponentPanels(true);
-
-        }, {once: true})
+        EventEmitter.dispatch(Events.LOADSAVEDGAME, message);
         break;
       }
+      
     }
-  }, [setAppState, setGameStateData, setReadyToAttackOpponent, setInGameMessages, setShowOpponentPanels])
+
+  }, [])
 
   useSubscription("/user/queue/game", onPrivateMessageReceived, "game-private-msg");
 
@@ -314,7 +369,6 @@ export default function GameContainer({
 
   return (
     <div id="game-container" ref={gameContainerRef}>
-      {/* <button onClick={() => {SETTEST(!TEST)}}>PRESS ME</button> */}
       {fullScreenDialog.shouldDisplay && <FullScreenInfoDialog 
         fullScreenDialog={fullScreenDialog} 
         setGameLoaded={setGameLoaded}
@@ -327,39 +381,32 @@ export default function GameContainer({
           shipStats={shipStats}
           dispatchShipStats={dispatchShipStats}
           gameContainerRef={gameContainerRef}
-          gameStateData={gameStateData}
         />
       {gameLoaded && <RoomPanel 
-        fullScreenDialog={fullScreenDialog} 
-        sendPacket={sendPacket}
         players={players}
         dispatchPlayers={dispatchPlayers}
-        dispatchShipStats={dispatchShipStats}
-        gameLoaded={gameLoaded} />}
+       />}
       {showOpponentShipsMinidialog && <OpponentShipsPlacedMinidialog shipStats={shipStats} />}
         <MessageArea 
           showEndGameButtons={!showEndGameDialog && showWinnerScreen}
           winner={players.winner}
           setShowEndGameDialog={setShowEndGameDialog} />
         <CreditsBlock setShowModelCredits={setShowModelCredits} />
-        {showOpponentPanels && (
-          <>
-            <OpponentBoard 
-              dispatchBattleStats={dispatchBattleStats}
-              readyToAttackOpponent={readyToAttackOpponent}
-              setReadyToAttackOpponent={setReadyToAttackOpponent}
-              sendPacket={sendPacket}
-              attackResultPlayer={attackResultPlayer}
-              shipStats={shipStats}
-              dispatchShipStats={dispatchShipStats}
-              gameStateData={gameStateData}
-            />
-            <BottomRightPanel 
-              battleStats={battleStats} 
-              gameTimeSecondsFinal={gameTimeSecondsFinal}
-              />
-          </>
-        )}
+        <OpponentBoard 
+          dispatchBattleStats={dispatchBattleStats}
+          readyToAttackOpponent={readyToAttackOpponent}
+          setReadyToAttackOpponent={setReadyToAttackOpponent}
+          sendPacket={sendPacket}
+          attackResultPlayer={attackResultPlayer}
+          shipStats={shipStats}
+          dispatchShipStats={dispatchShipStats}
+          showOpponentPanels={showOpponentPanels}
+        />
+        <BottomRightPanel 
+          battleStats={battleStats} 
+          gameTimeSecondsFinal={gameTimeSecondsFinal}
+          showOpponentPanels={showOpponentPanels}
+          />
         {(showWinnerScreen && showEndGameDialog) && <WinnerScreen 
           winner={players.winner} 
           battleStats={battleStats}

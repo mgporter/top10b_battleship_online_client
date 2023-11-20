@@ -5,7 +5,8 @@ import './bottomrightpanel.css';
 
 export default function BottomRightPanel({
   battleStats, 
-  gameTimeSecondsFinal
+  gameTimeSecondsFinal,
+  showOpponentPanels
 }) {
 
   const appState = useContext(AppStateContext);
@@ -13,8 +14,9 @@ export default function BottomRightPanel({
   const [gameTimeSeconds, setGameTimeSeconds] = useState(0);
 
   useEffect(() => {
-    bottomRightPanelRef.current.classList.add('slidein');
-  }, [])
+    if (showOpponentPanels)
+      bottomRightPanelRef.current.classList.add('slidein');
+  }, [showOpponentPanels])
 
   useEffect(() => {
 

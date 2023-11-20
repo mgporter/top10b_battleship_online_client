@@ -6,6 +6,12 @@
   animation: 1000ms cubic-bezier(0.12, 1.07, 1, 1) 0s 1 normal forwards running placementpanelslidein;
 }
 
+.placement-panel.slidein.boardflash {
+  animation: 
+    1000ms cubic-bezier(0.12, 1.07, 1, 1) 0s 1 normal forwards running placementpanelslidein,
+    1.6s linear 0s infinite alternate both running boardflash;
+}
+
 .placement-panel.slideout {
   animation: 400ms ease-in 0s 1 reverse forwards running placementpanelslidein;
 }

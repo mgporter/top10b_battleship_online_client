@@ -22,6 +22,7 @@ export default function RoomSelectionContainer({roomNumberRef}) {
     color: LobbyColors.emphasis,
   }]);
 
+  const [lobbyLoaded, setLobbyLoaded] = useState(false);
   const {playerName, playerId} = useContext(PlayerContext);
   const [requestGameRooms, updateGameRooms, gameRooms] = useFetch(endpoints.getGameRooms);
   const wsStatus = useWebSocketStatus();
@@ -92,9 +93,8 @@ export default function RoomSelectionContainer({roomNumberRef}) {
   useSubscription("/lobby", onPublicMessageReceived, "lobby");
   
   useEffect(() => {
-    if (!wsStatus) return;
     sendPacket(MessageTypes.JOINLOBBY);
-  }, [wsStatus, sendPacket])
+  }, [sendPacket]);
 
   
   return (

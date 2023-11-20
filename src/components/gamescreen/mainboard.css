@@ -68,7 +68,7 @@
 
 .fade-in-result .cell.hit, 
 .fade-in-result .cell.miss {
-  transition: 1.5s background-color;
+  transition: 1.5s ease-out background-color;
 }
 
 .disable-hover .cell:hover {

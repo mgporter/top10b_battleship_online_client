@@ -114,10 +114,7 @@ export function displayShipOnOpponentBoard(boardOverlayRef, attackResult) {
 
 export function addHitToHealthStatus(board, row, column) {
   const cellObj = board.getCell([row, column]);
-  console.log(board)
-  console.log(Boolean(cellObj.getShip()))
-  console.log(cellObj.getShip().getType())
-  console.log(cellObj.getShipPartNumber())
+
   if (!cellObj.getShip()) return;
   const shipType = cellObj.getShip().getType();
   const partNumber = cellObj.getShipPartNumber();
@@ -125,8 +122,6 @@ export function addHitToHealthStatus(board, row, column) {
   const healthCell = document.querySelector(
     `.ship-health-container[data-shiptype="${shipType}"] .health-box[data-shipsection="${partNumber}"]`
   );
-
-  console.log(healthCell)
 
   if (healthCell) healthCell.classList.add('hit');
 }
@@ -145,7 +140,7 @@ function calculateScore(newStats, currentScore) {
 }
 
 export function battleStatsReducer(current, action) {
-  console.log(current.streak)
+
   switch(action) {
     case battleStatsActions.incrementMyShotsFired: {
       const newStats = {

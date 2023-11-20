@@ -73,7 +73,7 @@ export default function useSocketSend() {
       }
 
       case MessageTypes.JOINLOBBY: {
-        sendTo("/app/joinLobby", data);
+        sendTo("/app/joinLobby");
         break;
       }
 

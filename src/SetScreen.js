@@ -13,24 +13,10 @@ import getSocket from './getSocket';
 export default function SetScreen() {
   console.log("SetScreen")
 
-
-
   const appState = useContext(AppStateContext);
-  const setAppState = useContext(SetAppStateContext);
-  const { playerName, setPlayerName, playerId, setPlayerId } = useContext(PlayerContext);
+  const { setPlayerName, setPlayerId } = useContext(PlayerContext);
   const roomNumberRef = useRef(null);
-  const setInGameMessages = useContext(setInGameMessagesContext);
-
-  const [gameStateData, setGameStateData] = useState(null);
   const socket = getSocket();
-
-  useEffect(() => {
-    if (appState === ApplicationState.ROOM_SELECTION) {
-      setGameStateData(null);
-      // setShowOpponentPanels(false);
-      // setReadyToAttackOpponent(false);
-    }
-  }, [appState])
 
   useEffect(() => {
 
@@ -55,53 +41,9 @@ export default function SetScreen() {
     return () => {
       window.removeEventListener("credentialsReceived", setCredentials);
     }
-  }, [playerId, setPlayerName, setPlayerId, socket])
+  }, [setPlayerName, setPlayerId, socket])
 
-  // const onMessageReceived = useCallback((payload) => {
-  //   const message = JSON.parse(payload.body);
-  //   console.log(message)
 
-  //   switch(message.type) {
-
-  //     case MessageTypes.LOAD_ALL_DATA: {
-  //       window.addEventListener("all_models_loaded", () => {
-  //         console.log("All models loaded event received")
-  //         changeToAttackMode(message);
-  //       }, {once: true})
-  //       break;
-  //     }
-
-  //     case MessageTypes.REJECTEDJOIN_ALREADY_IN_GAME: {
-  //       roomNumberRef.current = null;
-  //       break;
-  //     }
-
-  //     case MessageTypes.REJECTEDJOIN_ROOM_FULL: {
-  //       roomNumberRef.current = null;
-  //       break;
-  //     }
-
-  //     case MessageTypes.REJECTEDJOIN_GAME_NOT_FOUND: {
-  //       roomNumberRef.current = null;
-  //       break;
-  //     }
-  //   }
-  // }, [])
-
-  // function changeToAttackMode(message) {
-  //   setGameStateData(message);
-  //   setAppState(ApplicationState.ATTACK_PHASE);
-  //   if (message.goFirst) {
-  //     setReadyToAttackOpponent(true);
-  //     setInGameMessages(inGameMessages.STARTGAMEFIRSTATTACK);
-  //   } else {
-  //     setReadyToAttackOpponent(false);
-  //     setInGameMessages(inGameMessages.STARTGAMESECONDATTACK);
-  //   }
-  //   setShowOpponentPanels(true);
-  // }
-
-  // useSubscription("/user/queue/player", onMessageReceived, "private");
 
   const showLobby = appState === ApplicationState.ROOM_SELECTION;
 
@@ -109,11 +51,7 @@ export default function SetScreen() {
     {showLobby ? (
       <RoomSelectionContainer roomNumberRef={roomNumberRef} />
     ) : (
-      <GameContainer 
-        roomNumberRef={roomNumberRef}
-        gameStateData={gameStateData}
-        setGameStateData={setGameStateData}
-      />
+      <GameContainer roomNumberRef={roomNumberRef} />
     )}
   </>)
 }

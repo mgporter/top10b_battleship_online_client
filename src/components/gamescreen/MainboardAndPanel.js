@@ -19,8 +19,7 @@ const MainboardAndPanel = memo(function MainboardAndPanel({
   dispatchBattleStats,
   shipStats,
   dispatchShipStats,
-  gameContainerRef,
-  gameStateData
+  gameContainerRef
 }) {
 
   const [shipClicked, setShipClicked] = useState(null);
@@ -124,7 +123,6 @@ const MainboardAndPanel = memo(function MainboardAndPanel({
           attackResultOpponent={attackResultOpponent}
           dispatchBattleStats={dispatchBattleStats}
           gameContainerRef={gameContainerRef}
-          gameStateData={gameStateData}
         />
     </>
   )

@@ -7,33 +7,31 @@ import useSubscription from "../../useSubscription";
 import EventEmitter from "../../EventEmitter";
 
 export default function RoomPanel({
-  fullScreenDialog, 
-  sendPacket,
   players,
-  dispatchPlayers,
-  gameLoaded,
-  dispatchShipStats
+  dispatchPlayers
 }) {
 
   const { playerId } = useContext(PlayerContext);
-  const appState = useContext(AppStateContext);
-  const setAppState = useContext(SetAppStateContext);
 
   const currentPlayerMarker = "(You)";
 
   const onPlayerListReceived = useCallback((payload) => {
     const message = JSON.parse(payload.body);
 
-    dispatchPlayers({
-      type: playerListActions.UPDATEPLAYERLIST,
-      data: message
-    })
+    // dispatchPlayers({
+    //   type: playerListActions.UPDATEPLAYERLIST,
+    //   data: message
+    // })
 
-    if (!message.playerOneId || !message.playerTwoId) {
-      EventEmitter.dispatch(Events.NOTENOUGHPLAYERS);
-    }
+    EventEmitter.dispatch(Events.PLAYERLISTCHANGE, message);
 
-  }, [dispatchPlayers]);
+    // if (!message.playerOneId || !message.playerTwoId) {
+    //   EventEmitter.dispatch(Events.NOTENOUGHPLAYERS);
+    // } else {
+    //   EventEmitter.dispatch(Events.PLAYERLISTCHANGE);
+    // }
+
+  }, []);
 
   useSubscription(`/game/playerlist/${players.room}`, onPlayerListReceived, `game${players.room}-playerlist`);
 

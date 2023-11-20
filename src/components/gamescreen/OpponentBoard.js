@@ -1,9 +1,10 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { C } from "../../Constants";
 import './opponentboard.css';
-import { PacketType, battleStatsActions, inGameMessages, shipStatsActions } from "../../enums";
+import { Events, PacketType, battleStatsActions, inGameMessages, shipStatsActions } from "../../enums";
 import { displayShipOnOpponentBoard, handleAttackResult, coordinateToDOMCell } from "../logic/boardhelperfunctions";
 import { setInGameMessagesContext } from "../../InGameMessageProvider";
+import EventEmitter from "../../EventEmitter";
 
 /* Create the board cells once on load */
 // const cells = createBoardCells("opponentboard");
@@ -26,26 +27,92 @@ export default function OpponentBoard({
   dispatchBattleStats,
   shipStats,
   dispatchShipStats,
-  gameStateData
+  showOpponentPanels
 }) {
 
   const opponentboardRef = useRef(null);
   const boardOverlayRef = useRef(null);
   const pingRef = useRef(null);
   const opponentPanelRef = useRef(null);
+  const currentAttackResult = useRef(null);
 
   const setInGameMessages = useContext(setInGameMessagesContext);
 
   useEffect(() => {
-    opponentPanelRef.current.classList.add('slidein');
-  }, [])
+    if (showOpponentPanels)
+      opponentPanelRef.current.classList.add('slidein');
+  }, [showOpponentPanels])
 
-  /* If the player is joining a game that was in progress, then the current
-  game state will be loaded here */
   useEffect(() => {
-   if (!gameStateData) return;
-    const opponentSunkShips = gameStateData.opponentSunkShips;
-    const myAttacks = gameStateData.myAttacks;
+    if (readyToAttackOpponent) {
+      opponentboardRef.current.classList.add("boardflash");
+      opponentboardRef.current.classList.remove("disable-hover");
+    } else {
+      opponentboardRef.current.classList.remove("boardflash");
+      opponentboardRef.current.classList.add("disable-hover");
+    }
+  }, [readyToAttackOpponent])
+
+
+  // useEffect(() => {
+  //  if (!gameStateData) return;
+  //   const opponentSunkShips = gameStateData.opponentSunkShips;
+  //   const myAttacks = gameStateData.myAttacks;
+
+  //   for (let attack of myAttacks) {
+  //     const targetCell = coordinateToDOMCell([attack.row, attack.col], opponentboardRef);
+  //     if (attack.result === PacketType.M) handleMiss(targetCell, true);
+  //     else if (attack.result === PacketType.H) handleHit(targetCell, true);
+  //     else if (attack.result === PacketType.S) handleSink(targetCell, true);
+  //   }
+
+  //   for (let sunkShip of opponentSunkShips) {
+  //     displayShipOnOpponentBoard(boardOverlayRef, {
+  //       shipType: sunkShip.type,
+  //       direction: sunkShip.direction,
+  //       startingRow: sunkShip.location[0].row,
+  //       startingCol: sunkShip.location[0].col
+  //     });
+  //   }
+
+  //   dispatchShipStats({type: shipStatsActions.SETOPPONENTSHIPSUNK, data: opponentSunkShips.length})
+
+  // }, [gameStateData])
+
+
+
+
+
+
+  const handleMiss = useCallback((targetCell, loadingData = false) => {
+    targetCell.classList.add("miss");
+    dispatchBattleStats(battleStatsActions.incrementMyShotsFired);
+    if (loadingData === false) setInGameMessages(inGameMessages.ATTACKMISSED);
+  }, [dispatchBattleStats, setInGameMessages]);
+
+  const handleHit = useCallback((targetCell, loadingData = false) => {
+    targetCell.classList.add("hit");
+    dispatchBattleStats(battleStatsActions.incrementMyShotsHit);
+    if (loadingData === false) setInGameMessages(inGameMessages.ATTACKHITSHIP, currentAttackResult.current.shipType);
+  }, [dispatchBattleStats, setInGameMessages]);
+
+  const handleSink = useCallback((targetCell, loadingData = false) => {
+    targetCell.classList.add("hit");
+    dispatchBattleStats(battleStatsActions.incrementMyShotsHit);
+    if (loadingData === false) {
+      dispatchShipStats({type: shipStatsActions.INCREMENTOPPONENTSHIPSUNK})
+      setInGameMessages(inGameMessages.ATTACKSUNKSHIP, currentAttackResult.current.shipType);
+      displayShipOnOpponentBoard(boardOverlayRef, currentAttackResult.current);
+    }
+  }, [dispatchBattleStats, dispatchShipStats, setInGameMessages]);
+
+  const loadGameData = useCallback((data) => {
+    const opponentSunkShips = data.opponentSunkShips;
+    const myAttacks = data.myAttacks;
+
+    console.log(data)
+    console.log(opponentSunkShips)
+    console.log(myAttacks)
 
     for (let attack of myAttacks) {
       const targetCell = coordinateToDOMCell([attack.row, attack.col], opponentboardRef);
@@ -64,56 +131,35 @@ export default function OpponentBoard({
     }
 
     dispatchShipStats({type: shipStatsActions.SETOPPONENTSHIPSUNK, data: opponentSunkShips.length})
-
-  }, [gameStateData])
-
-  useEffect(() => {
-    if (!attackResultPlayer) return;
-
-    handleAttackResult(
-      opponentboardRef,
-      pingRef,
-      attackResultPlayer,
-      handleMiss,
-      handleHit,
-      handleSink
-    );
-
-  }, [attackResultPlayer])
+    
+  }, [dispatchShipStats, handleHit, handleMiss, handleSink])
 
 
   useEffect(() => {
-    if (readyToAttackOpponent) {
-      opponentboardRef.current.classList.add("boardflash");
-      opponentboardRef.current.classList.remove("disable-hover");
-    } else {
-      opponentboardRef.current.classList.remove("boardflash");
-      opponentboardRef.current.classList.add("disable-hover");
+    EventEmitter.subscribe(Events.MYATTACKRESULTSRECEIVED, "OppoBoard", (attackPacket) => {
+      currentAttackResult.current = attackPacket;
+      handleAttackResult(
+        opponentboardRef,
+        pingRef,
+        attackPacket,
+        handleMiss,
+        handleHit,
+        handleSink
+      );
+    });
+    return () => {
+      EventEmitter.unsubscribe(Events.MYATTACKRESULTSRECEIVED, "OppoBoard");
     }
-  }, [readyToAttackOpponent])
+  }, [handleMiss, handleHit, handleSink])
 
-
-  function handleMiss(targetCell, loadingData = false) {
-    targetCell.classList.add("miss");
-    dispatchBattleStats(battleStatsActions.incrementMyShotsFired);
-    if (loadingData === false) setInGameMessages(inGameMessages.ATTACKMISSED);
-  }
-
-  function handleHit(targetCell, loadingData = false) {
-    targetCell.classList.add("hit");
-    dispatchBattleStats(battleStatsActions.incrementMyShotsHit);
-    if (loadingData === false) setInGameMessages(inGameMessages.ATTACKHITSHIP, attackResultPlayer.shipType);
-  }
-
-  function handleSink(targetCell, loadingData = false) {
-    targetCell.classList.add("hit");
-    dispatchBattleStats(battleStatsActions.incrementMyShotsHit);
-    if (loadingData === false) {
-      dispatchShipStats({type: shipStatsActions.INCREMENTOPPONENTSHIPSUNK})
-      setInGameMessages(inGameMessages.ATTACKSUNKSHIP, attackResultPlayer.shipType);
-      displayShipOnOpponentBoard(boardOverlayRef, attackResultPlayer);
+  useEffect(() => {
+    EventEmitter.subscribe(Events.LOADSAVEDGAME, "OppoBoard", loadGameData);
+    return () => {
+      EventEmitter.unsubscribe(Events.LOADSAVEDGAME, "OppoBoard");
     }
-  }
+  }, [loadGameData])
+
+
 
   function handleCellClick(e) {
     if (!isValidCell(e)) return;

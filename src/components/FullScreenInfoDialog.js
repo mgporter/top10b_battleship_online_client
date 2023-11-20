@@ -25,30 +25,26 @@ export default function FullScreenInfoDialog({fullScreenDialog, setGameLoaded, s
       window.removeEventListener("model_loaded", incrementModelsLoaded);
     }
   }, [appState]);
-  
-  // useEffect(() => {
-  //   if (allModelsLoaded) setGameLoaded(true);
-  // }, [allModelsLoaded, setGameLoaded])
 
   useEffect(() => {
     if (allModelsLoaded) EventEmitter.dispatch(Events.GAMEROOMLOADED)
   }, [allModelsLoaded])
 
   let messageBlock = null;
-  const showBackToLobbyButton = fullScreenDialog.type != dialogBoxTypes.LOADINGMODELS;
   
   switch(fullScreenDialog.type) {
     
     case dialogBoxTypes.LOADINGMODELS: {
 
       messageBlock = 
-        <div className="models-progress-bar-container">
+        <>
           {allModelsLoaded && <h2>Waiting for another player to start the game...</h2>}
-          <h4>{allModelsLoaded ? "All models loaded!" : "Loading 3D models:"}</h4>
-          <progress className="model-load-progress-bar" max={C.numberOfModelsToLoad} value={modelsLoaded}></progress>
-          <h3>{modelsLoaded}</h3>
-        </div>
-
+          <div className="models-progress-bar-container">
+            <h4>{allModelsLoaded ? "All models loaded!" : "Loading 3D models:"}</h4>
+            <progress className="model-load-progress-bar" max={C.numberOfModelsToLoad} value={modelsLoaded}></progress>
+            <h3>{modelsLoaded}</h3>
+          </div>      
+        </>
       break;
     }
 
@@ -59,7 +55,6 @@ export default function FullScreenInfoDialog({fullScreenDialog, setGameLoaded, s
     }
 
     case dialogBoxTypes.PLAYERLEFT: {
-      console.log("we got here: " + fullScreenDialog.type)
       messageBlock = <h2>A player has left. Waiting for another player to continue the game.</h2>
       break;
     }
@@ -81,7 +76,7 @@ export default function FullScreenInfoDialog({fullScreenDialog, setGameLoaded, s
     <div className='backdrop'>
       <div className='confirmation-dialog join-game-dialog'>
         {messageBlock}
-        {showBackToLobbyButton && <button type="button" onClick={() => setAppState(ApplicationState.ROOM_SELECTION)}>Return to the lobby</button>}
+        <button type="button" onClick={() => setAppState(ApplicationState.ROOM_SELECTION)}>Return to the lobby</button>
       </div>
     </div>
   )
