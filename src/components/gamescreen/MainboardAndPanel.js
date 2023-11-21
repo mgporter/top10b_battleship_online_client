@@ -93,25 +93,18 @@ const MainboardAndPanel = memo(function MainboardAndPanel({
     }
   }, [appState])
 
-  const showShipPlacementPanel = 
-    appState === ApplicationState.SHIP_PLACEMENT ||
-    appState === ApplicationState.SHIPS_PLACED_AND_STARTED;
-  const showShipHealthPanel = 
-    appState === ApplicationState.ATTACK_PHASE || 
-    appState === ApplicationState.GAME_END;
-
   return (
     <>
-        {showShipPlacementPanel && <ShipPlacementPanel 
+        <ShipPlacementPanel 
           setShipClicked={setShipClicked} 
           leftPanelFlash={leftPanelFlash}
           sendPacket={sendPacket}
           shipsPlaced={shipsPlaced}
-        />}
-        {showShipHealthPanel && <ShipHealthPanel 
+        />
+        <ShipHealthPanel 
           shipsPlaced={shipsPlaced}
           shipStats={shipStats}
-        />}
+        />
         <MainBoard 
           mainboardFlash={mainboardFlash} 
           mainboardHover={mainboardHover}

@@ -11,24 +11,36 @@ export default function FullScreenInfoDialog({fullScreenDialog, setGameLoaded, s
   const [modelsLoaded, setModelsLoaded] = useState(0);
 
   // eslint-disable-next-line no-undef
-  const allModelsLoaded = modelsLoaded === Number(process.env.REACT_APP_MODELLOADCOUNT);
+  // const allModelsLoaded = modelsLoaded === Number(process.env.REACT_APP_MODELLOADCOUNT);
+  const allModelsLoaded = modelsLoaded === C.numberOfModelsToLoad;
+
+  // useEffect(() => {
+  //   if (appState != ApplicationState.GAME_INITIALIZED) return;
+  //   console.log("FullScreenDialog -> UseEffect -> incrementModelsLoaded")
+  //   function incrementModelsLoaded() {
+  //     setModelsLoaded(prev => prev + 1);
+  //   }
+
+  //   window.addEventListener("model_loaded", incrementModelsLoaded);
+
+  //   return () => {
+  //     window.removeEventListener("model_loaded", incrementModelsLoaded);
+  //   }
+  // }, [appState]);
+
 
   useEffect(() => {
-    if (appState != ApplicationState.GAME_INITIALIZED) return;
-    console.log("FullScreenDialog -> UseEffect -> incrementModelsLoaded")
-    function incrementModelsLoaded() {
-      setModelsLoaded(prev => prev + 1);
-    }
-    window.addEventListener("model_loaded", incrementModelsLoaded);
-
+    EventEmitter.subscribe(Events.MODELLOADED, "FSDialog", (data) => setModelsLoaded(data));
     return () => {
-      window.removeEventListener("model_loaded", incrementModelsLoaded);
+      EventEmitter.unsubscribe(Events.MODELLOADED, "FSDialog")
     }
-  }, [appState]);
+  }, [])
 
   useEffect(() => {
     if (allModelsLoaded) EventEmitter.dispatch(Events.GAMEROOMLOADED)
   }, [allModelsLoaded])
+
+
 
   let messageBlock = null;
   

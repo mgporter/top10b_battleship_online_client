@@ -110,10 +110,6 @@ export default function OpponentBoard({
     const opponentSunkShips = data.opponentSunkShips;
     const myAttacks = data.myAttacks;
 
-    console.log(data)
-    console.log(opponentSunkShips)
-    console.log(myAttacks)
-
     for (let attack of myAttacks) {
       const targetCell = coordinateToDOMCell([attack.row, attack.col], opponentboardRef);
       if (attack.result === PacketType.M) handleMiss(targetCell, true);

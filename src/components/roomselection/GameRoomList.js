@@ -7,10 +7,10 @@ export default function GameRoomList({joinGame, gameRooms}) {
   const [showJoinGameDialog, setShowJoinGameDialog] = useState({show: false});
 
   const messageStyle = {marginTop: "48px", fontSize: "1.6rem", alignSelf: "center"};
-  const gameRoomsList = gameRooms.data;
+  // const gameRoomsList = gameRooms.data;
 
   const handleGameSelection = useCallback((e) => {
-    const gameroom = gameRoomsList[e.target.id - 1];
+    const gameroom = gameRooms[e.target.id];
     const gameNumber = gameroom.roomNumber;
     const players = gameroom.playerList.map(player => player.name);
     setShowJoinGameDialog({
@@ -19,7 +19,7 @@ export default function GameRoomList({joinGame, gameRooms}) {
       players: players,
       full: gameroom.playerList.length >= 2,
     });
-  }, [gameRoomsList, setShowJoinGameDialog])
+  }, [gameRooms, setShowJoinGameDialog])
 
 
   return (
@@ -29,16 +29,25 @@ export default function GameRoomList({joinGame, gameRooms}) {
         setShowJoinGameDialog={setShowJoinGameDialog}
         joinGame={joinGame}>
       </JoinGameDialog>}
-      {gameRooms.loading && <p style={messageStyle}>Loading Gamerooms...</p>}
-      {gameRooms.error && <p style={messageStyle}>{gameRooms.error}</p>}
+      {gameRooms == null && <p style={messageStyle}>Loading Gamerooms...</p>}
+      {/* {gameRooms.error && <p style={messageStyle}>{gameRooms.error}</p>} */}
       <ul id="join-game-box">
-        {gameRooms.data && (
-          gameRooms.data.length === 0 ? 
+        {gameRooms && (
+          gameRooms.length === 0 ? 
           <p style={messageStyle}>There are no game rooms yet. Try creating one!</p>
           :
-          gameRooms.data.map((gameroom, i) => (
-            <GameRow onClick={handleGameSelection} key={gameroom.roomNumber} {...gameroom} row={i + 1} />
-          ))
+          // Display in reverse order, with most recent at top.
+          gameRooms.map((_, i) => {
+            const idx = gameRooms.length - i - 1;
+            const newGameRoom = gameRooms[idx];
+            return <GameRow 
+              onClick={handleGameSelection}
+              idx={idx} 
+              key={newGameRoom.roomNumber} 
+              row={i + 1}
+              {...newGameRoom}
+            />
+          })
         )}
       </ul>
     </>

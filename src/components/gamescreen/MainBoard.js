@@ -151,6 +151,7 @@ export default function MainBoard({
   const handleHit = useCallback((targetCell, loadingData = false, row = null, col = null) => {
     targetCell.classList.add("hit");
     dispatchBattleStats(battleStatsActions.incrementOpponentShotsHit);
+    console.log(row, col)
     if (loadingData === false) {
       setInGameMessages(inGameMessages.OPPONENTHITSHIP, currentAttackResult.current.shipType);
       addHitToHealthStatus(board, currentAttackResult.current.row, currentAttackResult.current.col);
@@ -215,9 +216,12 @@ export default function MainBoard({
         else if (attack.result === PacketType.H) handleHit(targetCell, true, attack.row, attack.col);
         else if (attack.result === PacketType.S) handleSink(targetCell, true, attack.row, attack.col);
       }
-      targetCell.addEventListener("transitionend" , () => {
-        playerboardRef.current.classList.remove("fade-in-result");
-      }, {once: true})
+
+      // If the player did not make any attacks, this will be null
+      if (targetCell) 
+        targetCell.addEventListener("transitionend" , () => {
+          playerboardRef.current.classList.remove("fade-in-result");
+        }, {once: true});
     }, 100)
 
   }, [dispatchShipStats, setShipsPlaced, handleMiss, handleHit, handleSink]);

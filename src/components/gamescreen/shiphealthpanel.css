@@ -1,24 +1,12 @@
-/* .ship-health-panel {
-  transform: translate(-140%);
+.ship-health-panel {
+  opacity: 0;
+  transition: 800ms cubic-bezier(0, 0, 0.26, 1.01) 300ms opacity;
+  pointer-events: none;
 }
 
-.ship-health-panel.slidein {
-  animation: 1000ms cubic-bezier(0.12, 1.07, 1, 1) 400ms 1 normal forwards running shiphealthpanelslidein;
+.ship-health-panel.fadein {
+  opacity: 1;
 }
-
-.ship-health-panel.slideout {
-  animation: 400ms ease-in 0s 1 reverse forwards running shiphealthpanelslidein;
-}
-
-@keyframes shiphealthpanelslidein {
-  from {  
-    transform: translate(-140%);
-  }
-  to {
-    transform: translate(0);
-  }
-} */
-
 
 .fleet-health-container {
   display: flex;

@@ -241,7 +241,7 @@ export function playerReducer(current, action) {
 
       return {
         ...current,
-        winner: action.data.winner
+        winner: action.data
       }
 
     }

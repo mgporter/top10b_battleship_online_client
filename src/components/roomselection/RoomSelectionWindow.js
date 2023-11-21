@@ -1,7 +1,7 @@
 import { useCallback, useContext, useEffect, useRef } from "react";
 import { PlayerContext, PlayerIdContext, PlayerNameContext, SetPlayerIdContext } from "../../PlayerProvider";
 import { ApplicationState, MessageTypes, PacketType } from "../../enums";
-import { postGameRoom } from "./fetchdata";
+import { postGameRoom } from "./lobbyhelperfunctions";
 import NameInput from "./NameInput";
 import GameRoomList from "./GameRoomList";
 import { endpoints } from "../../Endpoints";
@@ -22,44 +22,9 @@ export default function RoomSelectionWindow({
   const roomSelectionWindowRef = useRef(null);
   const sendPacket = useSocketSend();
 
-  const onPrivateMsgReceived = useCallback((payload) => {
-    const message = JSON.parse(payload.body);
-
-    switch(message.type) {
-      case MessageTypes.ACCEPTEDJOIN: {
-        setAppState(ApplicationState.GAME_INITIALIZED);
-        break;
-      }
-
-      /* These messages are sent from the server, but we will
-      not do anything with them right now. The client already
-      checks that the game is joinable and valid, so we should 
-      only receive these messages if the client fails at this 
-      somehow.  */
-      
-      case MessageTypes.REJECTEDJOIN_ALREADY_IN_GAME: {
-        roomNumberRef.current = null;
-        break;
-      }
-
-      case MessageTypes.REJECTEDJOIN_ROOM_FULL: {
-        roomNumberRef.current = null;
-        break;
-      }
-
-      case MessageTypes.REJECTEDJOIN_GAME_NOT_FOUND: {
-        roomNumberRef.current = null;
-        break;
-      }
-    }
-
-  }, [setAppState]);
-
   useEffect(() => {
     roomSelectionWindowRef.current.classList.add('slidein');
   }, [])
-
-  useSubscription("/user/queue/lobby", onPrivateMsgReceived, "lobbyPrivateMsg");
 
   function createGameHandler() {
     const player = {

@@ -3,28 +3,21 @@ import { C } from "../../Constants";
 
 export function parseLobbyMessage(message, playerId) {
   let lobbyMessage;
-  const isCurrentPlayer = message.sender.id === playerId;
+  const isMe = message.sender.id === playerId;
 
   switch (message.type) {
 
     case MessageTypes.JOINLOBBY: {
-      if (isCurrentPlayer) {
         lobbyMessage = {
-          message: `You have joined the lobby!`,
+          message: `${isMe ? "You have" : message.sender.name + " has"} joined the lobby!`,
           color: LobbyColors.playerJoin,
         }
-      } else {
-        lobbyMessage = {
-          message: `${message.sender.name} has joined the lobby!`,
-          color: LobbyColors.playerJoin,
-        }
-      }
       break;
     }
 
     case MessageTypes.CREATEDGAME: {
       lobbyMessage = {
-        message: `${message.sender.name} has created a new game.`,
+        message: `${isMe ? "You have" : message.sender.name + " has"} created a new game.`,
         color: LobbyColors.standard,
       }
       break;
@@ -32,7 +25,7 @@ export function parseLobbyMessage(message, playerId) {
 
     case MessageTypes.EXITEDLOBBY: {
       lobbyMessage = {
-        message: `${message.sender.name} has left the lobby.`,
+        message: `${isMe ? "You have" : message.sender.name + " has"} left the lobby.`,
         color: LobbyColors.playerLeave,
       }
       break;
@@ -40,7 +33,7 @@ export function parseLobbyMessage(message, playerId) {
 
     case MessageTypes.JOINGAME: {
       lobbyMessage = {
-        message: `${message.sender.name} has joined game ${message.roomNumber}.`,
+        message: `${isMe ? "You have" : message.sender.name + " has"} joined game ${message.roomNumber}.`,
         color: LobbyColors.standard,
       }
       break;
@@ -48,7 +41,7 @@ export function parseLobbyMessage(message, playerId) {
 
     case MessageTypes.EXITEDGAME: {
       lobbyMessage = {
-        message: `Game ${message.roomNumber} has been removed.`,
+        message: `${isMe ? "You have" : message.sender.name + " has"} left a game.`,
         color: LobbyColors.playerLeave,
       }
       break;
@@ -56,7 +49,7 @@ export function parseLobbyMessage(message, playerId) {
 
     case MessageTypes.GAMEREMOVED: {
       lobbyMessage = {
-        message: `${message.sender.name} has left a game.`,
+        message: `Game ${message.roomNumber} has been removed.`,
         color: LobbyColors.playerLeave,
       }
       break;
@@ -79,7 +72,6 @@ export async function getGameRoomList() {
     dataArr = Object.values(data);
   } catch(e) {
     console.log(e);
-    console.log("We are in the getGameRoomList block")
   }
 
   return dataArr;

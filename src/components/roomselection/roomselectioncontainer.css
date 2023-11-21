@@ -201,3 +201,7 @@
   filter: invert(1);
   margin: 0 12px 0 -4px;
 }
+
+.game-member-loading {
+  opacity: 0.5;
+}

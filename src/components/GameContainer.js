@@ -130,7 +130,6 @@ export default function GameContainer({
 
 
   const handlePlayerListChange = useCallback((message) => {
-    // console.log(message)
     
     dispatchPlayers({
       type: playerListActions.UPDATEPLAYERLIST,
@@ -211,20 +210,52 @@ export default function GameContainer({
   }, [setAppState]);
 
   const handleLoadSavedGame = useCallback((message) => {
-    setAppState(ApplicationState.ATTACK_PHASE);
-    setGameData(message);
-    fullScreenDialog.hide();
-    if (message.goFirst) {
-      setReadyToAttackOpponent(true);
-      setInGameMessages(inGameMessages.STARTGAMEFIRSTATTACK);
-    } else {
-      setReadyToAttackOpponent(false);
-      setInGameMessages(inGameMessages.STARTGAMESECONDATTACK);
-    }
-    setTimeout(() => {
+
+    // If all of the opponent's ships are already sunk
+    if (message.opponentSunkShips.length === C.totalShips) {
+
+      handleSetWinnerScreen(playerId);
       setShowOpponentPanels(true);
-    }, 100)
-  }, [setAppState, setInGameMessages, fullScreenDialog]);
+
+    // If all of the current player's ships are already sunk
+    } else if (message.myShips.filter(ship => ship.sunk === true).length === C.totalShips) {
+
+      handleSetWinnerScreen(playerId === players.playerOne ? players.playerTwo : players.playerOne);
+      setShowOpponentPanels(true);
+
+    // If the opponent has not yet placed their ships    
+    } else if (!message.opponentHasPlaced) {
+
+      handlePlacementsSubmitted();
+    
+    // All other situations, i.e., the opponent has placed their ships and nobody
+    // has won yet.
+    } else {
+
+      setAppState(ApplicationState.ATTACK_PHASE);
+      fullScreenDialog.hide();
+      if (message.goFirst) {
+        setReadyToAttackOpponent(true);
+        setInGameMessages(inGameMessages.STARTGAMEFIRSTATTACK);
+      } else {
+        setReadyToAttackOpponent(false);
+        setInGameMessages(inGameMessages.STARTGAMESECONDATTACK);
+      }
+      setTimeout(() => {
+        setShowOpponentPanels(true);
+      }, 100) 
+
+    }
+
+  }, [
+    setAppState, 
+    setInGameMessages, 
+    fullScreenDialog, 
+    handlePlacementsSubmitted,
+    handleSetWinnerScreen,
+    playerId,
+    players
+  ]);
 
   
   useEffect(() => {
@@ -404,6 +435,7 @@ export default function GameContainer({
         />
         <BottomRightPanel 
           battleStats={battleStats} 
+          players={players}
           gameTimeSecondsFinal={gameTimeSecondsFinal}
           showOpponentPanels={showOpponentPanels}
           />

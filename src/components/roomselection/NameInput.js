@@ -52,7 +52,7 @@ export default function NameInput() {
           pattern="[0-9A-Za-z_\-#]+"
           id="player-name-input" 
           maxLength="24"
-          value={localName || "Player"}
+          value={localName}
           onChange={(e) => handleNameChange(e.target.value)}
           onBlur={handleNameChangeOnBlur} />
         </fieldset>

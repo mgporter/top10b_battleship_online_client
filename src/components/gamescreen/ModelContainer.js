@@ -7,7 +7,8 @@ import patrolBoatGLB from '../../models/smallwarship.glb';
 import submarineGLB from '../../models/the_project_941__akula__typhoon_submarine.glb';
 import destroyerGLB from '../../models/bengaluru_class_destroyer_d67.glb';
 import gridGLB from '../../models/grid_4_x_4_navigation.glb';
-import { ShipType } from '../../enums';
+import { Events, ShipType } from '../../enums';
+import EventEmitter from '../../EventEmitter';
 
 import { useEffect, memo } from 'react';
 
@@ -131,21 +132,26 @@ function Model(playerboardRef, mainElementRef, gameContainerRef) {
   //   window.dispatchEvent(new Event('all_models_loaded'));
   //   console.log(ships)
   // });
-
+  let modelsLoaded = 0;
   loadModel(carrierGLB, ShipType.CARRIER, 'glb').then(() => {
-    window.dispatchEvent(new Event('model_loaded'));
+    EventEmitter.dispatch(Events.MODELLOADED, ++modelsLoaded);
+    // window.dispatchEvent(new Event('model_loaded'));
   })
   loadModel(battleshipOBJ, ShipType.BATTLESHIP, 'obj').then(() => {
-    window.dispatchEvent(new Event('model_loaded'));
+    EventEmitter.dispatch(Events.MODELLOADED, ++modelsLoaded);
+    // window.dispatchEvent(new Event('model_loaded'));
   })
   loadModel(patrolBoatGLB, ShipType.PATROLBOAT, 'glb').then(() => {
-    window.dispatchEvent(new Event('model_loaded'));
+    EventEmitter.dispatch(Events.MODELLOADED, ++modelsLoaded);
+    // window.dispatchEvent(new Event('model_loaded'));
   })
   loadModel(submarineGLB, ShipType.SUBMARINE, 'glb').then(() => {
-    window.dispatchEvent(new Event('model_loaded'));
+    EventEmitter.dispatch(Events.MODELLOADED, ++modelsLoaded);
+    // window.dispatchEvent(new Event('model_loaded'));
   })
   loadModel(destroyerGLB, ShipType.DESTROYER, 'glb').then(() => {
-    window.dispatchEvent(new Event('model_loaded'));
+    EventEmitter.dispatch(Events.MODELLOADED, ++modelsLoaded);
+    // window.dispatchEvent(new Event('model_loaded'));
   })
 
   // Resize renderer on window resize event

@@ -1,9 +1,17 @@
-/* .placement-panel {
-  transform: translate(-140%);
-} */
+.placement-panel {
+  transform: translate(-130%);
+  transition: 
+    600ms cubic-bezier(0.12, 1.07, 1, 1) 0s transform, 
+    500ms ease-out 0s opacity;
+}
 
 .placement-panel.slidein {
-  animation: 1000ms cubic-bezier(0.12, 1.07, 1, 1) 0s 1 normal forwards running placementpanelslidein;
+  transform: translate(0%);
+  /* animation: 1000ms cubic-bezier(0.12, 1.07, 1, 1) 0s 1 normal forwards running placementpanelslidein; */
+}
+
+.placement-panel.fadeout {
+  opacity: 0;
 }
 
 .placement-panel.slidein.boardflash {

@@ -16,13 +16,14 @@ export default function WinnerScreen({
   console.log("Winner is: " + winner);
 
   const winnerWasMe = winner === playerId;
+  const gameTimeAdjusted = gameTimeSecondsFinal.current + 1;
 
   const myHitRate = battleStats.myShotsFired === 0 ? 0 : battleStats.myShotsHit / battleStats.myShotsFired;
   const opponentHitRate = battleStats.opponentShotsFired === 0 ? 0 : battleStats.opponentShotsHit / battleStats.opponentShotsFired;
 
-  const gameSeconds = gameTimeSecondsFinal.current % 60;
-  const gameMinutes = Math.floor((gameTimeSecondsFinal.current / 60) % 60);
-  const gameHours = Math.floor(gameTimeSecondsFinal.current / 3600);
+  const gameSeconds = gameTimeAdjusted % 60;
+  const gameMinutes = Math.floor((gameTimeAdjusted / 60) % 60);
+  const gameHours = Math.floor(gameTimeAdjusted / 3600);
 
   function handleClick(e) {
     const buttonClicked = e.target.classList.contains("return-to-lobby");

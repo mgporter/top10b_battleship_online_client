@@ -6,7 +6,8 @@ import './bottomrightpanel.css';
 export default function BottomRightPanel({
   battleStats, 
   gameTimeSecondsFinal,
-  showOpponentPanels
+  showOpponentPanels,
+  players
 }) {
 
   const appState = useContext(AppStateContext);
@@ -19,26 +20,31 @@ export default function BottomRightPanel({
   }, [showOpponentPanels])
 
   useEffect(() => {
+    if (appState < ApplicationState.ATTACK_PHASE) return;
 
     const interval = setInterval(() => {
       setGameTimeSeconds((prev) => prev + 1);
+      gameTimeSecondsFinal.current = gameTimeSeconds;
     }, 1000);
 
-    if (appState === ApplicationState.GAME_END) {
+    /** Here, we primarily want to save the last value of
+     * gameTimeSeconds when the game ends. Additionally, we
+     * set a check for atLeastTwoPlayers, so that the timer
+     * stops when a player is alone and waiting.
+     *  */
+    
+    if (appState === ApplicationState.GAME_END || 
+      !players.atLeastTwoPlayers) {
       clearInterval(interval);
-      gameTimeSecondsFinal.current = gameTimeSeconds;
     }
 
     return () => {
       clearInterval(interval);
     }
-  }, [appState])
+  }, [appState, players, gameTimeSeconds, gameTimeSecondsFinal]);
 
   const gameSeconds = gameTimeSeconds % 60;
   const gameMinutes = Math.floor((gameTimeSeconds / 60) % 60);
-
-  // const myHitRate = battleStats.myShotsFired === 0 ? 0 : battleStats.myShotsHit / battleStats.myShotsFired;
-  // const opponentHitRate = battleStats.opponentShotsFired === 0 ? 0 : battleStats.opponentShotsHit / battleStats.opponentShotsFired;
 
   return (
     <div ref={bottomRightPanelRef} className="section-block bottom-right-panel">

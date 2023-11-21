@@ -14,12 +14,10 @@ export default function ShipPlacementPanel({
 }) {
 
   const appState = useContext(AppStateContext);
-  const setAppState = useContext(SetAppStateContext);
   const shipPlacementPanelRef = useRef(null);
-
-  useEffect(() => {
-    shipPlacementPanelRef.current.classList.add("slidein");
-  }, [])
+  const showShipPlacementPanel = 
+    appState === ApplicationState.SHIP_PLACEMENT ||
+    appState === ApplicationState.SHIPS_PLACED_AND_STARTED;
 
   function handleShipClick(shipType) {
     setShipClicked(shipType);
@@ -54,7 +52,10 @@ export default function ShipPlacementPanel({
   const flash = (appState === ApplicationState.SHIP_PLACEMENT) && leftPanelFlash ? true : false;
 
   return (
-      <div ref={shipPlacementPanelRef} className={`section-block left-panel placement-panel ${flash ? "boardflash" : ""}`}>
+      <div ref={shipPlacementPanelRef} 
+        className={`section-block left-panel placement-panel 
+          ${flash ? "boardflash" : ""} 
+          ${showShipPlacementPanel ? "slidein" : ""}`}>
         <h3>Add your ships</h3>
         <p>Select a ship, then click on a cell to add it to the board. Use the mousewheel or arrowkeys to rotate.</p>
         <fieldset id="addShipSelection">
