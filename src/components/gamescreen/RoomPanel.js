@@ -1,40 +1,16 @@
 import { useCallback, useContext, useEffect } from "react";
-import { ApplicationState, PacketType, playerListActions, dialogBoxTypes, shipStatsActions, Events } from "../../enums";
+import { Events } from "../../enums";
 import './roompanel.css';
 import { PlayerContext } from "../../PlayerProvider";
-import { AppStateContext, SetAppStateContext } from "../../AppStateProvider";
 import useSubscription from "../../useSubscription";
 import EventEmitter from "../../EventEmitter";
 
 export default function RoomPanel({
-  players,
-  dispatchPlayers
+  players
 }) {
 
   const { playerId } = useContext(PlayerContext);
-
   const currentPlayerMarker = "(You)";
-
-  const onPlayerListReceived = useCallback((payload) => {
-    const message = JSON.parse(payload.body);
-
-    // dispatchPlayers({
-    //   type: playerListActions.UPDATEPLAYERLIST,
-    //   data: message
-    // })
-
-    EventEmitter.dispatch(Events.PLAYERLISTCHANGE, message);
-
-    // if (!message.playerOneId || !message.playerTwoId) {
-    //   EventEmitter.dispatch(Events.NOTENOUGHPLAYERS);
-    // } else {
-    //   EventEmitter.dispatch(Events.PLAYERLISTCHANGE);
-    // }
-
-  }, []);
-
-  useSubscription(`/game/playerlist/${players.room}`, onPlayerListReceived, `game${players.room}-playerlist`);
-
 
   return (
     <div className="section-block room-panel">

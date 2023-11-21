@@ -1,9 +1,9 @@
-import { ApplicationState, PacketType, ShipType, inGameMessages, Events } from '../../enums';
+import { ApplicationState, PacketType, ShipType, Events } from '../../enums';
 import { C } from '../../Constants';
 import './leftpanel.css';
 import './shipplacementpanel.css';
-import { AppStateContext, SetAppStateContext } from '../../AppStateProvider';
-import { useContext, useEffect, useRef } from 'react';
+import { AppStateContext } from '../../AppStateProvider';
+import { useContext, useRef } from 'react';
 import EventEmitter from '../../EventEmitter';
 
 export default function ShipPlacementPanel({
@@ -44,7 +44,6 @@ export default function ShipPlacementPanel({
 
   function handleGameStart() {
     sendPacket(PacketType.PLACED_COMPLETE, shipsPlaced);
-    // setAppState(ApplicationState.SHIPS_PLACED_AND_STARTED);
     EventEmitter.dispatch(Events.PLACEMENTSSUBMITTED);
   }
 

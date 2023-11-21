@@ -1,22 +1,17 @@
 import { useState, useEffect, useContext, useCallback } from "react";
 import './roomselectioncontainer.css'
 import MessageWindow from "./MessageWindow";
-import { ApplicationState, LobbyColors, MessageTypes, PacketType } from '../../enums';
+import { ApplicationState, LobbyColors, MessageTypes } from '../../enums';
 import { PlayerContext } from "../../PlayerProvider";
 import { parseLobbyMessage } from "./lobbyhelperfunctions";
 import RoomSelectionWindow from "./RoomSelectionWindow";
 import useSubscription from "../../useSubscription";
-import useFetch from "../../useFetch";
-import { endpoints } from "../../Endpoints";
 import githubLogo from "../../images/github-logo.png"
 import { C } from "../../Constants";
-import useWebSocketStatus from "../../useWebSocketStatus";
 import useSocketSend from "../../useSocketSend";
 import { SetAppStateContext } from "../../AppStateProvider";
 
 export default function RoomSelectionContainer({roomNumberRef}) {
-
-  console.log("RoomSelectionContainer")
 
   const [messages, setMessages] = useState([{
     message: "Welcome to Battleship Online!",
@@ -24,15 +19,10 @@ export default function RoomSelectionContainer({roomNumberRef}) {
   }]);
 
   const setAppState = useContext(SetAppStateContext);
-  const { playerName, playerId } = useContext(PlayerContext);
-  // const [requestGameRooms, updateGameRooms, gameRooms] = useFetch(endpoints.getGameRooms);
+  const { playerId } = useContext(PlayerContext);
   const [gameRooms, setGameRooms] = useState(null);
-  const wsStatus = useWebSocketStatus();
   const sendPacket = useSocketSend();
 
-  // useEffect(() => {
-  //   requestGameRooms();
-  // }, [requestGameRooms])
 
   const onPublicMessageReceived = useCallback((payload) => {
     const message = JSON.parse(payload.body);
@@ -91,7 +81,7 @@ export default function RoomSelectionContainer({roomNumberRef}) {
         break;
       }
     }
-  }, [playerId, playerName, gameRooms])
+  }, [playerId, gameRooms])
 
   useSubscription("/lobby", onPublicMessageReceived, "lobby");
   
@@ -134,14 +124,9 @@ export default function RoomSelectionContainer({roomNumberRef}) {
 
   useSubscription("/user/queue/lobby", onPrivateMsgReceived, "lobbyPrivateMsg");
 
-
+  /* Subscribe to the lobby on mount, or when the socket opens. */
   useEffect(() => {
-    // setTimeout(() => {
-    //   sendPacket(MessageTypes.JOINLOBBY);
-    // }, 1000)
     sendPacket(MessageTypes.JOINLOBBY);
-
-    // requestGameRooms();
   }, [sendPacket]);
 
   

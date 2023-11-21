@@ -52,7 +52,6 @@ function pingBoard(boardRef, pingRef, row, column, callback) {
       pingElement.classList.remove('boardping');
       pingElement.style.display = 'none';
       const targetCell = coordinateToDOMCell([row, column], boardRef);
-      // targetCell.classList.add(resultClassname);
       callback(targetCell);
     },
     { once: true }

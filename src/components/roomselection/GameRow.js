@@ -3,11 +3,6 @@ import { memo } from "react";
 
 const GameRow = memo(function GameRow({roomNumber, playerList, row, onClick, idx}) {
 
-  // const playerString = playerList.reduce((s, player, i) => {
-  //   if (i != 0) return s + ", " + player.name
-  //   else return s + <span className="test">player.name</span>;
-  // }, "");
-
   const players = playerList.map((player, i) => {
     return <span key={i}>{i > 0 && ", "}<span className={player.loading ? "game-member-loading" : ""}>{player.name}</span></span>
   })

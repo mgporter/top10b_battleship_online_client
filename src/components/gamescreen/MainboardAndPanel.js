@@ -14,7 +14,6 @@ let ships;
 
 const MainboardAndPanel = memo(function MainboardAndPanel({
   sendPacket,
-  attackResultOpponent,
   readyToAttackOpponent,
   dispatchBattleStats,
   shipStats,
@@ -85,8 +84,6 @@ const MainboardAndPanel = memo(function MainboardAndPanel({
   useEffect(() => {
     if (appState === ApplicationState.ATTACK_PHASE) {
       setMainboardHover(false);
-      // shipPlacementPanelRef.current.classList.add('slideout');
-      // shipHealthPanelRef.current.classList.add('slidein');
     } else if (appState === ApplicationState.GAME_END) {
       setMainboardFlash(false);
       setMainboardHover(false);
@@ -113,7 +110,6 @@ const MainboardAndPanel = memo(function MainboardAndPanel({
           dispatchShipStats={dispatchShipStats}
           shipsPlaced={shipsPlaced}
           setShipsPlaced={setShipsPlaced}
-          attackResultOpponent={attackResultOpponent}
           dispatchBattleStats={dispatchBattleStats}
           gameContainerRef={gameContainerRef}
         />

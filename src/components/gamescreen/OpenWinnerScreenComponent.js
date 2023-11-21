@@ -1,5 +1,5 @@
 import { useContext } from "react"
-import { PlayerContext, PlayerIdContext } from "../../PlayerProvider";
+import { PlayerContext } from "../../PlayerProvider";
 import { SetAppStateContext } from "../../AppStateProvider";
 import { ApplicationState } from "../../enums";
 

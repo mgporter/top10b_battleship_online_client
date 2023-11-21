@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef } from "react";
 import { C } from "../../Constants";
 import './opponentboard.css';
 import { Events, PacketType, battleStatsActions, inGameMessages, shipStatsActions } from "../../enums";
@@ -7,8 +7,6 @@ import { setInGameMessagesContext } from "../../InGameMessageProvider";
 import EventEmitter from "../../EventEmitter";
 
 /* Create the board cells once on load */
-// const cells = createBoardCells("opponentboard");
-
 const cells = (function createOpponentboardCells() {
   const cellArr = []
   for (let i = 0; i < C.gameboardRows; i++) {
@@ -22,7 +20,6 @@ const cells = (function createOpponentboardCells() {
 export default function OpponentBoard({
   readyToAttackOpponent, 
   sendPacket, 
-  attackResultPlayer,
   setReadyToAttackOpponent,
   dispatchBattleStats,
   shipStats,
@@ -35,8 +32,8 @@ export default function OpponentBoard({
   const pingRef = useRef(null);
   const opponentPanelRef = useRef(null);
   const currentAttackResult = useRef(null);
-
   const setInGameMessages = useContext(setInGameMessagesContext);
+
 
   useEffect(() => {
     if (showOpponentPanels)
@@ -52,36 +49,6 @@ export default function OpponentBoard({
       opponentboardRef.current.classList.add("disable-hover");
     }
   }, [readyToAttackOpponent])
-
-
-  // useEffect(() => {
-  //  if (!gameStateData) return;
-  //   const opponentSunkShips = gameStateData.opponentSunkShips;
-  //   const myAttacks = gameStateData.myAttacks;
-
-  //   for (let attack of myAttacks) {
-  //     const targetCell = coordinateToDOMCell([attack.row, attack.col], opponentboardRef);
-  //     if (attack.result === PacketType.M) handleMiss(targetCell, true);
-  //     else if (attack.result === PacketType.H) handleHit(targetCell, true);
-  //     else if (attack.result === PacketType.S) handleSink(targetCell, true);
-  //   }
-
-  //   for (let sunkShip of opponentSunkShips) {
-  //     displayShipOnOpponentBoard(boardOverlayRef, {
-  //       shipType: sunkShip.type,
-  //       direction: sunkShip.direction,
-  //       startingRow: sunkShip.location[0].row,
-  //       startingCol: sunkShip.location[0].col
-  //     });
-  //   }
-
-  //   dispatchShipStats({type: shipStatsActions.SETOPPONENTSHIPSUNK, data: opponentSunkShips.length})
-
-  // }, [gameStateData])
-
-
-
-
 
 
   const handleMiss = useCallback((targetCell, loadingData = false) => {

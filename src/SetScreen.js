@@ -1,13 +1,10 @@
-import { useContext, useState, useRef, useCallback, useEffect } from 'react';
+import { useContext, useRef, useEffect } from 'react';
 import RoomSelectionContainer from './components/roomselection/RoomSelectionContainer';
 import GameContainer from './components/GameContainer';
-import { ApplicationState, MessageTypes, inGameMessages } from './enums';
-import { AppStateContext, SetAppStateContext } from './AppStateProvider';
-import { PlayerContext, PlayerNameContext, SetPlayerIdContext, SetPlayerNameContext } from './PlayerProvider';
-import useUpdateServerName from "./useUpdateServerName";
-import { setInGameMessagesContext } from './InGameMessageProvider';
-import useSocketSend from './useSocketSend';
-import { endpoints } from './Endpoints';
+import { ApplicationState } from './enums';
+import { AppStateContext } from './AppStateProvider';
+import { PlayerContext } from './PlayerProvider';
+import InGameMessageProvider from './InGameMessageProvider';
 import getSocket from './getSocket';
 
 export default function SetScreen() {
@@ -17,6 +14,13 @@ export default function SetScreen() {
   const { setPlayerName, setPlayerId } = useContext(PlayerContext);
   const roomNumberRef = useRef(null);
   const socket = getSocket();
+
+  /**
+   * Open a subscription to receive the playerId and default
+   * name from the server. If the player already has a name
+   * in localStorage, then that name will be used. After this
+   * process is complete, the socket is set as connected, so that
+   * other subscriptions can occur. */
 
   useEffect(() => {
 
@@ -51,7 +55,9 @@ export default function SetScreen() {
     {showLobby ? (
       <RoomSelectionContainer roomNumberRef={roomNumberRef} />
     ) : (
-      <GameContainer roomNumberRef={roomNumberRef} />
+      <InGameMessageProvider>
+        <GameContainer roomNumberRef={roomNumberRef} />
+      </InGameMessageProvider>
     )}
   </>)
 }

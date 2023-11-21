@@ -1,7 +1,7 @@
 import { createContext, useContext, useState } from "react"
 import { inGameMessages as types, Avatars } from "./enums"
 import { C } from "./Constants";
-import { PlayerContext, PlayerNameContext } from "./PlayerProvider";
+import { PlayerContext } from "./PlayerProvider";
 
 export const setInGameMessagesContext = createContext(null);
 export const inGameMessagesContext = createContext(null);

@@ -35,7 +35,6 @@ export default function MainBoard({
   dispatchShipStats,
   setShipsPlaced,
   shipsPlaced,
-  attackResultOpponent,
   dispatchBattleStats,
   gameContainerRef
 }) {
@@ -63,59 +62,6 @@ export default function MainBoard({
     )
   }
 
-  // /* If the player is joining a game that was in progress, then the current
-  // game state will be loaded here */
-  // useEffect(() => {
-  //   if (!gameStateData) return;
-  //   const myShips = gameStateData.myShips;
-  //   const opponentAttacks = gameStateData.opponentAttacks;
-
-  //   let mySunkShips = 0;
-  //   for (let JsonShip of myShips) {
-  //     const ship = shipFromJSON(JsonShip);
-  //     setShipsPlaced((prev) => [...prev, ship]);
-  //     shipPlacement.placeShip(ship, ship.getLocation());
-
-  //     modelRef.current.addModelToScene(
-  //       ship.getType(),
-  //       directions[ship.getDirection()],
-  //       ship.getStartingCoordinates()[0],
-  //       ship.getStartingCoordinates()[1]
-  //     );
-      
-  //     if (ship.isSunk()) {
-  //       modelRef.current.sinkShip(ship.getType());
-  //       mySunkShips++;
-  //     }
-  //   }
-
-  //   dispatchShipStats({type: shipStatsActions.SETPLAYERSHIPSSUNK, data: mySunkShips})
-
-  //   modelRef.current.resizeCanvasToDisplaySize();
-  //   playerboardRef.current.classList.add("fade-in-result");
-
-  //   /* Give the Ship Health Container some time to load and get in the screen,
-  //    * otherwise handleMiss/Hit/Sink will run before they are rendered to the DOM.
-  //    * We also fade in the colors on the attacked cells, and add an
-  //    * event listener on the last cell to turn off the fade.
-  //    * This is a temporary solution for now.
-  //    */
-  //   setTimeout(() => {
-  //     let targetCell;
-  //     for (let attack of opponentAttacks) {
-  //       targetCell = coordinateToDOMCell([attack.row, attack.col], playerboardRef);
-  //       if (attack.result === PacketType.M) handleMiss(targetCell, true);
-  //       else if (attack.result === PacketType.H) handleHit(targetCell, true, attack.row, attack.col);
-  //       else if (attack.result === PacketType.S) handleSink(targetCell, true, attack.row, attack.col);
-  //     }
-  //     targetCell.addEventListener("transitionend" , () => {
-  //       console.log("transitionend")
-  //       playerboardRef.current.classList.remove("fade-in-result");
-  //     }, {once: true})
-  //   }, 100)
-
-  // }, [gameStateData])
-
   useEffect(() => {
     board = new Gameboard();
     shipPlacement = ShipPlacement(board);
@@ -138,7 +84,6 @@ export default function MainBoard({
       document.removeEventListener('keydown', changeShipDirection);
     }
   }, [])
-
 
 
 

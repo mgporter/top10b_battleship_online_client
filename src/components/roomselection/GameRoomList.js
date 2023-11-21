@@ -7,7 +7,6 @@ export default function GameRoomList({joinGame, gameRooms}) {
   const [showJoinGameDialog, setShowJoinGameDialog] = useState({show: false});
 
   const messageStyle = {marginTop: "48px", fontSize: "1.6rem", alignSelf: "center"};
-  // const gameRoomsList = gameRooms.data;
 
   const handleGameSelection = useCallback((e) => {
     const gameroom = gameRooms[e.target.id];
@@ -30,7 +29,6 @@ export default function GameRoomList({joinGame, gameRooms}) {
         joinGame={joinGame}>
       </JoinGameDialog>}
       {gameRooms == null && <p style={messageStyle}>Loading Gamerooms...</p>}
-      {/* {gameRooms.error && <p style={messageStyle}>{gameRooms.error}</p>} */}
       <ul id="join-game-box">
         {gameRooms && (
           gameRooms.length === 0 ? 

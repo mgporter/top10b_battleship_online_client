@@ -119,44 +119,25 @@ function Model(playerboardRef, mainElementRef, gameContainerRef) {
   camera.position.set(0, 27.2, 41.8);
   camera.rotation.set(-0.730865, 0, 0);
 
-  // Load the ship models.
-  // const loadModelPromises = [
-  //   loadModel(carrierGLB, ShipType.CARRIER, 'glb'),
-  //   loadModel(battleshipOBJ, ShipType.BATTLESHIP, 'obj'),
-  //   loadModel(patrolBoatGLB, ShipType.PATROLBOAT, 'glb'),
-  //   loadModel(submarineGLB, ShipType.SUBMARINE, 'glb'),
-  //   loadModel(destroyerGLB, ShipType.DESTROYER, 'glb'),
-  // ];
-
-  // Promise.all(loadModelPromises).then(() => {
-  //   window.dispatchEvent(new Event('all_models_loaded'));
-  //   console.log(ships)
-  // });
   let modelsLoaded = 0;
   loadModel(carrierGLB, ShipType.CARRIER, 'glb').then(() => {
     EventEmitter.dispatch(Events.MODELLOADED, ++modelsLoaded);
-    // window.dispatchEvent(new Event('model_loaded'));
   })
   loadModel(battleshipOBJ, ShipType.BATTLESHIP, 'obj').then(() => {
     EventEmitter.dispatch(Events.MODELLOADED, ++modelsLoaded);
-    // window.dispatchEvent(new Event('model_loaded'));
   })
   loadModel(patrolBoatGLB, ShipType.PATROLBOAT, 'glb').then(() => {
     EventEmitter.dispatch(Events.MODELLOADED, ++modelsLoaded);
-    // window.dispatchEvent(new Event('model_loaded'));
   })
   loadModel(submarineGLB, ShipType.SUBMARINE, 'glb').then(() => {
     EventEmitter.dispatch(Events.MODELLOADED, ++modelsLoaded);
-    // window.dispatchEvent(new Event('model_loaded'));
   })
   loadModel(destroyerGLB, ShipType.DESTROYER, 'glb').then(() => {
     EventEmitter.dispatch(Events.MODELLOADED, ++modelsLoaded);
-    // window.dispatchEvent(new Event('model_loaded'));
   })
 
   // Resize renderer on window resize event
   window.addEventListener('resize', resizeCanvasToDisplaySize);
-  // setTimeout(resizeCanvasToDisplaySize, 100);
 
   function resizeCanvasToDisplaySize() {
     // This is one of the most important functions. It keeps the 3d model space (controlled by
@@ -353,11 +334,15 @@ function Model(playerboardRef, mainElementRef, gameContainerRef) {
     return (t * t) / (2 * (t * t - t) + 1);
   }
 
+  /**
+   * The function below can be used to align items to the grid if
+   * necessary. It is especially useful to load up the gridGLB and
+   * use the arrow keys to put it into position, so that it aligns
+   * with the CSS grid. */
+
   function debugMode(moveObject = 'camera') {
     if (!enableDebugMode) return;
 
-    // The grid is useful for debugging as we can use it to align the 3d canvas space
-    // with the CSS grid in the DOM
     loadModel(gridGLB, 'grid', 'glb').then((model) => {
       scene.add(model);
       render();

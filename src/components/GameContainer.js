@@ -1,10 +1,9 @@
-import { useState, useEffect, useContext, useRef, useReducer, useCallback, useMemo } from "react";
+import { useState, useEffect, useContext, useRef, useReducer, useCallback } from "react";
 import { ApplicationState, PacketType, dialogBoxTypes, inGameMessages, playerListActions, shipStatsActions, MessageTypes, Events } from '../enums';
-import { PlayerContext, PlayerIdContext } from "../PlayerProvider";
+import { PlayerContext } from "../PlayerProvider";
 import "./gamecontainer.css";
 import './gamescreen/winnerscreen.css';
 import FullScreenInfoDialog from "./FullScreenInfoDialog.js";
-import { updatePlayerList } from "./helperfunctions.js";
 import BottomRightPanel from "./gamescreen/BottomRightPanel";
 import CreditsBlock from "./gamescreen/CreditsBlock";
 import MessageArea from "./gamescreen/MessageArea";
@@ -21,8 +20,6 @@ import { setInGameMessagesContext } from "../InGameMessageProvider.js";
 import useFullScreenDialog from "../useFullScreenDialog";
 import OpponentShipsPlacedMinidialog from "./gamescreen/OpponentShipsPlacedMinidialog";
 import { C } from "../Constants";
-import getSocket from "../getSocket";
-import useWebSocketStatus from "../useWebSocketStatus";
 import EventEmitter from "../EventEmitter";
 
 /**
@@ -82,7 +79,6 @@ export default function GameContainer({
 
   const fullScreenDialog = useFullScreenDialog(dialogBoxTypes.LOADINGMODELS);
   const [gameLoaded, setGameLoaded] = useState(false);
-  const [gameData, setGameData] = useState(null);
 
   const [attackResultPlayer, setAttackResultPlayer] = useState(null);
   const [attackResultOpponent, setAttackResultOpponent] = useState(null);
@@ -344,6 +340,11 @@ export default function GameContainer({
         break;
       }
 
+      case PacketType.PLAYERLIST_UPDATE: {
+        EventEmitter.dispatch(Events.PLAYERLISTCHANGE, message);
+        break;
+      }
+
       case PacketType.PLACED_SHIP: {
         if (!fromCurrentPlayer) 
           EventEmitter.dispatch(Events.OPPONENTPLACEDSHIP, message.shipsPlacedCount);
@@ -402,12 +403,10 @@ export default function GameContainer({
     <div id="game-container" ref={gameContainerRef}>
       {fullScreenDialog.shouldDisplay && <FullScreenInfoDialog 
         fullScreenDialog={fullScreenDialog} 
-        setGameLoaded={setGameLoaded}
         shipStats={shipStats} />}
       <MainboardAndPanel 
           sendPacket={sendPacket} 
           dispatchBattleStats={dispatchBattleStats}
-          attackResultOpponent={attackResultOpponent}
           readyToAttackOpponent={readyToAttackOpponent}
           shipStats={shipStats}
           dispatchShipStats={dispatchShipStats}
@@ -415,7 +414,6 @@ export default function GameContainer({
         />
       {gameLoaded && <RoomPanel 
         players={players}
-        dispatchPlayers={dispatchPlayers}
        />}
       {showOpponentShipsMinidialog && <OpponentShipsPlacedMinidialog shipStats={shipStats} />}
         <MessageArea 
@@ -428,7 +426,6 @@ export default function GameContainer({
           readyToAttackOpponent={readyToAttackOpponent}
           setReadyToAttackOpponent={setReadyToAttackOpponent}
           sendPacket={sendPacket}
-          attackResultPlayer={attackResultPlayer}
           shipStats={shipStats}
           dispatchShipStats={dispatchShipStats}
           showOpponentPanels={showOpponentPanels}
