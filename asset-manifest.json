@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/top10b_battleship_online_client/static/css/main.fc5e1b0a.css",
-    "main.js": "/top10b_battleship_online_client/static/js/main.ed6a9ef9.js",
+    "main.js": "/top10b_battleship_online_client/static/js/main.90a77a08.js",
     "static/js/787.309c8978.chunk.js": "/top10b_battleship_online_client/static/js/787.309c8978.chunk.js",
     "static/media/smallwarship.glb": "/top10b_battleship_online_client/static/media/smallwarship.4518d517db3d6f305176.glb",
     "static/media/charles_de_gaulle_french_aircraft_carrier.glb": "/top10b_battleship_online_client/static/media/charles_de_gaulle_french_aircraft_carrier.6a06e5c4b0c46ebf43b8.glb",
@@ -24,11 +24,11 @@
     "static/media/swords_crossed.svg": "/top10b_battleship_online_client/static/media/swords_crossed.badf7a44d4738efc1b967ed124b19405.svg",
     "index.html": "/top10b_battleship_online_client/index.html",
     "main.fc5e1b0a.css.map": "/top10b_battleship_online_client/static/css/main.fc5e1b0a.css.map",
-    "main.ed6a9ef9.js.map": "/top10b_battleship_online_client/static/js/main.ed6a9ef9.js.map",
+    "main.90a77a08.js.map": "/top10b_battleship_online_client/static/js/main.90a77a08.js.map",
     "787.309c8978.chunk.js.map": "/top10b_battleship_online_client/static/js/787.309c8978.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.fc5e1b0a.css",
-    "static/js/main.ed6a9ef9.js"
+    "static/js/main.90a77a08.js"
   ]
 }
