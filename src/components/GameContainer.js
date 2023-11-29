@@ -52,19 +52,22 @@ import EventEmitter from "../EventEmitter";
  * GAME STATES:
  * 1. GAME_INITIALIZED: after the server accepts the joingame request, it sends a packet
  *  and a function in the lobby moves the game to this state. In this state, the gameboard
- *  is displayed and we load the models. If there is a saved gameState, then we jump
- *  directly to the ATTACK_PHASE after loading.
- * 2. SHIP_PLACEMENT: after the models have been loaded and there are at least two players
+ *  is displayed and we load the models.
+ * 2. GAME_INITIALIZED_AND_LOADED: After loading, the client sends a message to the server
+ *  that loading is complete, and we just wait for another player. When another player joins,
+ *  or if there is someone else already present, we move to the SHIP_PLACEMENT state. If there 
+ *  is a saved gameState, then we jump directly to the ATTACK_PHASE state. 
+ * 3. SHIP_PLACEMENT: after the models have been loaded and there are at least two players
  *  in the room, then we move to the SHIP_PLACEMENT state, where players place their ships
  *  on the board. No information is saved until the player places all their ships and
  *  presses the start button. 
- * 3. SHIPS_PLACED_AND_STARTED: After the user presses the start button, the game moves to
+ * 4. SHIPS_PLACED_AND_STARTED: After the user presses the start button, the game moves to
  *  this state. The ship placement data is sent to the server, and the player cannot change
  *  their placements.
- * 4. ATTACK_PHASE: Once both players have pressed the start button and entered the 
+ * 5. ATTACK_PHASE: Once both players have pressed the start button and entered the 
  *  SHIPS_PLACED_AND_STARTED state, the game moves to the ATTACK_PHASE. This is where
  *  players start attacking each other.
- * 5. GAME_END: once a player's ships have all been sunk, then we move to the GAME_END state,
+ * 6. GAME_END: once a player's ships have all been sunk, then we move to the GAME_END state,
  *  where players can no longer attack each other and the end game screen is displayed.
  *  */
 
@@ -73,16 +76,11 @@ export default function GameContainer({
   roomNumberRef
 }) {
 
-  console.log("GameContainer");
-
   const gameContainerRef = useRef(null);
 
   const fullScreenDialog = useFullScreenDialog(dialogBoxTypes.LOADINGMODELS);
   const [gameLoaded, setGameLoaded] = useState(false);
-
-  const [attackResultPlayer, setAttackResultPlayer] = useState(null);
-  const [attackResultOpponent, setAttackResultOpponent] = useState(null);
-  const [showEndGameDialog, setShowEndGameDialog] = useState(true);  // change this, or move messagearea endgame to main endgame container
+  const [showEndGameDialog, setShowEndGameDialog] = useState(true);
   const [showModelCredits, setShowModelCredits] = useState(false);
   const [readyToAttackOpponent, setReadyToAttackOpponent] = useState(false);
   const [showOpponentPanels, setShowOpponentPanels] = useState(false);
@@ -115,7 +113,7 @@ export default function GameContainer({
     score: 0
   });
 
-  // load contexts
+
   const {playerId} = useContext(PlayerContext);
   const appState = useContext(AppStateContext);
   const setAppState = useContext(SetAppStateContext);
@@ -125,33 +123,6 @@ export default function GameContainer({
 
 
 
-  const handlePlayerListChange = useCallback((message) => {
-    
-    dispatchPlayers({
-      type: playerListActions.UPDATEPLAYERLIST,
-      data: message
-    })
-
-    if (message.playerOneId && message.playerTwoId) {
-
-      console.log("hide dialog")
-      fullScreenDialog.hide();
-
-    } else {
-
-      if (appState === ApplicationState.SHIPS_PLACED_AND_STARTED ||
-        appState === ApplicationState.SHIP_PLACEMENT) {
-        dispatchShipStats({type: shipStatsActions.SETOPPONENTSHIPSPLACED, data: 0});
-      }
-      if (appState >= ApplicationState.SHIP_PLACEMENT &&
-        appState != ApplicationState.GAME_END) {
-          fullScreenDialog.show(dialogBoxTypes.PLAYERLEFT);
-          sendPacket(PacketType.SAVESTATE);
-        }      
-
-    }
-
-  }, [appState, fullScreenDialog, sendPacket]);
 
   const handleGameRoomLoaded = useCallback(() => {
     sendPacket(PacketType.GAMEROOMLOADED);
@@ -159,10 +130,12 @@ export default function GameContainer({
   }, [sendPacket]);
 
   const handleStartPlacement = useCallback(() => {
+    if (appState >= ApplicationState.SHIP_PLACEMENT) return;
+
     fullScreenDialog.hide();
     setAppState(ApplicationState.SHIP_PLACEMENT);
     setInGameMessages(inGameMessages.WELCOME);
-  }, [fullScreenDialog, setAppState, setInGameMessages]);
+  }, [fullScreenDialog, setAppState, setInGameMessages, appState]);
 
   const handleOpponentPlacedShip = useCallback((shipcount) => {
     dispatchShipStats({type: shipStatsActions.SETOPPONENTSHIPSPLACED, data: shipcount});
@@ -204,6 +177,38 @@ export default function GameContainer({
       setAppState(ApplicationState.GAME_END);
     }, 1200)
   }, [setAppState]);
+
+  const handlePlayerListChange = useCallback((message) => {
+    
+    dispatchPlayers({
+      type: playerListActions.UPDATEPLAYERLIST,
+      data: message
+    })
+
+    if (message.playerOneId && message.playerTwoId) {
+
+      if (appState === ApplicationState.SHIPS_PLACED_AND_STARTED) {
+        handlePlacementsSubmitted();
+        return;
+      }
+
+      fullScreenDialog.hide();
+
+    } else {
+
+      if (appState === ApplicationState.SHIP_PLACEMENT ||
+        appState === ApplicationState.SHIPS_PLACED_AND_STARTED) {
+        dispatchShipStats({type: shipStatsActions.SETOPPONENTSHIPSPLACED, data: 0});
+      }
+      if (appState >= ApplicationState.SHIP_PLACEMENT &&
+        appState != ApplicationState.GAME_END) {
+          fullScreenDialog.show(dialogBoxTypes.PLAYERLEFT);
+          sendPacket(PacketType.SAVESTATE);
+        }      
+
+    }
+
+  }, [appState, fullScreenDialog, sendPacket, handlePlacementsSubmitted]);
 
   const handleLoadSavedGame = useCallback((message) => {
 
@@ -336,7 +341,8 @@ export default function GameContainer({
       case PacketType.ATTACK: {
         if (fromCurrentPlayer)
           EventEmitter.dispatch(Events.MYATTACKRESULTSRECEIVED, message);
-        else EventEmitter.dispatch(Events.OPPONENTATTACKRECEIVED, message);
+        else 
+          EventEmitter.dispatch(Events.OPPONENTATTACKRECEIVED, message);
         break;
       }
 

@@ -8,7 +8,6 @@ import InGameMessageProvider from './InGameMessageProvider';
 import getSocket from './getSocket';
 
 export default function SetScreen() {
-  console.log("SetScreen")
 
   const appState = useContext(AppStateContext);
   const { setPlayerName, setPlayerId } = useContext(PlayerContext);

@@ -2,13 +2,15 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { PlayerContext } from "../../PlayerProvider";
 import useSocketSend from "../../useSocketSend";
 import { MessageTypes } from "../../enums";
+import useWebSocketStatus from "../../useWebSocketStatus";
 
 export default function NameInput() {
 
   const { playerName, setPlayerName } = useContext(PlayerContext); 
   const nameInputRef = useRef(null);
-  const [localName, setLocalName] = useState(playerName);
+  const [localName, setLocalName] = useState("---");
   const sendPacket = useSocketSend();
+  const wsConnected = useWebSocketStatus();
 
   useEffect(() => {
     window.addEventListener("keydown", interceptEnter);
@@ -18,7 +20,7 @@ export default function NameInput() {
   }, [])
 
   useEffect(() => {
-    setLocalName(playerName);
+    if (playerName) setLocalName(playerName);
   }, [playerName])
 
   function interceptEnter(e) {
@@ -32,6 +34,8 @@ export default function NameInput() {
     setLocalName(name);
   }
 
+  /* Inform the server of the name change when the user clicks
+  away from the element. */
   function handleNameChangeOnBlur(e) {
     let name = e.target.value;
     if (name === "") name = "Player";
@@ -52,6 +56,7 @@ export default function NameInput() {
           pattern="[0-9A-Za-z_\-#]+"
           id="player-name-input" 
           maxLength="24"
+          disabled={!wsConnected}
           value={localName}
           onChange={(e) => handleNameChange(e.target.value)}
           onBlur={handleNameChangeOnBlur} />

@@ -58,12 +58,10 @@ export default function RoomSelectionContainer({roomNumberRef}) {
       }
 
       case MessageTypes.EXITEDGAME: {
-        const roomNumber = message.roomNumber;
         const updateGameRoomsOnExit = (room) => {
-          if (room.roomNumber === roomNumber) {
-            const num = room.roomNumber;
+          if (room.roomNumber === message.roomNumber) {
             const list = room.playerList.filter(player => player.id != message.sender.id);
-            return {roomNumber: num, playerList: list};
+            return {roomNumber: room.roomNumber, playerList: list};
           } else {
             return room;
           } 

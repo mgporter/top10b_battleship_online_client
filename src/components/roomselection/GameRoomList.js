@@ -6,8 +6,6 @@ export default function GameRoomList({joinGame, gameRooms}) {
 
   const [showJoinGameDialog, setShowJoinGameDialog] = useState({show: false});
 
-  const messageStyle = {marginTop: "48px", fontSize: "1.6rem", alignSelf: "center"};
-
   const handleGameSelection = useCallback((e) => {
     const gameroom = gameRooms[e.target.id];
     const gameNumber = gameroom.roomNumber;
@@ -28,11 +26,15 @@ export default function GameRoomList({joinGame, gameRooms}) {
         setShowJoinGameDialog={setShowJoinGameDialog}
         joinGame={joinGame}>
       </JoinGameDialog>}
-      {gameRooms == null && <p style={messageStyle}>Loading Gamerooms...</p>}
       <ul id="join-game-box">
+        {gameRooms == null && 
+          <p className="gamerooms-loading-message">
+            Loading Gamerooms... <br />
+            <span>This app is on the free tier, so you might need to reload the page the first time if nothing happens</span>
+          </p>}
         {gameRooms && (
           gameRooms.length === 0 ? 
-          <p style={messageStyle}>There are no game rooms yet. Try creating one!</p>
+          <p className="gamerooms-loading-message">There are no game rooms yet. Try creating one!</p>
           :
           // Display in reverse order, with most recent at top.
           gameRooms.map((_, i) => {

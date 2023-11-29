@@ -181,9 +181,9 @@ function Model(playerboardRef, mainElementRef, gameContainerRef) {
             initializeModelOnLoad(obj);
             resolve(obj);
           },
-          (progressEvent) => {
-            // window.dispatchEvent(new ProgressEvent('model_loaded'));
-            // window.dispatchEvent(new Event('model_loaded'));
+          () => {
+            // This function can accept a progressEvent parameter
+            // Dispatch loading or progress event here
           }
         );
       });
@@ -196,9 +196,9 @@ function Model(playerboardRef, mainElementRef, gameContainerRef) {
             initializeModelOnLoad(gltf.scene);
             resolve(gltf.scene);
           },
-          (progressEvent) => {
-            // window.dispatchEvent(new Event('model_loaded'));
-            // window.dispatchEvent(new ProgressEvent('model_loaded'));
+          () => {
+            // This function can accept a progressEvent parameter
+            // Dispatch loading or progress event here
           }
         );
       });
@@ -435,7 +435,7 @@ const ModelContainerMemo = memo(function ModelContainer({modelRef, playerboardRe
     return () => {
       modelRef.current.removeCanvas();
     }
-  }, [])
+  }, [gameContainerRef, mainElementRef, playerboardRef, modelRef])
 
   return;
 })

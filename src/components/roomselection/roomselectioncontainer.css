@@ -172,6 +172,19 @@
   font-size: 18px;
 }
 
+#join-game-box .gamerooms-loading-message {
+  margin-top: 4%; 
+  font-size: 1.6rem; 
+  align-self: center; 
+  text-align: center;
+  line-height: 2rem;
+}
+
+#join-game-box .gamerooms-loading-message span {
+  display: inline-block;
+  margin-top: 1rem;
+}
+
 .join-game-game-row {
   display: flex;
   align-items: center;

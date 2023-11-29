@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import battleshipSide from './images/battleship-side.png';
 import carrierSide from './images/carrier-side.png';
 import submarineSide from './images/submarine-side.png';
@@ -69,5 +70,6 @@ export const C = {
     [Avatars.PLAYERCAPTAIN]: playerCaptainAvatar,
   },
   serverPrefix: process.env.REACT_APP_SERVERPREFIX,
-  githubLink: "https://github.com/mgporter/top10b_battleship_online_client"
+  githubLink: "https://github.com/mgporter/top10b_battleship_online_client",
+  debugMode: process.env.REACT_APP_DEBUGMODE === "true" ? true : false
 };

@@ -1,9 +1,6 @@
-import { useCallback, useContext, useEffect } from "react";
-import { Events } from "../../enums";
+import { useContext } from "react";
 import './roompanel.css';
 import { PlayerContext } from "../../PlayerProvider";
-import useSubscription from "../../useSubscription";
-import EventEmitter from "../../EventEmitter";
 
 export default function RoomPanel({
   players

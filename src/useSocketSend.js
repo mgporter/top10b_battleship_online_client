@@ -3,6 +3,7 @@ import getSocket from "./getSocket";
 import useWebSocketStatus from "./useWebSocketStatus";
 import { MessageTypes, PacketType } from "./enums";
 import { endpoints } from "./Endpoints";
+import { C } from "./Constants";
 
 
 export default function useSocketSend() {
@@ -11,10 +12,13 @@ export default function useSocketSend() {
   const wsStatus = useWebSocketStatus();
 
   const sendTo = useCallback((destination, payload) => {
-    console.log("Sending message to " + destination)
+    if (C.debugMode) console.log("Sending message to " + destination);
     const stringifiedPayload = typeof payload === "string" ? payload : JSON.stringify(payload);
     if (wsStatus) socket.send(destination, {}, stringifiedPayload);
-    else console.error(`Message to ${destination} could not be sent.`);
+    else {
+      if (C.debugMode)
+        console.error(`Message to ${destination} could not be sent.`);
+    }
   }, [socket, wsStatus])
 
   const sendPacket = useCallback((type, data = null) => {

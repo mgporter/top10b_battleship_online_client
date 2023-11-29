@@ -12,7 +12,7 @@ export default function ShipHealthPanel({shipsPlaced, shipStats}) {
 
   const showShipHealthPanel = appState >= ApplicationState.ATTACK_PHASE;
 
-  const healthContainers = shipsPlaced.map((ship) => {
+  const healthContainers = shipsPlaced.current.map((ship) => {
     return <ShipHealthContainer key={ship.getId()} ship={ship} />
   });
 

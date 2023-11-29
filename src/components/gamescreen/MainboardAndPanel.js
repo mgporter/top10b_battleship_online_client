@@ -25,8 +25,9 @@ const MainboardAndPanel = memo(function MainboardAndPanel({
   const [leftPanelFlash, setLeftPanelFlash] = useState(true);
   const [mainboardFlash, setMainboardFlash] = useState(false);
   const [mainboardHover, setMainboardHover] = useState(false);
-  const [shipsPlaced, setShipsPlaced] = useState([]);
+  // const [shipsPlaced, setShipsPlaced] = useState([]);
 
+  const shipsPlaced = useRef([]);
   const shipToPlace = useRef(null);
   const firstPlacement = useRef(true);
 
@@ -58,9 +59,9 @@ const MainboardAndPanel = memo(function MainboardAndPanel({
     }
 
     /* Handle messages */
-    if (shipsPlaced.length === 0) {
+    if (shipsPlaced.current.length === 0) {
       setInGameMessages(inGameMessages.FIRSTSHIPSELECTED, shipClicked);
-    } else if (shipsPlaced.length === C.totalShips) {
+    } else if (shipsPlaced.current.length === C.totalShips) {
       // do nothing
     } else {
       setInGameMessages(inGameMessages.SHIPSELECTED, shipClicked);
@@ -68,7 +69,7 @@ const MainboardAndPanel = memo(function MainboardAndPanel({
 
     firstPlacement.current = false;
 
-  }, [shipClicked])
+  }, [shipClicked, setInGameMessages])
 
 
   useEffect(() => {
@@ -109,7 +110,7 @@ const MainboardAndPanel = memo(function MainboardAndPanel({
           sendPacket={sendPacket}
           dispatchShipStats={dispatchShipStats}
           shipsPlaced={shipsPlaced}
-          setShipsPlaced={setShipsPlaced}
+          // setShipsPlaced={setShipsPlaced}
           dispatchBattleStats={dispatchBattleStats}
           gameContainerRef={gameContainerRef}
         />

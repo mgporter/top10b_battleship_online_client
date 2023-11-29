@@ -24,7 +24,7 @@ export default function ShipPlacementPanel({
   }
 
   const shipIcons = Object.values(ShipType).map((shiptype) => {
-    const placed = shipsPlaced.filter(ship => ship.getType() === shiptype).map(s => s.isPlaced())[0];
+    const placed = shipsPlaced.current.filter(ship => ship.getType() === shiptype).map(s => s.isPlaced())[0];
     return (
       <label 
         key={shiptype}
@@ -43,11 +43,11 @@ export default function ShipPlacementPanel({
   })
 
   function handleGameStart() {
-    sendPacket(PacketType.PLACED_COMPLETE, shipsPlaced);
+    sendPacket(PacketType.PLACED_COMPLETE, shipsPlaced.current);
     EventEmitter.dispatch(Events.PLACEMENTSSUBMITTED);
   }
 
-  const allPlaced = shipsPlaced.length === Object.values(ShipType).length;
+  const allPlaced = shipsPlaced.current.length === Object.values(ShipType).length;
   const flash = (appState === ApplicationState.SHIP_PLACEMENT) && leftPanelFlash ? true : false;
 
   return (

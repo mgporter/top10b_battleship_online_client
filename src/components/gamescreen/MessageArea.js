@@ -1,6 +1,5 @@
-import avatar1 from '../../images/avatar_1.png';
 import './messagearea.css';
-import { useContext, useEffect } from 'react';
+import { useContext } from 'react';
 import { C } from '../../Constants';
 import OpenWinnerScreenComponent from './OpenWinnerScreenComponent';
 import { inGameMessagesContext } from '../../InGameMessageProvider';

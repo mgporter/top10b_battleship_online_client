@@ -5,6 +5,7 @@ import { postGameRoom } from "./lobbyhelperfunctions";
 import NameInput from "./NameInput";
 import GameRoomList from "./GameRoomList";
 import useSocketSend from "../../useSocketSend";
+import useWebSocketStatus from "../../useWebSocketStatus";
 
 export default function RoomSelectionWindow({
   roomNumberRef, 
@@ -13,6 +14,7 @@ export default function RoomSelectionWindow({
 
   const {playerName, playerId } = useContext(PlayerContext);
   const roomSelectionWindowRef = useRef(null);
+  const wsConnected = useWebSocketStatus();
   const sendPacket = useSocketSend();
 
   useEffect(() => {
@@ -48,7 +50,11 @@ export default function RoomSelectionWindow({
     <div id="room-selection-container" ref={roomSelectionWindowRef}>
       <h2>Create or join a game</h2>
       <NameInput />
-      <button className="create-game-button button" onClick={createGameHandler} type="button">Create a game</button>
+      <button 
+        className="create-game-button button" 
+        onClick={createGameHandler} 
+        type="button" 
+        disabled={!wsConnected}>Create a game</button>
       <hr />
       <GameRoomList 
         joinGame={joinGame}

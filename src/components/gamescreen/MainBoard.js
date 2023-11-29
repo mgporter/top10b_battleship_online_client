@@ -2,7 +2,7 @@ import './mainboard.css';
 import { useState, useRef, useEffect, useContext, useCallback } from 'react';
 import { C } from '../../Constants';
 import Gameboard from '../logic/gameboard';
-import { ApplicationState, Avatars, Events, PacketType, battleStatsActions, inGameMessages, shipStatsActions } from '../../enums';
+import { ApplicationState, Events, PacketType, battleStatsActions, inGameMessages, shipStatsActions } from '../../enums';
 import ModelContainerMemo from "./ModelContainer";
 import { AppStateContext } from '../../AppStateProvider';
 import ShipPlacement from '../logic/shipplacement';
@@ -33,7 +33,7 @@ export default function MainBoard({
   shipToPlace,
   sendPacket,
   dispatchShipStats,
-  setShipsPlaced,
+  // setShipsPlaced,
   shipsPlaced,
   dispatchBattleStats,
   gameContainerRef
@@ -125,7 +125,8 @@ export default function MainBoard({
     let mySunkShips = 0;
     for (let JsonShip of myShips) {
       const ship = shipFromJSON(JsonShip);
-      setShipsPlaced((prev) => [...prev, ship]);
+      shipsPlaced.current.push(ship);
+      // setShipsPlaced((prev) => [...prev, ship]);
       shipPlacement.placeShip(ship, ship.getLocation());
 
       modelRef.current.addModelToScene(
@@ -169,7 +170,7 @@ export default function MainBoard({
         }, {once: true});
     }, 100)
 
-  }, [dispatchShipStats, setShipsPlaced, handleMiss, handleHit, handleSink]);
+  }, [dispatchShipStats, handleMiss, handleHit, handleSink]);
 
   useEffect(() => {
     EventEmitter.subscribe(Events.OPPONENTATTACKRECEIVED, "MainBoard", (attackPacket) => {
@@ -206,18 +207,19 @@ export default function MainBoard({
     if (!shipToPlace.current.isPlaced()) {
 
       /* Handle messages */
-      if (shipsPlaced.length === 0) {
+      if (shipsPlaced.current.length === 0) {
         setInGameMessages(inGameMessages.FIRSTSHIPPLACED, shipToPlace.current.getType());
-      } else if (shipsPlaced.length >= C.totalShips - 1) {
+      } else if (shipsPlaced.current.length >= C.totalShips - 1) {
         setInGameMessages(inGameMessages.ALLSHIPSPLACED, shipToPlace.current.getType());
       } else {
         setInGameMessages(inGameMessages.SHIPPLACED, shipToPlace.current.getType());
       }
       
-      sendPacket(PacketType.PLACED_SHIP, shipsPlaced.length + 1);
+      sendPacket(PacketType.PLACED_SHIP, shipsPlaced.current.length + 1);
 
       /* Only add the ship to the shipsPlaced array the first time it is placed */
-      setShipsPlaced((prev) => [...prev, shipToPlace.current]);
+      shipsPlaced.current.push(shipToPlace.current);
+      // setShipsPlaced((prev) => [...prev, shipToPlace.current]);
       dispatchShipStats({type: shipStatsActions.INCREMENTPLAYERSHIPPLACED});
 
       /* Remove boardflash in case it is still on */
