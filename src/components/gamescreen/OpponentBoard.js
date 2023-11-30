@@ -1,10 +1,11 @@
 import { useCallback, useContext, useEffect, useRef } from "react";
 import { C } from "../../Constants";
 import './opponentboard.css';
-import { Events, PacketType, battleStatsActions, inGameMessages, shipStatsActions } from "../../enums";
+import { ApplicationState, Events, PacketType, battleStatsActions, inGameMessages, shipStatsActions } from "../../enums";
 import { displayShipOnOpponentBoard, handleAttackResult, coordinateToDOMCell } from "../logic/boardhelperfunctions";
 import { setInGameMessagesContext } from "../../InGameMessageProvider";
 import EventEmitter from "../../EventEmitter";
+import { AppStateContext } from "../../AppStateProvider";
 
 /* Create the board cells once on load */
 const cells = (function createOpponentboardCells() {
@@ -33,6 +34,7 @@ export default function OpponentBoard({
   const opponentPanelRef = useRef(null);
   const currentAttackResult = useRef(null);
   const setInGameMessages = useContext(setInGameMessagesContext);
+  const appState = useContext(AppStateContext);
 
 
   useEffect(() => {
@@ -41,14 +43,14 @@ export default function OpponentBoard({
   }, [showOpponentPanels])
 
   useEffect(() => {
-    if (readyToAttackOpponent) {
+    if (readyToAttackOpponent && appState != ApplicationState.GAME_END) {
       opponentboardRef.current.classList.add("boardflash");
       opponentboardRef.current.classList.remove("disable-hover");
     } else {
       opponentboardRef.current.classList.remove("boardflash");
       opponentboardRef.current.classList.add("disable-hover");
     }
-  }, [readyToAttackOpponent])
+  }, [readyToAttackOpponent, appState])
 
 
   const handleMiss = useCallback((targetCell, loadingData = false) => {

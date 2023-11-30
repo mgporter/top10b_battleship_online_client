@@ -307,6 +307,14 @@ export function shipStatsReducer(current, action) {
       }
     }
 
+    case shipStatsActions.SETOPPONENTPLACEMENTCOMPLETE: {
+      console.log(action.data)
+      return {
+        ...current,
+        opponentPlacementComplete: action.data,
+      }
+    }
+
   }
 
 }

@@ -7,10 +7,10 @@ import { useContext, useRef } from 'react';
 import EventEmitter from '../../EventEmitter';
 
 export default function ShipPlacementPanel({
-  setShipClicked, 
   leftPanelFlash, 
   shipsPlaced, 
-  sendPacket
+  sendPacket,
+  handleShipClicked
 }) {
 
   const appState = useContext(AppStateContext);
@@ -19,10 +19,6 @@ export default function ShipPlacementPanel({
     appState === ApplicationState.SHIP_PLACEMENT ||
     appState === ApplicationState.SHIPS_PLACED_AND_STARTED;
 
-  function handleShipClick(shipType) {
-    setShipClicked(shipType);
-  }
-
   const shipIcons = Object.values(ShipType).map((shiptype) => {
     const placed = shipsPlaced.current.filter(ship => ship.getType() === shiptype).map(s => s.isPlaced())[0];
     return (
@@ -30,7 +26,7 @@ export default function ShipPlacementPanel({
         key={shiptype}
         className={placed ? "ship-placed" : ""} 
         htmlFor={shiptype} 
-        onClick={() => handleShipClick(shiptype)}>
+        onClick={() => handleShipClicked(shiptype)}>
         <input type="radio" id={shiptype} name="addship" value={shiptype} />
         <img 
           src={C.ships[shiptype].sideimg} 

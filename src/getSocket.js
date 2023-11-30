@@ -29,7 +29,6 @@ function onConnected() {
 }
 
 function receiveCredentials(payload) {
-  console.log("Credentials RECEIVED")
   const message = JSON.parse(payload.body);
   window.dispatchEvent(new CustomEvent("credentialsReceived", {
     detail: {

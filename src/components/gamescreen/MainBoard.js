@@ -11,8 +11,8 @@ import { setInGameMessagesContext } from '../../InGameMessageProvider';
 import { shipFromJSON } from '../logic/ship';
 import EventEmitter from '../../EventEmitter';
 
-/* Create the board cells once on load */
 
+/* Create the board cells once on load */
 const cells = (function createPlayerboardCells() {
   const cellArr = []
   for (let i = 0; i < C.gameboardRows; i++) {
@@ -33,10 +33,10 @@ export default function MainBoard({
   shipToPlace,
   sendPacket,
   dispatchShipStats,
-  // setShipsPlaced,
   shipsPlaced,
   dispatchBattleStats,
-  gameContainerRef
+  gameContainerRef,
+  setReadyToAttackOpponent
 }) {
 
   const [mouseOverCell, setMouseOverCell] = useState(null);
@@ -86,12 +86,14 @@ export default function MainBoard({
   }, [])
 
 
-
   const handleMiss = useCallback((targetCell, loadingData = false) => {
     targetCell.classList.add("miss");
     dispatchBattleStats(battleStatsActions.incrementOpponentShotsFired);
-    if (loadingData === false) setInGameMessages(inGameMessages.OPPONENTMISSED);
-  }, [dispatchBattleStats, setInGameMessages]);
+    if (loadingData === false) {
+      setInGameMessages(inGameMessages.OPPONENTMISSED);
+      setReadyToAttackOpponent(true);
+    }
+  }, [dispatchBattleStats, setInGameMessages, setReadyToAttackOpponent]);
 
   const handleHit = useCallback((targetCell, loadingData = false, row = null, col = null) => {
     targetCell.classList.add("hit");
@@ -100,10 +102,11 @@ export default function MainBoard({
     if (loadingData === false) {
       setInGameMessages(inGameMessages.OPPONENTHITSHIP, currentAttackResult.current.shipType);
       addHitToHealthStatus(board, currentAttackResult.current.row, currentAttackResult.current.col);
+      setReadyToAttackOpponent(true);
     } else {
       addHitToHealthStatus(board, row, col);
     }
-  }, [dispatchBattleStats, setInGameMessages]);
+  }, [dispatchBattleStats, setInGameMessages, setReadyToAttackOpponent]);
 
   const handleSink = useCallback((targetCell, loadingData = false, row = null, col = null) => {
     targetCell.classList.add("hit");
@@ -113,10 +116,11 @@ export default function MainBoard({
       setInGameMessages(inGameMessages.OPPONENTSUNKSHIP, currentAttackResult.current.shipType);
       addHitToHealthStatus(board, currentAttackResult.current.row, currentAttackResult.current.col);
       modelRef.current.sinkShip(currentAttackResult.current.shipType);
+      setReadyToAttackOpponent(true);
     } else {
       addHitToHealthStatus(board, row, col);
     }
-  }, [dispatchBattleStats, dispatchShipStats, setInGameMessages]);
+  }, [dispatchBattleStats, dispatchShipStats, setInGameMessages, setReadyToAttackOpponent]);
 
   const loadGameData = useCallback((data) => {
     const myShips = data.myShips;
@@ -126,7 +130,6 @@ export default function MainBoard({
     for (let JsonShip of myShips) {
       const ship = shipFromJSON(JsonShip);
       shipsPlaced.current.push(ship);
-      // setShipsPlaced((prev) => [...prev, ship]);
       shipPlacement.placeShip(ship, ship.getLocation());
 
       modelRef.current.addModelToScene(
@@ -170,7 +173,7 @@ export default function MainBoard({
         }, {once: true});
     }, 100)
 
-  }, [dispatchShipStats, handleMiss, handleHit, handleSink]);
+  }, [dispatchShipStats, handleMiss, handleHit, handleSink, shipsPlaced]);
 
   useEffect(() => {
     EventEmitter.subscribe(Events.OPPONENTATTACKRECEIVED, "MainBoard", (attackPacket) => {
@@ -219,7 +222,6 @@ export default function MainBoard({
 
       /* Only add the ship to the shipsPlaced array the first time it is placed */
       shipsPlaced.current.push(shipToPlace.current);
-      // setShipsPlaced((prev) => [...prev, shipToPlace.current]);
       dispatchShipStats({type: shipStatsActions.INCREMENTPLAYERSHIPPLACED});
 
       /* Remove boardflash in case it is still on */

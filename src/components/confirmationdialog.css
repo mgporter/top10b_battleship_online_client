@@ -60,4 +60,6 @@
 
 .opponent-ships-placed-minitext h3 {
   color: rgba(255, 255, 255, 0.581);
+  line-height: 2.2rem;
+  text-align: center;
 }

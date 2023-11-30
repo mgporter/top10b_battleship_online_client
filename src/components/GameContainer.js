@@ -89,7 +89,8 @@ export default function GameContainer({
     playerShipsPlaced: 0,
     playerShipsSunk: 0,
     opponentShipsPlaced: 0,
-    opponentShipsSunk: 0
+    opponentShipsSunk: 0,
+    opponentPlacementComplete: false
   });
 
   const [players, dispatchPlayers] = useReducer(playerReducer, {
@@ -129,13 +130,19 @@ export default function GameContainer({
     setGameLoaded(true);
   }, [sendPacket]);
 
-  const handleStartPlacement = useCallback(() => {
+  const handleStartPlacement = useCallback((message) => {
+
+    let opponentHasPlaced = players.playerOne === playerId ?
+      message.playerTwoHasPlaced : message.playerOneHasPlaced;
+
+    dispatchShipStats({type: shipStatsActions.SETOPPONENTPLACEMENTCOMPLETE, data: opponentHasPlaced});
+
     if (appState >= ApplicationState.SHIP_PLACEMENT) return;
 
     fullScreenDialog.hide();
     setAppState(ApplicationState.SHIP_PLACEMENT);
     setInGameMessages(inGameMessages.WELCOME);
-  }, [fullScreenDialog, setAppState, setInGameMessages, appState]);
+  }, [fullScreenDialog, setAppState, setInGameMessages, appState, playerId, players]);
 
   const handleOpponentPlacedShip = useCallback((shipcount) => {
     dispatchShipStats({type: shipStatsActions.SETOPPONENTSHIPSPLACED, data: shipcount});
@@ -145,10 +152,6 @@ export default function GameContainer({
     setAppState(ApplicationState.SHIPS_PLACED_AND_STARTED);
     fullScreenDialog.show(dialogBoxTypes.WAITINGFORPLACEMENT, shipStats.opponentShipsPlaced);
   }, [setAppState, fullScreenDialog, shipStats]);
-
-  const handleOpponentAttackReceived = useCallback(() => {
-    setReadyToAttackOpponent(true);
-  }, []);
 
   const handleTellServerToLoadData = useCallback(() => {
     sendPacket(PacketType.LOAD_ALL_DATA);
@@ -187,6 +190,10 @@ export default function GameContainer({
 
     if (message.playerOneId && message.playerTwoId) {
 
+      if (appState === ApplicationState.SHIP_PLACEMENT) {
+        sendPacket(PacketType.PLACED_SHIP, shipStats.playerShipsPlaced);
+      }
+
       if (appState === ApplicationState.SHIPS_PLACED_AND_STARTED) {
         handlePlacementsSubmitted();
         return;
@@ -208,7 +215,7 @@ export default function GameContainer({
 
     }
 
-  }, [appState, fullScreenDialog, sendPacket, handlePlacementsSubmitted]);
+  }, [appState, fullScreenDialog, sendPacket, handlePlacementsSubmitted, shipStats]);
 
   const handleLoadSavedGame = useCallback((message) => {
 
@@ -295,13 +302,6 @@ export default function GameContainer({
   }, [handlePlacementsSubmitted])
 
   useEffect(() => {
-    EventEmitter.subscribe(Events.OPPONENTATTACKRECEIVED, "GameCon", handleOpponentAttackReceived);
-    return () => {
-      EventEmitter.unsubscribe(Events.OPPONENTATTACKRECEIVED, "GameCon");
-    }
-  }, [handleOpponentAttackReceived])
-
-  useEffect(() => {
     EventEmitter.subscribe(Events.TELLSERVERTOLOADDATA, "GameCon", handleTellServerToLoadData);
     return () => {
       EventEmitter.unsubscribe(Events.TELLSERVERTOLOADDATA, "GameCon");
@@ -358,7 +358,7 @@ export default function GameContainer({
       }
 
       case PacketType.GAME_START: {
-        EventEmitter.dispatch(Events.STARTPLACEMENT);
+        EventEmitter.dispatch(Events.STARTPLACEMENT, message);
         break;
       }
 
@@ -414,6 +414,7 @@ export default function GameContainer({
           sendPacket={sendPacket} 
           dispatchBattleStats={dispatchBattleStats}
           readyToAttackOpponent={readyToAttackOpponent}
+          setReadyToAttackOpponent={setReadyToAttackOpponent}
           shipStats={shipStats}
           dispatchShipStats={dispatchShipStats}
           gameContainerRef={gameContainerRef}
@@ -422,35 +423,34 @@ export default function GameContainer({
         players={players}
        />}
       {showOpponentShipsMinidialog && <OpponentShipsPlacedMinidialog shipStats={shipStats} />}
-        <MessageArea 
-          showEndGameButtons={!showEndGameDialog && showWinnerScreen}
-          winner={players.winner}
-          setShowEndGameDialog={setShowEndGameDialog} />
-        <CreditsBlock setShowModelCredits={setShowModelCredits} />
-        <OpponentBoard 
-          dispatchBattleStats={dispatchBattleStats}
-          readyToAttackOpponent={readyToAttackOpponent}
-          setReadyToAttackOpponent={setReadyToAttackOpponent}
-          sendPacket={sendPacket}
-          shipStats={shipStats}
-          dispatchShipStats={dispatchShipStats}
-          showOpponentPanels={showOpponentPanels}
+      <MessageArea 
+        showEndGameButtons={!showEndGameDialog && showWinnerScreen}
+        winner={players.winner}
+        setShowEndGameDialog={setShowEndGameDialog} />
+      <CreditsBlock setShowModelCredits={setShowModelCredits} />
+      <OpponentBoard 
+        dispatchBattleStats={dispatchBattleStats}
+        readyToAttackOpponent={readyToAttackOpponent}
+        setReadyToAttackOpponent={setReadyToAttackOpponent}
+        sendPacket={sendPacket}
+        shipStats={shipStats}
+        dispatchShipStats={dispatchShipStats}
+        showOpponentPanels={showOpponentPanels}
+      />
+      <BottomRightPanel 
+        battleStats={battleStats} 
+        players={players}
+        gameTimeSecondsFinal={gameTimeSecondsFinal}
+        showOpponentPanels={showOpponentPanels}
         />
-        <BottomRightPanel 
-          battleStats={battleStats} 
-          players={players}
-          gameTimeSecondsFinal={gameTimeSecondsFinal}
-          showOpponentPanels={showOpponentPanels}
-          />
-        {(showWinnerScreen && showEndGameDialog) && <WinnerScreen 
-          winner={players.winner} 
-          battleStats={battleStats}
-          shipStats={shipStats}
-          gameTimeSecondsFinal={gameTimeSecondsFinal}
-          setShowEndGameDialog={setShowEndGameDialog}
-        />}
-        {showModelCredits && <ModelCredits setShowModelCredits={setShowModelCredits} />}
-
+      {(showWinnerScreen && showEndGameDialog) && <WinnerScreen 
+        winner={players.winner} 
+        battleStats={battleStats}
+        shipStats={shipStats}
+        gameTimeSecondsFinal={gameTimeSecondsFinal}
+        setShowEndGameDialog={setShowEndGameDialog}
+      />}
+      {showModelCredits && <ModelCredits setShowModelCredits={setShowModelCredits} />}
     </div>
   ) 
 

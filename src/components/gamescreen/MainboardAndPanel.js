@@ -15,17 +15,16 @@ let ships;
 const MainboardAndPanel = memo(function MainboardAndPanel({
   sendPacket,
   readyToAttackOpponent,
+  setReadyToAttackOpponent,
   dispatchBattleStats,
   shipStats,
   dispatchShipStats,
   gameContainerRef
 }) {
 
-  const [shipClicked, setShipClicked] = useState(null);
   const [leftPanelFlash, setLeftPanelFlash] = useState(true);
   const [mainboardFlash, setMainboardFlash] = useState(false);
   const [mainboardHover, setMainboardHover] = useState(false);
-  // const [shipsPlaced, setShipsPlaced] = useState([]);
 
   const shipsPlaced = useRef([]);
   const shipToPlace = useRef(null);
@@ -47,9 +46,32 @@ const MainboardAndPanel = memo(function MainboardAndPanel({
     }
   }, [])
 
-  useEffect(() => {
-    if (!shipClicked) return;
-    shipToPlace.current = ships.filter(s => s.getType() === shipClicked)[0];
+  // useEffect(() => {
+  //   if (!shipClicked) return;
+  //   shipToPlace.current = ships.filter(s => s.getType() === shipClicked)[0];
+
+  //   /* Add visual indicators the first time the user clicks a ship */
+  //   if (firstPlacement) {
+  //     setMainboardHover(true);
+  //     setMainboardFlash(true);
+  //     setLeftPanelFlash(false);
+  //   }
+
+  //   /* Handle messages */
+  //   if (shipsPlaced.current.length === 0) {
+  //     setInGameMessages(inGameMessages.FIRSTSHIPSELECTED, shipClicked);
+  //   } else if (shipsPlaced.current.length === C.totalShips) {
+  //     // do nothing
+  //   } else {
+  //     setInGameMessages(inGameMessages.SHIPSELECTED, shipClicked);
+  //   }
+
+  //   firstPlacement.current = false;
+
+  // }, [shipClicked, setInGameMessages])
+
+  function handleShipClicked(shipType) {
+    shipToPlace.current = ships.filter(s => s.getType() === shipType)[0];
 
     /* Add visual indicators the first time the user clicks a ship */
     if (firstPlacement) {
@@ -60,16 +82,15 @@ const MainboardAndPanel = memo(function MainboardAndPanel({
 
     /* Handle messages */
     if (shipsPlaced.current.length === 0) {
-      setInGameMessages(inGameMessages.FIRSTSHIPSELECTED, shipClicked);
+      setInGameMessages(inGameMessages.FIRSTSHIPSELECTED, shipType);
     } else if (shipsPlaced.current.length === C.totalShips) {
       // do nothing
     } else {
-      setInGameMessages(inGameMessages.SHIPSELECTED, shipClicked);
+      setInGameMessages(inGameMessages.SHIPSELECTED, shipType);
     }
 
     firstPlacement.current = false;
-
-  }, [shipClicked, setInGameMessages])
+  }
 
 
   useEffect(() => {
@@ -94,7 +115,7 @@ const MainboardAndPanel = memo(function MainboardAndPanel({
   return (
     <>
         <ShipPlacementPanel 
-          setShipClicked={setShipClicked} 
+          handleShipClicked={handleShipClicked}
           leftPanelFlash={leftPanelFlash}
           sendPacket={sendPacket}
           shipsPlaced={shipsPlaced}
@@ -110,9 +131,9 @@ const MainboardAndPanel = memo(function MainboardAndPanel({
           sendPacket={sendPacket}
           dispatchShipStats={dispatchShipStats}
           shipsPlaced={shipsPlaced}
-          // setShipsPlaced={setShipsPlaced}
           dispatchBattleStats={dispatchBattleStats}
           gameContainerRef={gameContainerRef}
+          setReadyToAttackOpponent={setReadyToAttackOpponent}
         />
     </>
   )
